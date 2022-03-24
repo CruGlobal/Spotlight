@@ -43,10 +43,14 @@ function updateScriptProperties(){
   }
 }
 
-function getLastRow(sheet){
-  let columnA = sheet.getRange("A1:A").getValues();
+function getLastRow(sheet,column){
+  if(column == null){
+    Logger.log(column);
+    column = 'A';
+  }
+  let testColumn = sheet.getRange(column+'1:'+column).getValues();
   let lastRow=0;
-  for(cell of columnA){
+  for(cell of testColumn){
     if(cell != ""){
       lastRow += 1;
     }

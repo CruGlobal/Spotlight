@@ -78,6 +78,7 @@ function getMovements(movementsList, purpose) {
 
   let object = [];
   for(mvmntIn of movementsList){
+    Logger.log(movements)
     try {
       if(purpose == 'summary'){                    //we want everything
         let mvmnt = movements[mvmntIn];
@@ -120,15 +121,18 @@ function summarizeMovements(movements){
     groupNum[fbID] = (groupNum[fbID] || 0) + parseInt(movement.fb);
     groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1);
 
+    //STRATEGY
     let stratID = strategies[movement.strat].summaryId;
     if(stratID.trim() == ''){
       stratID = global.g2;
     }
     groupNum[stratID] = (groupNum[stratID] || 0) + parseInt(movement.g2);
 
+    //TEAM
     let teamID = teams[movement.tID].teamSum;
-    questions[teamID] = teams[movement.tID][teamID].replace(/^.*Ͱ/,''); //want to have the team question too.
-    if(teamID.trim() == ''){
+    if(teamID.trim() != ''){
+      questions[teamID] = teams[movement.tID][teamID].replace(/^.*Ͱ/,''); //want to have the team question too.
+    } else {
       teamID = global.g3;
     }
     groupNum[teamID]  = (groupNum[teamID] || 0) + parseInt(movement.g3);
@@ -143,7 +147,7 @@ function summarizeMovements(movements){
 
 
 function myMovements() {
-  summarizeMovements(['11639','15452'])
+  Logger.log(summarizeMovements(['96']))
 }
 
 function testUpdateMovementsInCache() {

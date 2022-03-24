@@ -16,7 +16,7 @@ body {
 }
 object,
 img {
-	image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 button,
@@ -113,7 +113,7 @@ h1 {
 }
 #statsList {
  display: grid;
- grid-template-columns: 1fr 8rem;
+ grid-template-columns: 1fr 8.5rem;
  grid-gap: 1rem;
 }
 #statsList input {

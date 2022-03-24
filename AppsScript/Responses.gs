@@ -31,6 +31,52 @@ function saveResponseToCache(e){
 
 function testResponseCache(){
   Logger.log(SCRIPT_PROP.getProperty('responseCache'))
+  let e = {
+    "parameters": {
+        "movementId": [
+            "96"
+        ],
+        "personalEvang": [
+            "1"
+        ],
+        "userName": [
+            "Carl Hempel"
+        ],
+        "startDate": [
+            ""
+        ],
+        "userPhone": [
+            "8453320550"
+        ],
+        "holySpiritPres": [
+            "0"
+        ],
+        "spiritualConvo": [
+            "4"
+        ],
+        "endDate": [
+            "3/24/2022"
+        ],
+        "personalEvangDec": [
+            "1"
+        ]
+    },
+    "contextPath": "",
+    "parameter": {
+        "startDate": "",
+        "spiritualConvo": "4",
+        "personalEvangDec": "1",
+        "personalEvang": "1",
+        "movementId": "96",
+        "userName": "Carl Hempel",
+        "holySpiritPres": "0",
+        "userPhone": "8453320550",
+        "endDate": "3/24/2022"
+    },
+    "contentLength": -1,
+    "queryString": "startDate=&endDate=3%2F24%2F2022&movementId=96&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=4&personalEvang=1&personalEvangDec=1&holySpiritPres=0"
+}
+  Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){

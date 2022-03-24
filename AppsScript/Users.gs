@@ -98,8 +98,6 @@ function gatherUserInfo(phone){
     let movements = getMovements(userMvmntsIds);
     let strategiesList = movements.map(mvmnt => mvmnt.strat);
 
-    Logger.log(getStrategies());
-
     userInfo.strategies = getStrategies(strategiesList); //get's the unique strategies as a list
     userInfo.movements = movements;
     
