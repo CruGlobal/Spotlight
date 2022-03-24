@@ -16,12 +16,13 @@ function saveResponseToCache(e){
     let responseCache = (JSON.parse(SCRIPT_PROP.getProperty('responseCache')) || []);
     responseCache.push(...formSubs);
     SCRIPT_PROP.setProperty('responseCache',JSON.stringify(responseCache));
-    lock.releaseLock();
-    
+
     updateMovementsInCache(formSubs); 
 
-    success = phone;
+    lock.releaseLock();
 
+    success = phone;
+    
   } catch (error) {
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
     lock.releaseLock();

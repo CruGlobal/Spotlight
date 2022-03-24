@@ -132,8 +132,6 @@ function saveUser(e) {
     }    
    
     if(newUser){   
-      // we'll assume header is in row 1 but you can override with header_row in GET/POST data
-      var headRow = e.parameter.header_row || 1;
       var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       var nextRow = sheet.getLastRow()+1; // get next row
       var row = []; 

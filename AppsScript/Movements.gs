@@ -22,9 +22,6 @@ function setMovementsScriptProperty(){
 }
 
 function updateMovementsInCache(responses){
-  let lock = LockService.getPublicLock();
-  lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
-
   let movements = JSON.parse(SCRIPT_PROP.getProperty("movements"));
   let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
   let strategies = getStrategies();
@@ -69,7 +66,6 @@ function updateMovementsInCache(responses){
 
   //set changed movement values back to cache  
   SCRIPT_PROP.setProperty("movements", JSON.stringify(movements));
-  lock.releaseLock();
 }
 
 function getMovements(movementsList, purpose) {

@@ -95,6 +95,56 @@ function updateUser(e) {
   }
 }
 
+function testSaveForm(){
+  let e = {
+    "contentLength": -1,
+    "parameter": {
+        "movementId": "8072",
+        "endDate": "3/24/2022",
+        "personalEvangDec": "0",
+        "personalEvang": "0",
+        "startDate": "",
+        "userPhone": "8453320550",
+        "spiritualConvo": "0",
+        "userName": "Carl Hempel",
+        "holySpiritPres": "0"
+    },
+    "parameters": {
+        "personalEvangDec": [
+            "0"
+        ],
+        "movementId": [
+            "8072"
+        ],
+        "holySpiritPres": [
+            "0"
+        ],
+        "personalEvang": [
+            "0"
+        ],
+        "spiritualConvo": [
+            "0"
+        ],
+        "userName": [
+            "Carl Hempel"
+        ],
+        "userPhone": [
+            "8453320550"
+        ],
+        "startDate": [
+            ""
+        ],
+        "endDate": [
+            "3/24/2022"
+        ]
+    },
+    "contextPath": "",
+    "queryString": "startDate=&endDate=3%2F24%2F2022&movementId=8072&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0"
+};
+
+  saveForm(e);
+}
+
 //SAVE form data to Responses, return summary for included movements
 function saveForm(e) {
   try {
@@ -102,12 +152,13 @@ function saveForm(e) {
 
     let movements = e.parameters.movementId;
     let summary = summarizeMovements(movements);
+
     let userInfo = gatherUserInfo(success);
 
     if(success){
       // return json success results
       return ContentService
-        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": summary, 'user': userInfo}))
+        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": summary, 'user': userInfo, 'orig_e': e}))
         .setMimeType(ContentService.MimeType.JSON);
     }
     else {
