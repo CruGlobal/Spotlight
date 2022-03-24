@@ -125,7 +125,7 @@ function saveUser(e) {
     let users = sheet.getRange(2,1, sheet.getLastRow(), 3).getValues();
     let newUser = true;     
     for(i in users){
-        Logger.log(users[i])
+        //Logger.log(users[i])
       if(users[i][0] == e.parameter.phone) {
         newUser = false;
       }

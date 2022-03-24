@@ -45,7 +45,7 @@ function updateScriptProperties(){
 
 function getLastRow(sheet,column){
   if(column == null){
-    Logger.log(column);
+    //Logger.log(column);
     column = 'A';
   }
   let testColumn = sheet.getRange(column+'1:'+column).getValues();

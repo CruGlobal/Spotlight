@@ -6,7 +6,7 @@ function setQuestionRelsScriptProperty(){
   let questionObjs = {};
   //for each row in the 2d array from getValues();
   for(question of questionRelsList){
-    Logger.log(questionRelsList)
+    //Logger.log(questionRelsList)
     let questionOb = {};
     questionOb.notCumulative=Boolean(question[2]);
     let lessThan = question[0];

@@ -78,7 +78,6 @@ function getMovements(movementsList, purpose) {
 
   let object = [];
   for(mvmntIn of movementsList){
-    Logger.log(movements)
     try {
       if(purpose == 'summary'){                    //we want everything
         let mvmnt = movements[mvmntIn];
@@ -116,7 +115,6 @@ function summarizeMovements(movements){
       questions[question.id] = question.name;
     }
   }
-  
   for(movement of summaryMovements){
     groupNum[fbID] = (groupNum[fbID] || 0) + parseInt(movement.fb);
     groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1);
@@ -137,6 +135,18 @@ function summarizeMovements(movements){
     }
     groupNum[teamID]  = (groupNum[teamID] || 0) + parseInt(movement.g3);
   }
+  
+  if(groupNum[global.fb] == 0){
+    delete groupNum[global.fb];
+  }
+  for(num of Object.keys(groupNum)) {
+    if(Object.keys(groupNum).length > 3 && groupNum[num] == 0) {
+      delete groupNum[num];
+    }
+  }
+  if(Object.keys(groupNum).length > 3){
+    delete groupNum[global.fb];
+  }
 
   let summary = {};
   summary.groupNum = groupNum;
@@ -147,7 +157,7 @@ function summarizeMovements(movements){
 
 
 function myMovements() {
-  Logger.log(summarizeMovements(['96']))
+  Logger.log(summarizeMovements(['8072']))
 }
 
 function testUpdateMovementsInCache() {

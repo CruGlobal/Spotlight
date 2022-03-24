@@ -390,7 +390,7 @@ async function hashchanged(){
           time += 2000;
         }
       }
-      window.statSummary.groupNum = null;
+      //window.statSummary.groupNum = null;
     }
     else {
       location.hash = '#';
