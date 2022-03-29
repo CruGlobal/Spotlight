@@ -67,24 +67,42 @@ function testmyPhone(){
   Logger.log(gatherUserInfo(8453320550))
 }
 
-function updateUserInCache(e){
+function updateUserInCache(phone, mvmnts, replace=true){
   //check to see if the phone is already registered.
-  let user = getUser(e.parameter.phone);
+  let user = getUser(phone);
   if(!user){
     return false;
   }
-  
   //ok, we do have the user in our cache - time to update them.
-  var lock = LockService.getPublicLock();
-  lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
+  if(replace){ //default when onboarding
+    var lock = LockService.getPublicLock();
+    lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
 
-  let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
-  users[e.parameter.phone].mvmnts = e.parameter.mvmnts; //JS object with key as mvmntID, and value is last update.
+    let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
 
-  SCRIPT_PROP.setProperty("users", JSON.stringify(users));
-  lock.releaseLock();
-  
-  return gatherUserInfo(e.parameter.phone);
+    users[phone].mvmnts = mvmnts; //JS object with key as mvmntID, and value is last update.
+
+    SCRIPT_PROP.setProperty("users", JSON.stringify(users));
+    lock.releaseLock();
+    
+    return gatherUserInfo(phone);
+  }
+  else { //when we are saving our movement responses to cache, already have a waitlock
+    let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
+
+    mvmntOb = JSON.parse(users[phone].mvmnts);
+
+    for(obKey of Object.keys(mvmntOb)){
+      if(mvmnts[obKey]){
+        mvmntOb[obKey] = mvmnts[obKey];
+      }
+    }
+
+    users[phone].mvmnts = JSON.stringify(mvmntOb)
+    SCRIPT_PROP.setProperty("users", JSON.stringify(users));
+    
+    return true;
+  }
 }
 
 function gatherUserInfo(phone){
@@ -138,7 +156,7 @@ function saveUser(e) {
       // loop through the header columns
       for (i in headers){
         if (headers[i] == "Timestamp"){ // special case if you include a 'Timestamp' column
-          row.push(new Date());
+          row.push(GoogleDate(new Date()));
         } else { // else use header name to get data
           row.push(e.parameter[headers[i]]);
         }

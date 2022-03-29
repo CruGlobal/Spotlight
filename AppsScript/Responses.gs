@@ -3,31 +3,52 @@ function saveResponseToCache(e){
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
 
   for(form of formSubs){
-    form.push(['Timestamp',new Date()]);
+    form.push(['Timestamp',GoogleDate(new Date())]);
   }
 
-  let success = false;
+  let result = false;
   
   //locking to be sure that we don't overwrite the same variable twice.  
   let lock = LockService.getPublicLock();
   lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
 
   try {
+    //FIRST write Response Cache
     let responseCache = (JSON.parse(SCRIPT_PROP.getProperty('responseCache')) || []);
     responseCache.push(...formSubs);
     SCRIPT_PROP.setProperty('responseCache',JSON.stringify(responseCache));
 
-    updateMovementsInCache(formSubs); 
+    //get reference tables, used in updateMovements, SummarizeMovements, and GatherUser
+    let strategies = getStrategies();
+    let teams = getTeams();
+    let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
 
+    //SECOND Update movements in Cache
+    updateMovementsInCache(formSubs, strategies, teams, global); 
+
+    //THIRD Update user profile information
+    let movements = e.parameters.movementId;
+    let mvmnts = {};
+    for(movement of movements){
+      mvmnts[movement] = new Date().toLocaleString().split(',')[0];
+    }
+    updateUserInCache(phone, mvmnts, false);  //WORK HERE NEXT!!!!
     lock.releaseLock();
 
-    success = phone;
+    //FOURTH Summarize movements
+    let summary = summarizeMovements(movements, strategies, teams, global);
+
+    //FITH Gather user information
+    let userInfo = gatherUserInfo(phone);
+
+    result = {'summary': summary, 'userInfo': userInfo};
     
   } catch (error) {
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
     lock.releaseLock();
   }
-  return success;
+  Logger.log(JSON.stringify(result));
+  return result;
 }
 
 function testResponseCache(){

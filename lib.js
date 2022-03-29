@@ -110,11 +110,10 @@ async function requestUser(phone, spin=true){
     data: "requestUser=true&phone="+phone
   }).done(function(data){
     console.log(data);
+//ERROR HANDLING required!!!!!
     let user = data.user;
     setUser(user);
     window.user = user;
-    //$('#startDate').val(user.lastUpdate);
-    //$('.startDate').text(user.lastUpdate);
   });
   if(spin) {stopSpin();}
   return jqxhr;
@@ -333,8 +332,15 @@ async function hashchanged(){
       $('#userPhone').val(user.phone); //hidden field
 
       // set dates for the movement
+      var fourteenDays = new Date(); //used if the date is older than 
+      fourteenDays.setTime(fourteenDays.getTime() - (24*60*60*1000) * 14);
+
       let endDate = new Date().toLocaleString().split(',')[0];
-      let startDate = user.lastUpdate;
+      let startDate = user.mvmnts[movement.id];
+
+      if(new Date(startDate).getTime() < fourteenDays.getTime()){
+        startDate = fourteenDays.toLocaleString().split(',')[0];
+      }
 
       $('#startDate').val(startDate);
       $('.startDate').text(startDate);
@@ -527,10 +533,10 @@ async function submitLocationForm(){
     console.log(data);
     window.statSummary = data.summary;
     location.hash = "#summary";
+    setUser(data.user);
+    window.user = data.user;
   });
-  window.user.lastUpdate = new Date().toLocaleString().split(',')[0];
   window.formSubs = {}; //reset window.formSubs
-  setUser(window.user);
   //THen change the location
   stopSpin();
 }
@@ -547,11 +553,12 @@ function goToNextMovement() {
   if(window.user.movements.length == movement_num + 1){
     movement_num = 0;
     window.formSubs = {};
+    location.hash = "#";
   }
   else{
     movement_num += 1;
+    location.hash = "#locations/"+movement_num+"/"+user.movements[movement_num].id;
   }
-  location.hash = "#locations/"+movement_num+"/"+user.movements[movement_num].id;
 }
 
 function startSpin() {

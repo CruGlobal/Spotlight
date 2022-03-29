@@ -82,3 +82,9 @@ function setGlobalSumsScriptProperty(){
 function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;
 }
+
+function GoogleDate(jSdate) { 
+   var d = new Date(jSdate) ;
+   var googleStart = new Date(Date.UTC(1899,11,30,0,0,0,0)) ; // the starting value for Google
+   return ((d.getTime()  - googleStart.getTime())/60000 - d.getTimezoneOffset()) / 1440 ;
+}

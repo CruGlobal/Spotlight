@@ -2,6 +2,7 @@
   box-sizing: border-box;
   transition: all .25s; 
 	font-family: 'Source Sans Pro', sans-serif;
+	touch-action: manipulation;
 }
 :root {
   --main-color: #FFCF07;

@@ -21,11 +21,17 @@ function setMovementsScriptProperty(){
   SCRIPT_PROP.setProperty("movements", JSON.stringify(moveObjs));
 }
 
-function updateMovementsInCache(responses){
+function updateMovementsInCache(responses, strategies, teams, global){
   let movements = JSON.parse(SCRIPT_PROP.getProperty("movements"));
-  let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
-  let strategies = getStrategies();
-  let teams = getTeams();
+  if(strategies === undefined){
+    strategies = getStrategies();
+  }
+  if(teams === undefined){
+    teams = getTeams();
+  }
+  if(global === undefined){
+    global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
+  }
 
   for(response of responses) {
     let param_ob = {};
@@ -66,6 +72,8 @@ function updateMovementsInCache(responses){
 
   //set changed movement values back to cache  
   SCRIPT_PROP.setProperty("movements", JSON.stringify(movements));
+
+  return true;
 }
 
 function getMovements(movementsList, purpose) {
@@ -93,11 +101,17 @@ function getMovements(movementsList, purpose) {
   return object;
 }
 
-function summarizeMovements(movements){
+function summarizeMovements(movements, strategies, teams, global){
   let summaryMovements = getMovements(movements, 'summary');
-  let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
-  let strategies = getStrategies();
-  let teams = getTeams();
+  if(strategies === undefined){
+    strategies = getStrategies();
+  }
+  if(teams === undefined){
+    teams = getTeams();
+  }
+  if(global === undefined){
+    global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
+  }
 
   let fbID = global.fb
   let g1ID = global.g1
@@ -120,6 +134,7 @@ function summarizeMovements(movements){
     if(stratID.trim() == ''){
       stratID = global.g2;
     }
+    Logger.log(stratID)
     groupNum[stratID] = (groupNum[stratID] || 0) + parseInt(movement.g2);
 
     //TEAM
@@ -153,7 +168,7 @@ function summarizeMovements(movements){
 
 
 function myMovements() {
-  Logger.log(summarizeMovements(['8072']))
+  Logger.log(summarizeMovements(['10959']))
 }
 
 function testUpdateMovementsInCache() {

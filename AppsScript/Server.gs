@@ -2,11 +2,11 @@
 // original gist: https://gist.github.com/willpatera/ee41ae374d3c9839c2d6 
 
 function doGet(e){
-  //SEND movments list
-  if(e.parameter.movements){
+  //SEND movments list ---- USED in Onboarding only
+  if(e.parameter.movements){  
     return sendMovements(e);
   }
-  //SEND onboarding - receives phone number; return movements, name, last date || error - user not found
+  //SEND user - receives phone number; return movements, name, last date || error - user not found
   else if(e.parameter.requestUser){
     return requestUser(e);
   }
@@ -42,7 +42,7 @@ function sendMovements(e) {
   }
 }
 
-//SENDING User's movements, last entered date, name || Not found
+//SENDING User's movements, last entered date, question_rels, etc name || Not found
 function requestUser(e) {
   try {
     let userInfo = gatherUserInfo(e.parameter.phone)
@@ -82,7 +82,7 @@ function registerUser(e){
 
 //SAVE over existing user - receives phone number, movements; returns success, name || error no user found
 function updateUser(e) {
-  let userInfo = updateUserInCache(e);
+  let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts);
   if(userInfo) {
     return ContentService
       .createTextOutput(JSON.stringify({"result":"success", "user": userInfo}))
@@ -97,50 +97,50 @@ function updateUser(e) {
 
 function testSaveForm(){
   let e = {
-    "contentLength": -1,
-    "parameter": {
-        "movementId": "8072",
-        "endDate": "3/24/2022",
-        "personalEvangDec": "0",
-        "personalEvang": "0",
-        "startDate": "",
-        "userPhone": "8453320550",
-        "spiritualConvo": "0",
-        "userName": "Carl Hempel",
-        "holySpiritPres": "0"
-    },
     "parameters": {
-        "personalEvangDec": [
-            "0"
-        ],
-        "movementId": [
-            "8072"
+        "userPhone": [
+            "8453320550"
         ],
         "holySpiritPres": [
             "0"
         ],
-        "personalEvang": [
-            "0"
+        "startDate": [
+            "3/15/2022"
         ],
-        "spiritualConvo": [
+        "endDate": [
+            "3/29/2022"
+        ],
+        "personalEvangDec": [
             "0"
         ],
         "userName": [
             "Carl Hempel"
         ],
-        "userPhone": [
-            "8453320550"
+        "movementId": [
+            "96"
         ],
-        "startDate": [
-            ""
+        "spiritualConvo": [
+            "1"
         ],
-        "endDate": [
-            "3/24/2022"
+        "personalEvang": [
+            "1"
         ]
     },
     "contextPath": "",
-    "queryString": "startDate=&endDate=3%2F24%2F2022&movementId=8072&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0"
-};
+    "contentLength": -1,
+    "queryString": "startDate=3%2F15%2F2022&endDate=3%2F29%2F2022&movementId=96&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=1&personalEvang=1&personalEvangDec=0&holySpiritPres=0",
+    "parameter": {
+        "startDate": "3/15/2022",
+        "endDate": "3/29/2022",
+        "holySpiritPres": "0",
+        "userPhone": "8453320550",
+        "movementId": "96",
+        "personalEvangDec": "0",
+        "personalEvang": "1",
+        "spiritualConvo": "1",
+        "userName": "Carl Hempel"
+    }
+  };
 
   saveForm(e);
 }
@@ -148,17 +148,12 @@ function testSaveForm(){
 //SAVE form data to Responses, return summary for included movements
 function saveForm(e) {
   try {
-    let success = saveResponseToCache(e);
-
-    let movements = e.parameters.movementId;
-    let summary = summarizeMovements(movements);
-
-    let userInfo = gatherUserInfo(success);
+    let success = saveResponseToCache(e);  //uses Lock, will return summarizeMovements and gatherUserInfo
 
     if(success){
       // return json success results
       return ContentService
-        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": summary, 'user': userInfo, 'orig_e': e}))
+        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": success.summary, 'user': success.userInfo, 'orig_e': e}))
         .setMimeType(ContentService.MimeType.JSON);
     }
     else {
