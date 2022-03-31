@@ -2,19 +2,20 @@ function setUserScriptProperty(){
   let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
   let sheet = doc.getSheetByName(USER_SHEET_UPDATE);
   
-  let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 5).getValues();
+  let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 6).getValues();
   let userObjs = {};
   //for each row in the 2d array from getValues();
   for(user of users){
     let userOb = {};
-    userOb.name=user[1];
-    userOb.cat=user[2];
-    userOb.mvmnts=user[3];
-    if(user[4]!= ''){
-      userOb.txtOn=user[4];
+    userOb.tmstmp=GoogleDate(user[0]);
+    userOb.name=user[2];
+    userOb.cat=user[3];
+    userOb.mvmnts=user[4];
+    if(user[5]!= ''){
+      userOb.txtOn=user[5];
     }
 
-    userObjs[user.shift()]=userOb;
+    userObjs[user[1]]=userOb;
   }
 
   SCRIPT_PROP.setProperty("users", JSON.stringify(userObjs));
@@ -49,6 +50,7 @@ function registerUserInCache(e){
 
   //compile our new user information
   let userOb = {};
+  userOb.tmstmp = GoogleDate(new Date());
   userOb.name = e.parameter.name;
   userOb.cat = e.parameter.cat;
 
@@ -64,7 +66,7 @@ function registerUserInCache(e){
 }
 
 function testmyPhone(){
-  Logger.log(gatherUserInfo(8453320550).teams)
+  Logger.log(gatherUserInfo(8453320550).movements)
 }
 
 function updateUserInCache(phone, mvmnts, cat){
@@ -79,7 +81,7 @@ function updateUserInCache(phone, mvmnts, cat){
     lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
 
     let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
-
+    users[phone].tmstmp = GoogleDate(new Date());
     users[phone].mvmnts = mvmnts; //JS object with key as mvmntID, and value is last update.
     users[phone].cat = cat;
 
@@ -98,7 +100,7 @@ function updateUserInCache(phone, mvmnts, cat){
         mvmntOb[obKey] = mvmnts[obKey];
       }
     }
-
+    users[phone].tmstmp = GoogleDate(new Date());
     users[phone].mvmnts = JSON.stringify(mvmntOb)
     SCRIPT_PROP.setProperty("users", JSON.stringify(users));
     
@@ -142,68 +144,53 @@ function gatherUserInfo(phone){
   }
 }
 
-//SAVE new User - receives phone number, name, movements; returns success || error if already registered.
-function saveUser(e) {
+//Save our cached users table to the sheet
+function writeUsersToSheets() {
   var lock = LockService.getPublicLock();
   lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
-  
+
   try {
-    // next set where we write the data - you could write to multiple/alternate destinations
-    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
-    var sheet = doc.getSheetByName(USER_SHEET);
-    
-    //CHECK TO BE SURE PHONE NUMBER IS NOT Already registered.  NEED TO VALIDATE PHONE NUMBER client side and here.
-    e.parameter.phone = e.parameter.phone.replace(/\D/g,'');
-    
-    //for each item in list of users, check if it is the same as the one we received.
-    let users = sheet.getRange(2,1, sheet.getLastRow(), 3).getValues();
-    let newUser = true;     
-    for(i in users){
-        //Logger.log(users[i])
-      if(users[i][0] == e.parameter.phone) {
-        newUser = false;
+    //Full Cache of Users
+    let usersOb = JSON.parse(SCRIPT_PROP.getProperty('users'));
+
+    let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+    let sheet = doc.getSheetByName(USER_SHEET);
+    let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 5).getValues();
+
+    // cycle through our existing users
+    for(i in users){  
+      let userPhone = users[i][1]; //Second column in a row is the phone number
+      try { //let's see if it exists in our data.  If yes then place it there.
+        let userOb = usersOb[userPhone];
+        users[i][0] = userOb.tmstmp;
+        users[i][2] = userOb.name;
+        users[i][3] = userOb.cat;
+        users[i][4] = userOb.mvmnts;
+        delete usersOb[userPhone];
+      } catch {
+        Logger.log('missing user: '+ userPhone + ' in cached data');
       }
-    }    
-   
-    if(newUser){   
-      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-      var nextRow = sheet.getLastRow()+1; // get next row
-      var row = []; 
-      // loop through the header columns
-      for (i in headers){
-        if (headers[i] == "Timestamp"){ // special case if you include a 'Timestamp' column
-          row.push(GoogleDate(new Date()));
-        } else { // else use header name to get data
-          row.push(e.parameter[headers[i]]);
-        }
-      }
-      // more efficient to set values as [][] array than individually
-      sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
-      SpreadsheetApp.flush();
-      setUserScriptProperty();
-      let user = getUser(e.parameter.phone);
-      return ContentService
-            .createTextOutput(JSON.stringify({"result":"success", "user": {'phone':user[0],'name':user[1],'mvmnts':user[2],'lastUpdate':user[3]}}))
-            .setMimeType(ContentService.MimeType.JSON);
     }
-    else {
-      return ContentService
-            .createTextOutput(JSON.stringify({'result':'failure', 'text':'That phone number is already registered'}))
-            .setMimeType(ContentService.MimeType.JSON);
+    //cycle through remaining new users and add to the bottom of the users table
+    for (const [userPhone, userOb] of Object.entries(usersOb)) {
+      let userRow = [];
+      userRow.push(userOb.tmstmp);
+      userRow.push(userPhone);
+      userRow.push(userOb.name);
+      userRow.push(userOb.cat);
+      userRow.push(userOb.mvmnts);
+      users.push(userRow);
     }
-  } catch(e){
-    // if error return this
-    Logger.log(e)
-    return ContentService
-          .createTextOutput(JSON.stringify({"result":"error", "error": e}))
-          .setMimeType(ContentService.MimeType.JSON);
+
+    //Write 2d Data store to sheet
+    sheet.getRange(2, 1, users.length, users[0].length).setValues(users);
+    SpreadsheetApp.flush();
+    setUserScriptProperty();
+
+  // Release Lock
   } finally { //release lock
     lock.releaseLock();
   }
-}
-
-function saveMyUser(){
-  registerUser({"parameter":{"phone":"834242121","name":"Jimmy","movementIds":"12321,12,1231,0"}})
 }
 
 function allUsers() {

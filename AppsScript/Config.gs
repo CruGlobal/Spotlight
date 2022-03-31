@@ -27,7 +27,11 @@ function updateScriptProperties(){
   setTeamsScriptProperty();
   setUserScriptProperty();
   setGlobalSumsScriptProperty();
+  
+  return cacheSize();
+}
 
+function cacheSize() {
   // Get multiple script properties in one call, then log them all.
   var scriptProperties = PropertiesService.getScriptProperties();
   var data = scriptProperties.getProperties();
@@ -40,6 +44,15 @@ function updateScriptProperties(){
   Logger.log(store_size);
   if(store_size > 480000){
     GmailApp.sendEmail('carl.hempel@cru.org','Server script properties are at 480kb!','You should check it out: \n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
+  }
+
+  return store_size;
+}
+
+function clearResponseCacheIfTooBig() {
+  if(cacheSize() > 400000) {
+    writeCacheToSheets();
+    GmailApp.sendEmail('carl.hempel@cru.org','Wrote Response Cache to sheets','New size is: '+cacheSize()+'\n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
   }
 }
 

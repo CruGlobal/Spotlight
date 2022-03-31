@@ -97,7 +97,7 @@ function testResponseCache(){
     "contentLength": -1,
     "queryString": "startDate=&endDate=3%2F24%2F2022&movementId=96&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=4&personalEvang=1&personalEvangDec=1&holySpiritPres=0"
 }
-  Logger.log(saveResponseToCache(e))
+  //Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){
@@ -118,8 +118,8 @@ function writeCacheToSheets(){
 
     let missing_params = [];
     //first loop through each sub and make sure that all headers are present.
+    let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     for(sub of formSubs){
-      let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       let param_ob = {};
       
       //create param_ob and add headers if missing
@@ -138,8 +138,8 @@ function writeCacheToSheets(){
     let formattedSubs = [];
 
     //then loop through each submission and build array to save to the sheet.
+    headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     for(sub of formSubs){
-      let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       let param_ob = {};
 
       for(param of sub){
@@ -161,8 +161,8 @@ function writeCacheToSheets(){
     sheet.getRange(nextRow, 1, formattedSubs.length, formattedSubs[0].length).setValues(formattedSubs);
     
     SpreadsheetApp.flush();
-    //setMovementsScriptProperty();
-    //SCRIPT_PROP.deleteProperty('responseCache');
+    setMovementsScriptProperty();
+    SCRIPT_PROP.deleteProperty('responseCache');
 
   } catch(error){
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));

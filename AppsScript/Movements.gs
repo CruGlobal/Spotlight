@@ -168,7 +168,7 @@ function summarizeMovements(movements, strategies, teams, global){
 
 
 function myMovements() {
-  Logger.log(getMovements(['8072'],'summary'))
+  Logger.log(summarizeMovements([96]))
 }
 
 function testUpdateMovementsInCache() {
