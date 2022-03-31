@@ -86,14 +86,14 @@ async function registerUser(name, phone, mvmnts, cat){
   stopSpin();
   return jqxhr;
 }
-async function updateUser(phone, mvmnts){
+async function updateUser(phone, mvmnts, cat){
   startSpin();
   phone = phone.replace(/\D/g,'');
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "updateUser=true&phone="+phone+"&mvmnts="+JSON.stringify(mvmnts)
+    data: "updateUser=true&phone="+phone+"&mvmnts="+JSON.stringify(mvmnts)+"&cat="+cat
   }).done(function(data){
     console.log(data);
     setUser(data.user);
@@ -305,7 +305,15 @@ async function hashchanged(){
         let helpText='';
         if(user.questionRels[question.id] && user.questionRels[question.id].lessThan){
           helpText = user.questionRels[question.id].lessThan;
-          helpText = helpText.map(vari => strategy.questions.filter(item => item.id == vari)[0].name);
+          let newHelp = [];
+          for(i = 0; i < helpText.length; i++){
+            try {
+              newHelp.push(strategy.questions.filter(item => item.id == helpText[i])[0].name);
+            }
+            catch {
+            }
+          }
+          helpText = newHelp;
           helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1');
         }
         statsListContent += `<div class="statsListLeft">
@@ -317,6 +325,26 @@ async function hashchanged(){
           <input id="${question.id}" name="${question.id}" type="number" min="0" max="100" step="1" inputmode="numeric" value="0">
           <span class="inc button">+</span>
         </div>`;
+      }
+      //WORKING HERE to add Team Questions.  Will need to send team table, and what teamid in user.movements
+      for(i = 1; i <= 3; i++){
+        try {
+          let teamQ = user.teams[movement.tID]['teamQ'+i].trim().replace(/^.*Ͱ/,'');
+          if(teamQ != ''){
+            statsListContent += `<div class="statsListLeft">
+              <label for="teamQ${i}">${teamQ}</label>
+              <span rel="tooltip" title="${teamQ.replace(/"/g,"'")}">i</span>
+            </div>
+            <div class="statsListRight">
+              <span class="dec button">-</span>
+              <input id="teamQ${i}" name="teamQ${i}" type="number" min="0" max="100" step="1" inputmode="numeric" value="0">
+              <span class="inc button">+</span>
+            </div>`;
+          }
+        } 
+        catch {
+          
+        }
       }
 
       document.getElementById('statsList').innerHTML = statsListContent;
@@ -454,7 +482,7 @@ async function processOnboardForm(e) {
     }
     //OR we overwrite the existing.
     else {
-      let result = await updateUser(user.phone, user.mvmnts);
+      let result = await updateUser(user.phone, user.mvmnts, user.cat);
       if(result.result == "success"){
         console.log(result)
       }
@@ -481,10 +509,8 @@ async function processOnboardForm(e) {
   location.hash = "#";
 
   //clear form
-  phoneEl.value = '';
-  nameEl.value = '';
-  accountEl.value = '';
-  $('input[type="checkbox"]').prop('checked', false);
+  document.getElementById('onboard-form').reset();
+  document.getElementById('staffAcct').removeAttribute('required');
 
   return false;
 }
@@ -509,7 +535,6 @@ function processLocationForm(submit) {
   //clear form
   $('input[type="checkbox"]').prop('checked', false);
   $('input[type="number"]').val(0);
-  $('input[type="tel"]').val(0);
 
   //clear notification
   $('#notification').remove();

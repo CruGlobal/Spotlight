@@ -64,23 +64,24 @@ function registerUserInCache(e){
 }
 
 function testmyPhone(){
-  Logger.log(gatherUserInfo(8453320550))
+  Logger.log(gatherUserInfo(8453320550).teams)
 }
 
-function updateUserInCache(phone, mvmnts, replace=true){
+function updateUserInCache(phone, mvmnts, cat){
   //check to see if the phone is already registered.
   let user = getUser(phone);
   if(!user){
     return false;
   }
   //ok, we do have the user in our cache - time to update them.
-  if(replace){ //default when onboarding
+  if(cat){ //default when onboarding
     var lock = LockService.getPublicLock();
     lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
 
     let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
 
     users[phone].mvmnts = mvmnts; //JS object with key as mvmntID, and value is last update.
+    users[phone].cat = cat;
 
     SCRIPT_PROP.setProperty("users", JSON.stringify(users));
     lock.releaseLock();
@@ -114,9 +115,24 @@ function gatherUserInfo(phone){
     //need to get movements table, look up our movement id's and get the unique set of strategies that are related to them.
     let userMvmntsIds = Object.keys(userInfo.mvmnts);
     let movements = getMovements(userMvmntsIds);
-    let strategiesList = movements.map(mvmnt => mvmnt.strat);
 
-    userInfo.strategies = getStrategies(strategiesList); //get's the unique strategies as a list
+    let strategiesList = movements.map(mvmnt => mvmnt.strat);
+    let userCat = userInfo.cat;
+    if(userCat == '!staff'){
+      userCat = 'non-staff';
+    }
+    userInfo.strategies = getStrategies(strategiesList, userCat); //get's the unique strategies as a list
+
+    let teamsList = movements.map(mvmnt => mvmnt.tID ).filter(onlyUnique);
+    if(userCat == 'staff'){
+      userCat = 'S';
+    } else if(userCat == 'non-staff') {
+      userCat = 'N';
+    } else {
+      userCat = 'B';
+    }
+    userInfo.teams = getTeams(teamsList, userCat);
+
     userInfo.movements = movements;
     
     return userInfo;
@@ -171,7 +187,6 @@ function saveUser(e) {
             .setMimeType(ContentService.MimeType.JSON);
     }
     else {
-      Logger.log('hi')
       return ContentService
             .createTextOutput(JSON.stringify({'result':'failure', 'text':'That phone number is already registered'}))
             .setMimeType(ContentService.MimeType.JSON);

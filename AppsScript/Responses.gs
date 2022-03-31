@@ -32,7 +32,7 @@ function saveResponseToCache(e){
     for(movement of movements){
       mvmnts[movement] = new Date().toLocaleString().split(',')[0];
     }
-    updateUserInCache(phone, mvmnts, false);  //WORK HERE NEXT!!!!
+    updateUserInCache(phone, mvmnts, false); 
     lock.releaseLock();
 
     //FOURTH Summarize movements
@@ -47,7 +47,6 @@ function saveResponseToCache(e){
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
     lock.releaseLock();
   }
-  Logger.log(JSON.stringify(result));
   return result;
 }
 

@@ -19,7 +19,7 @@ function setTeamsScriptProperty(){
   SCRIPT_PROP.setProperty("teams", JSON.stringify(teamObjs));
 }
 
-function getTeams(teamsList) {
+function getTeams(teamsList, userCat) {
   let teams = JSON.parse(SCRIPT_PROP.getProperty('teams'));
   let object = {};
   
@@ -28,7 +28,20 @@ function getTeams(teamsList) {
   }
   else {
     for(team of teamsList){
-      object[team] = teams[team]
+      let teamOb = teams[team];
+      if(userCat){
+        for(i = 1; i <= 3; i++){  // Need to filter out questions that don't apply to this user
+          let question = teamOb['teamQ'+i]
+          if(question != null){ //sometimes there's no question
+            let questionUser = question.match('^.*Ͱ');
+            if(question == '' || (questionUser[0].indexOf(userCat) < 0 && questionUser[0].indexOf('B') < 0) ){
+              delete teamOb['teamQ'+i];
+            }
+            else teamOb['teamQ'+i] = teamOb['teamQ'+i].replace(/^.*Ͱ/,'');
+          }
+        }
+      }
+      object[team] = teamOb;
     }
   }
   

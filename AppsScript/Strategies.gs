@@ -29,13 +29,14 @@ function setStrategiesScriptProperty(){
   SCRIPT_PROP.setProperty("strategies", JSON.stringify(stratObjs));
 }
 
-function getStrategies(strategiesList) {
+function getStrategies(strategiesList, userCat) {
   let strategies = JSON.parse(SCRIPT_PROP.getProperty('strategies'));
  
   if(strategiesList !== undefined){
     let subset = {};
     for(strategy of strategiesList){
       subset[strategy] = strategies[strategy];
+      subset[strategy].questions = subset[strategy].questions.filter(question => ['','both',userCat].indexOf(question.users.toLowerCase()) > -1);
     }
     strategies = subset;
   }

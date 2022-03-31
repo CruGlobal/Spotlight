@@ -91,7 +91,8 @@ function getMovements(movementsList, purpose) {
         let mvmnt = {};
         mvmnt.id = mvmntIn;                         //id
         mvmnt.name = movements[mvmntIn].name;       //name
-        mvmnt.strat = movements[mvmntIn].strat;  //strategy
+        mvmnt.strat = movements[mvmntIn].strat;     //strategy
+        mvmnt.tID = movements[mvmntIn].tID;         //team ID
         object.push(mvmnt);
       }
     } catch(e) {
@@ -134,7 +135,6 @@ function summarizeMovements(movements, strategies, teams, global){
     if(stratID.trim() == ''){
       stratID = global.g2;
     }
-    Logger.log(stratID)
     groupNum[stratID] = (groupNum[stratID] || 0) + parseInt(movement.g2);
 
     //TEAM
@@ -168,7 +168,7 @@ function summarizeMovements(movements, strategies, teams, global){
 
 
 function myMovements() {
-  Logger.log(summarizeMovements(['10959']))
+  Logger.log(getMovements(['8072'],'summary'))
 }
 
 function testUpdateMovementsInCache() {

@@ -82,7 +82,7 @@ function registerUser(e){
 
 //SAVE over existing user - receives phone number, movements; returns success, name || error no user found
 function updateUser(e) {
-  let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts);
+  let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts, e.parameter.cat);
   if(userInfo) {
     return ContentService
       .createTextOutput(JSON.stringify({"result":"success", "user": userInfo}))
