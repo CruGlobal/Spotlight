@@ -524,6 +524,7 @@ span[rel="tooltip"] {
 }
  
 #tooltip:after { /* triangle decoration */
+  pointer-events: none;
 	width: 0;
 	height: 0;
 	border-left: 10px solid transparent;

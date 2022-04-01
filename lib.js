@@ -657,12 +657,7 @@ function setToolTips() {
            .appendTo( 'body' );
 
     var init_tooltip = function() {
-      if( $( window ).width() < tooltip.outerWidth() * 1.5 ) {
-        tooltip.css( 'max-width', $( window ).width() / 2 );
-      }
-      else {
-        tooltip.css( 'max-width', 340 );
-      }
+      tooltip[0].style.maxWidth= `min(${$( window ).width() / 1.2}px, 340px)`;
 
       var pos_left = target.offset().left + ( target.outerWidth() / 2 ) - ( tooltip.outerWidth() / 2 );
       var pos_top  = target.offset().top - tooltip.outerHeight() - 20;
@@ -705,6 +700,8 @@ function setToolTips() {
 
       target.attr( 'title', tip );
     };
+  
+    $( '#locations' ).scroll( remove_tooltip );
 
     target.bind( 'mouseleave', remove_tooltip );
     tooltip.bind( 'click', remove_tooltip );
