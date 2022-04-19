@@ -594,7 +594,7 @@ function stopSpin() {
 }
 
 function setCalendarReminder(){
-  let details = encodeURI("Time to celebrate what God is doing on your campus with your team!\n\nhttps://carlhemp.github.io/StatsCollector/");
+  let details = encodeURI("Time to celebrate what God is doing on your campus with your team!\n\nhttps://cruglobal.github.io/Spotlight/");
   //get's the next selected date
   var d = new Date();
   d.setDate(d.getDate() + (parseInt($('input[name="weekday"]:checked').val()) + 7 - d.getDay()) % 7);
