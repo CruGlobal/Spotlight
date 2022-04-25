@@ -662,7 +662,7 @@ function setToolTips() {
       var pos_left = target.offset().left + ( target.outerWidth() / 2 ) - ( tooltip.outerWidth() / 2 );
       var pos_top  = target.offset().top - tooltip.outerHeight() - 20;
 
-      if( pos_left < 0 )
+     /* if( pos_left < 0 )
       {
         pos_left = target.offset().left + target.outerWidth() / 2 - 20;
         tooltip.addClass( 'left' );
@@ -677,7 +677,7 @@ function setToolTips() {
       }
       else {
         tooltip.removeClass( 'right' );
-      }
+      }*/
 
       if( pos_top < 0 ) {
         var pos_top  = target.offset().top + target.outerHeight();
