@@ -123,6 +123,7 @@ h1 {
 .statsListLeft {
 	white-space: nowrap;
 	overflow: hidden;
+	white-space: normal;
 }
 .statsListLeft label {
 	text-overflow: ellipsis;
@@ -515,6 +516,7 @@ span[rel="tooltip"] {
   user-select: none;
 }
 #tooltip {
+  pointer-events: none;
   text-align: center;
   color: #fff;
   background: var(--tooltip-color);
