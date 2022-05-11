@@ -44,8 +44,8 @@ function saveResponseToCache(e){
     global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
 
     //SECOND Update movements in Cache
-    updateMovementsInCache(formSubs, strategies, teams, global); 
-
+    updateMovementsInCache(formSubs, strategies, teams, global);
+    
     //THIRD Update user profile information
     let movements = e.parameters.movementId;
     let mvmnts = {};
@@ -96,7 +96,7 @@ function saveResponseToCache(e){
 You've got new comments for your question: "${question}"\n`;
 
     for(story of teamStories[teamID]){
-      body += `- ${movements[story[0]].name}(${users[phone].name}): ${decodeURI(story[1]).replace('%2C',',')}\n`;
+      body += `- ${movements[story[0]].name}(${users[phone].name}): ${decodeURIComponent(story[1])}\n`;
     }
     body += '\n - Spotlight'
 
@@ -132,7 +132,7 @@ function testResponseCache(){
             "0"
         ],
         "teamQ1": [
-            "0"
+            "1"
         ],
         "media": [
             "0"
@@ -174,7 +174,7 @@ function testResponseCache(){
             "0"
         ]
     },
-    "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=0&storyBox=Jimmy%2C%20Bifor",
+    "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=1&storyBox=Jimmy%2C%20Bifor",
     "contentLength": -1
 }
   Logger.log(saveResponseToCache(e))
