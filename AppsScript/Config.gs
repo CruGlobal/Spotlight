@@ -18,6 +18,20 @@ var SCRIPT_PROP = PropertiesService.getScriptProperties(); // new property servi
 function setup() {
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     SCRIPT_PROP.setProperty("key", doc.getId());
+
+    //Install SM form
+    var form = FormApp.openById('1jV9A3_h4U2qvy4ohksEjwLmOp6HG0GICy1PnsuoZx7k');
+    ScriptApp.newTrigger('updateAutoScriptProperties')
+    .forForm(form)
+    .onFormSubmit()
+    .create();
+
+    //install Campus form
+    form = FormApp.openById('1lfG0JOC0Lr3rhQvprCiXy7EsPoV7ZY-EDrDt2qa235U');
+    ScriptApp.newTrigger('updateAutoScriptProperties')
+    .forForm(form)
+    .onFormSubmit()
+    .create();
 }
 
 function updateScriptProperties(){
@@ -29,6 +43,15 @@ function updateScriptProperties(){
   setGlobalSumsScriptProperty();
   
   return cacheSize();
+}
+
+function updateAutoScriptProperties() {
+  setGlobalSumsScriptProperty();
+  setTeamsScriptProperty();
+  setStrategiesScriptProperty();
+  writeCacheToSheets();
+  writeUsersToSheets();
+  setMovementsScriptProperty();
 }
 
 function cacheSize() {
