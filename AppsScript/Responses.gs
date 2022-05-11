@@ -13,7 +13,7 @@ function saveResponseToCache(e){
       if(storyBox != ''){
         //Now we need to email the right person.
         let movement = formSub.match(movementRegex)[0].replace('&','').replace('movementId=','');
-        listOfStories.push([movement,storyBox]);
+        listOfStories.push([movement,storyBox,phone]);
       }
     }
   }
@@ -30,18 +30,22 @@ function saveResponseToCache(e){
   //locking to be sure that we don't overwrite the same variable twice.  
   let lock = LockService.getPublicLock();
   lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
-  let strategies, teams, global;
 
   try {
+    //store story cache
+    let storyCache = (JSON.parse(SCRIPT_PROP.getProperty('storyCache')) || []);
+    storyCache.push(...listOfStories);
+    SCRIPT_PROP.setProperty('storyCache',JSON.stringify(storyCache));
+
     //FIRST write Response Cache
     let responseCache = (JSON.parse(SCRIPT_PROP.getProperty('responseCache')) || []);
     responseCache.push(...formSubs);
     SCRIPT_PROP.setProperty('responseCache',JSON.stringify(responseCache));
 
     //get reference tables, used in updateMovements, SummarizeMovements, and GatherUser
-    strategies = getStrategies();
-    teams = getTeams();
-    global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
+    let strategies = getStrategies();
+    let teams = getTeams();
+    let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
 
     //SECOND Update movements in Cache
     updateMovementsInCache(formSubs, strategies, teams, global);
@@ -67,11 +71,17 @@ function saveResponseToCache(e){
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
     lock.releaseLock();
   }
+  return result;
+}
 
+function emailTeamStories(){
   //Now send emails to the team leaders.
   let teamStories = {};
   let movements = JSON.parse(SCRIPT_PROP.getProperty("movements"));
+  let teams = getTeams();
   let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
+  let listOfStories = JSON.parse(SCRIPT_PROP.getProperty('storyCache')) || [];
+
   for(story of listOfStories){  //need to associate the stories with a team and it's associated email address
     try {
       let teamID = movements[story[0]].tID;
@@ -89,25 +99,34 @@ function saveResponseToCache(e){
     let storyBox = teams[teamID].storyBox;
     let teamName = teams[teamID].name;
     let email = storyBox.match(/Ͱ.*?ͱ/)[0].replace(/Ͱ|ͱ/g,'');
-    let subject = 'StoryBox: ' + teamName
+    let subject = 'StoryBox: ' + teamName + ' as of ' + new Date().toLocaleDateString();
     let question = storyBox.replace(/^.*ͱ/,'');
     let body = `Hi ${teamName},
 
 You've got new comments for your question: "${question}"\n`;
 
     for(story of teamStories[teamID]){
-      body += `- ${movements[story[0]].name}(${users[phone].name}): ${decodeURIComponent(story[1])}\n`;
+      let movementId = story[0];
+      let storyTxt = story[1];
+      let phone = story[2];
+      body += `- ${movements[movementId].name}(${users[phone].name}): ${decodeURIComponent(storyTxt)}\n`;
     }
     body += '\n - Spotlight'
 
     GmailApp.sendEmail(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
   }
 
-  return result;
+  SCRIPT_PROP.deleteProperty('storyCache');
+
+  return;
+}
+
+function testStoryCache(){
+  Logger.log(SCRIPT_PROP.getProperty('storyCache'));
 }
 
 function testResponseCache(){
-  Logger.log(SCRIPT_PROP.getProperty('responseCache'))
+  Logger.log(SCRIPT_PROP.getProperty('responseCache'));
   let e = {
     "parameter": {
         "groupEvangDec": "0",
