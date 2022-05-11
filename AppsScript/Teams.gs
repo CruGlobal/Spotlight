@@ -2,7 +2,7 @@ function setTeamsScriptProperty(){
   let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
   let sheet = doc.getSheetByName(TEAM_SHEET);
 
-  let teams = sheet.getRange(2,1,getLastRow(sheet) - 2,sheet.getLastColumn()).getValues();
+  let teams = sheet.getRange(2,1,getLastRow(sheet) - 1,sheet.getLastColumn()).getValues();
   let teamObjs = {};
   //for each row in the 2d array from getValues();
   for(team of teams){
@@ -12,6 +12,7 @@ function setTeamsScriptProperty(){
     teamOb.teamQ2=team[3];
     teamOb.teamQ3=team[4];
     teamOb.teamSum=team[5];
+    teamOb.storyBox=team[6];
 
     teamObjs[team.shift()]=teamOb;
   }
@@ -34,20 +35,28 @@ function getTeams(teamsList, userCat) {
           let question = teamOb['teamQ'+i]
           if(question != null){ //sometimes there's no question
             let questionUser = question.match('^.*Ͱ');
-            if(question == '' || (questionUser[0].indexOf(userCat) < 0 && questionUser[0].indexOf('B') < 0) ){
+            if(question == '' || (questionUser[0].indexOf(userCat) < 0 && questionUser[0].indexOf('B') < 0) ){ //make sure it applies to our user
               delete teamOb['teamQ'+i];
             }
             else teamOb['teamQ'+i] = teamOb['teamQ'+i].replace(/^.*Ͱ/,'');
           }
         }
+        //Storybox code
+        let storyBox = teamOb.storyBox;
+        let questionUser = storyBox.match('^.*Ͱ');
+        if(storyBox == '' || (questionUser[0].indexOf(userCat) < 0 && questionUser[0].indexOf('B') < 0) ){ //make sure it applies to our user
+          delete teamOb.storyBox;
+        }
+        else {
+          teamOb.storyBox = teamOb.storyBox.replace(/^.*ͱ/,'');
+        }
       }
       object[team] = teamOb;
     }
   }
-  
   return object;
 }
 
 function testTeams() {
-  Logger.log(getTeams())
+  Logger.log(getTeams(['sm453'],'S'))
 }

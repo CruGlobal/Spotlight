@@ -350,6 +350,17 @@ async function hashchanged(){
       document.getElementById('statsList').innerHTML = statsListContent;
       setToolTips();
 
+      let storyBox = user.teams[movement.tID].storyBox;
+      let storyBoxContent = '';
+      if(storyBox) {
+        storyBoxContent += `<label for="storyBox">${storyBox}</label><br>
+        <div class="grow-wrap">
+          <textarea id="storyBox" style="width: 100%" name="storyBox" onInput="this.parentNode.dataset.replicatedValue = this.value"></textarea>
+        </div>`
+        
+      }
+      document.getElementById('storyBoxContainer').innerHTML = storyBoxContent;
+      
       let prefix = '';
       if(user.movements.length > 1){
         prefix = (movement_num + 1)+"/"+user.movements.length+" ";

@@ -1,6 +1,25 @@
 function saveResponseToCache(e){
-  let formSubs = e.queryString.split('+').map(form => form.split('&').map(param => [param.split('=')[0],decodeURIComponent(param.split('=')[1])]));
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
+  let formSubs = e.queryString.split('+');
+
+  var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
+  var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
+
+  let listOfStories = [];
+  for(formSub of formSubs){
+    let storyBox = formSub.match(storyRegex);
+    if(storyBox){ //there's a match, and the match isn't empty
+      storyBox = storyBox[0].replace('&','').replace('storyBox=','');
+      if(storyBox != ''){
+        //Now we need to email the right person.
+        let movement = formSub.match(movementRegex)[0].replace('&','').replace('movementId=','');
+        listOfStories.push([movement,storyBox]);
+      }
+    }
+  }
+    
+  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '')); //remove all our storyBox entries.
+  formSubs = formSubs.map(form => form.split('&').map(param => [param.split('=')[0],decodeURIComponent(param.split('=')[1])]));
 
   for(form of formSubs){
     form.push(['Timestamp',GoogleDate(new Date())]);
@@ -11,6 +30,7 @@ function saveResponseToCache(e){
   //locking to be sure that we don't overwrite the same variable twice.  
   let lock = LockService.getPublicLock();
   lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
+  let strategies, teams, global;
 
   try {
     //FIRST write Response Cache
@@ -19,9 +39,9 @@ function saveResponseToCache(e){
     SCRIPT_PROP.setProperty('responseCache',JSON.stringify(responseCache));
 
     //get reference tables, used in updateMovements, SummarizeMovements, and GatherUser
-    let strategies = getStrategies();
-    let teams = getTeams();
-    let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
+    strategies = getStrategies();
+    teams = getTeams();
+    global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
 
     //SECOND Update movements in Cache
     updateMovementsInCache(formSubs, strategies, teams, global); 
@@ -47,57 +67,117 @@ function saveResponseToCache(e){
     MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
     lock.releaseLock();
   }
+
+  //Now send emails to the team leaders.
+  let teamStories = {};
+  let movements = JSON.parse(SCRIPT_PROP.getProperty("movements"));
+  let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
+  for(story of listOfStories){  //need to associate the stories with a team and it's associated email address
+    try {
+      let teamID = movements[story[0]].tID;
+      if(!teamStories[teamID]){ //make sure we have a defined team in the teamStories object
+        teamStories[teamID] = [];
+      }
+      teamStories[teamID].push(story);
+    }
+    catch {
+
+    }
+  }
+  //then send all the stories for each team.  We don't assume that all movements in a submission are associated with the same team.
+  for(teamID of Object.keys(teamStories)) {
+    let storyBox = teams[teamID].storyBox;
+    let teamName = teams[teamID].name;
+    let email = storyBox.match(/Ͱ.*?ͱ/)[0].replace(/Ͱ|ͱ/g,'');
+    let subject = 'StoryBox: ' + teamName
+    let question = storyBox.replace(/^.*ͱ/,'');
+    let body = `Hi ${teamName},
+
+You've got new comments for your question: "${question}"\n`;
+
+    for(story of teamStories[teamID]){
+      body += `- ${movements[story[0]].name}(${users[phone].name}): ${decodeURI(story[1]).replace('%2C',',')}\n`;
+    }
+    body += '\n - Spotlight'
+
+    GmailApp.sendEmail(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  }
+
   return result;
 }
 
 function testResponseCache(){
   Logger.log(SCRIPT_PROP.getProperty('responseCache'))
   let e = {
+    "parameter": {
+        "groupEvangDec": "0",
+        "groupEvang": "0",
+        "storyBox": "Jimmy, Bifor",
+        "userName": "Carl",
+        "endDate": "5/11/2022",
+        "holySpiritPres": "0",
+        "personalEvang": "0",
+        "personalEvangDec": "0",
+        "movementId": "sm453",
+        "mediaDec": "0",
+        "userPhone": "8453320550",
+        "media": "0",
+        "teamQ1": "0",
+        "startDate": "5/10/2022",
+        "spiritualConvo": "0"
+    },
+    "contextPath": "",
     "parameters": {
-        "movementId": [
-            "96"
+        "groupEvangDec": [
+            "0"
         ],
-        "personalEvang": [
-            "1"
+        "teamQ1": [
+            "0"
         ],
-        "userName": [
-            "Carl Hempel"
-        ],
-        "startDate": [
-            ""
-        ],
-        "userPhone": [
-            "8453320550"
+        "media": [
+            "0"
         ],
         "holySpiritPres": [
             "0"
         ],
+        "personalEvangDec": [
+            "0"
+        ],
+        "mediaDec": [
+            "0"
+        ],
         "spiritualConvo": [
-            "4"
+            "0"
+        ],
+        "userPhone": [
+            "8453320550"
+        ],
+        "userName": [
+            "Carl"
         ],
         "endDate": [
-            "3/24/2022"
+            "5/11/2022"
         ],
-        "personalEvangDec": [
-            "1"
+        "startDate": [
+            "5/10/2022"
+        ],
+        "groupEvang": [
+            "0"
+        ],
+        "movementId": [
+            "sm453"
+        ],
+        "storyBox": [
+            "Jimmy, Bifor"
+        ],
+        "personalEvang": [
+            "0"
         ]
     },
-    "contextPath": "",
-    "parameter": {
-        "startDate": "",
-        "spiritualConvo": "4",
-        "personalEvangDec": "1",
-        "personalEvang": "1",
-        "movementId": "96",
-        "userName": "Carl Hempel",
-        "holySpiritPres": "0",
-        "userPhone": "8453320550",
-        "endDate": "3/24/2022"
-    },
-    "contentLength": -1,
-    "queryString": "startDate=&endDate=3%2F24%2F2022&movementId=96&userName=Carl%20Hempel&userPhone=8453320550&spiritualConvo=4&personalEvang=1&personalEvangDec=1&holySpiritPres=0"
+    "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=0&storyBox=Jimmy%2C%20Bifor",
+    "contentLength": -1
 }
-  //Logger.log(saveResponseToCache(e))
+  Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){
@@ -107,18 +187,19 @@ function writeCacheToSheets(){
   // we want a public lock, one that locks for all invocations
   let lock = LockService.getPublicLock();
   
-  try {
-    // set where we write the data - you could write to multiple/alternate destinations
-    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
-    var sheet = doc.getSheetByName(RESPONSE_SHEET);
+  // set where we write the data - you could write to multiple/alternate destinations
+  var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  var sheet = doc.getSheetByName(RESPONSE_SHEET);
 
-    lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
+  lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
 
-    let formSubs = JSON.parse(SCRIPT_PROP.getProperty('responseCache'));
+  let formSubs = JSON.parse(SCRIPT_PROP.getProperty('responseCache'));
 
+  if(formSubs){    
     let missing_params = [];
     //first loop through each sub and make sure that all headers are present.
     let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
     for(sub of formSubs){
       let param_ob = {};
       
@@ -164,9 +245,6 @@ function writeCacheToSheets(){
     setMovementsScriptProperty();
     SCRIPT_PROP.deleteProperty('responseCache');
 
-  } catch(error){
-    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
-  } finally { //release lock
-    lock.releaseLock();
   }
+  lock.releaseLock();
 }

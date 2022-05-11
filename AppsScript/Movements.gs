@@ -168,7 +168,7 @@ function summarizeMovements(movements, strategies, teams, global){
 
 
 function myMovements() {
-  Logger.log(summarizeMovements([96]))
+  Logger.log(SCRIPT_PROP.getProperty("movements"));
 }
 
 function testUpdateMovementsInCache() {
