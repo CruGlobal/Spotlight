@@ -55,14 +55,8 @@ function updateMovementsInCache(responses, strategies, teams, global){
     //need to know which team for this movement
     let team = teams[movements[param_ob.movementId].tID];
     let team_summary_id = '';
-    if(team.teamQ1.indexOf('՜') > -1) {
-      team_summary_id = 'teamQ1';
-    }
-    else if(team.teamQ2.indexOf('՜') > -1) {
-      team_summary_id = 'teamQ2';
-    }
-    else if(team.teamQ3.indexOf('՜') > -1) {
-      team_summary_id = 'teamQ3';
+    if(team.teamSum != '') {
+      team_summary_id = team.teamSum;
     }
     else {
       team_summary_id = global.g3;
@@ -87,7 +81,7 @@ function getMovements(movementsList, purpose) {
         let mvmnt = movements[mvmntIn];
         mvmnt.id = mvmntIn;
         object.push(mvmnt);
-      } else {                                    //we only need the id, name, and strategy
+      } else {                                     //we only need the id, name, and strategy
         let mvmnt = {};
         mvmnt.id = mvmntIn;                         //id
         mvmnt.name = movements[mvmntIn].name;       //name
@@ -172,6 +166,6 @@ function myMovements() {
 }
 
 function testUpdateMovementsInCache() {
-  let responses = [[["startDate",""],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","2"],["personalEvang","1"],["personalEvangDec","0"],["holySpiritPres","0"],["Timestamp","2022-02-25T16:51:40.652Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","4"],["personalEvang","3"],["personalEvangDec","2"],["holySpiritPres","2"],["Timestamp","2022-02-25T16:51:40.652Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:55:37.905Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:55:37.905Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:58:29.792Z"]],[["startDate","2/25/2022"],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","0"],["Timestamp","2022-02-25T18:31:47.811Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","0"],["Timestamp","2022-02-25T18:32:24.532Z"]]];
+  let responses = [[["startDate",""],["endDate","2/25/2022"],["movementId","sm453"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","2"],["personalEvang","1"],["personalEvangDec","0"],["holySpiritPres","0"],["Timestamp","2022-02-25T16:51:40.652Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","4"],["personalEvang","3"],["personalEvangDec","2"],["holySpiritPres","2"],["Timestamp","2022-02-25T16:51:40.652Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:55:37.905Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:55:37.905Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","15452"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","1"],["Timestamp","2022-02-25T16:58:29.792Z"]],[["startDate","2/25/2022"],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","0"],["Timestamp","2022-02-25T18:31:47.811Z"]],[["startDate",""],["endDate","2/25/2022"],["movementId","11639"],["userName","Carl Hempel"],["userPhone","8453320550"],["spiritualConvo","1"],["personalEvang","1"],["personalEvangDec","1"],["holySpiritPres","0"],["Timestamp","2022-02-25T18:32:24.532Z"]]];
   updateMovementsInCache(responses);
 }
