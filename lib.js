@@ -295,9 +295,8 @@ async function hashchanged(){
 
       var movement = user.movements[movement_num];
       let strategy = user.strategies[movement.strat];
-      $('.put_name').text(user.name);
 
-      document.getElementById('strategyWelcomeText').innerHTML = strategy.welcomeText;
+      document.getElementById('strategyWelcomeText').innerHTML = user.name + ', ' +strategy.welcomeText.charAt(0).toLowerCase() + strategy.welcomeText.slice(1); 
       document.documentElement.style.setProperty('--main-color', strategy.primaryColor);
 
       let statsListContent='';
