@@ -1,6 +1,8 @@
 function saveResponseToCache(e){
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
-  let formSubs = e.queryString.split('+');
+  let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
+  let pin = e.queryString.match(/userPin=(\d*)&/)[1];
+  let formSubs = e.queryString.replace(pinRegex,'').split('+');
 
   var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
@@ -17,8 +19,10 @@ function saveResponseToCache(e){
       }
     }
   }
+
+  storyRegex = /&storyBox\=([^&]+)(?=&|$)|^storyBox\=([^&]+)(&|$)/;  //modified to only match entries that have entries.
     
-  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '')); //remove all our storyBox entries.
+  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '&storyBox=1')); //record that we had a story
   formSubs = formSubs.map(form => form.split('&').map(param => [param.split('=')[0],decodeURIComponent(param.split('=')[1])]));
 
   for(form of formSubs){
@@ -56,7 +60,7 @@ function saveResponseToCache(e){
     for(movement of movements){
       mvmnts[movement] = new Date().toLocaleString().split(',')[0];
     }
-    updateUserInCache(phone, mvmnts, false); 
+    updateUserInCache(phone, mvmnts, false, pin); 
     lock.releaseLock();
 
     //FOURTH Summarize movements
@@ -98,7 +102,11 @@ function emailTeamStories(){
   for(teamID of Object.keys(teamStories)) {
     let storyBox = teams[teamID].storyBox;
     let teamName = teams[teamID].name;
-    let email = storyBox.match(/Ͱ.*?ͱ/)[0].replace(/Ͱ|ͱ/g,'');
+    let email_match = storyBox.match(/Ͱ.*?ͱ/);
+    if(email_match == null){
+      continue;
+    }
+    let email = email_match[0].replace(/Ͱ|ͱ/g,'');
     let subject = 'StoryBox: ' + teamName + ' as of ' + new Date().toLocaleDateString();
     let question = storyBox.replace(/^.*ͱ/,'');
     let body = `Hi ${teamName},
@@ -109,11 +117,13 @@ You've got new comments for your question: "${question}"\n`;
       let movementId = story[0];
       let storyTxt = story[1];
       let phone = story[2];
-      body += `- ${movements[movementId].name}(${users[phone].name}): ${decodeURIComponent(storyTxt)}\n`;
+      body += `- ${movements[movementId].name}(${users[phone].name}): \n     ${decodeURIComponent(storyTxt)}\n\n`;
     }
     body += '\n - Spotlight'
 
-    GmailApp.sendEmail(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    let draft = GmailApp.createDraft(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    draft.send()
+    //GmailApp.moveMessageToTrash(draft.send());
   }
 
   SCRIPT_PROP.deleteProperty('storyCache');

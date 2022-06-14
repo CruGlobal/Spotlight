@@ -1,13 +1,19 @@
-window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
+// Production
+//window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
+
+// Dev
+window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbxWTt86lv0Jpr7AqTaL1yHzTv5NOl7UdAOfYeSUcx8n9-IOLUPPcEATLhV1K8fuCfblBg/exec";
 
 function toggleRegister(){
   if($('#register')[0].checked){
     $('#regUserName').prop('required',true);
+    $('#regUserEmail').prop('required',true);
     $('.userToggle').show();
     $('#formSubmit span').show();
   }
   else{
     $('#regUserName').removeAttr('required');
+    $('#regUserEmail').removeAttr('required');
     $('.userToggle').hide();
     $('#formSubmit span').hide();
   }
@@ -70,15 +76,15 @@ async function loadMovements(listOfMovementIDs){
   return jqxhr;
 }
 
-async function registerUser(name, phone, mvmnts, cat){
+async function registerUser(name, phone, mvmnts, cat, pin, email){
   startSpin();
   phone = phone.replace(/\D/g,'');
-  console.log("registerUser=true&phone="+phone+"&name="+name+"&cat="+cat+"&mvmnts="+JSON.stringify(mvmnts));
+  console.log(`registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`);
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "registerUser=true&phone="+phone+"&name="+name+"&cat="+cat+"&mvmnts="+JSON.stringify(mvmnts)
+    data: `registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`
   }).done(function(data){
     console.log(data);
     setUser(data.user);
@@ -86,14 +92,14 @@ async function registerUser(name, phone, mvmnts, cat){
   stopSpin();
   return jqxhr;
 }
-async function updateUser(phone, mvmnts, cat){
+async function updateUser(phone, mvmnts, cat, pin){
   startSpin();
   phone = phone.replace(/\D/g,'');
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "updateUser=true&phone="+phone+"&mvmnts="+JSON.stringify(mvmnts)+"&cat="+cat
+    data: `updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`
   }).done(function(data){
     console.log(data);
     setUser(data.user);
@@ -101,13 +107,13 @@ async function updateUser(phone, mvmnts, cat){
   stopSpin();
   return jqxhr;
 }
-async function requestUser(phone, spin=true){
+async function requestUser(phone, pin, spin=true){
   if(spin) {startSpin();}
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "requestUser=true&phone="+phone
+    data: `requestUser=true&phone=${phone}&pin=${pin}`
   }).done(function(data){
     console.log(data);
 //ERROR HANDLING required!!!!!
@@ -116,6 +122,25 @@ async function requestUser(phone, spin=true){
     window.user = user;
   });
   if(spin) {stopSpin();}
+  return jqxhr;
+}
+async function requestPin(){
+  let phone = document.getElementById('regUserPhone').value.replace(/\D/g,'');
+  if(phone.length != 10){
+    alert('please enter a valid 10 digit phone number');
+    return
+  }
+  startSpin()
+  var jqxhr = await $.ajax({
+    url: window.indicatorAppURL,
+    method: "GET",
+    dataType: "json",
+    data: `requestPin=true&phone=${phone}`
+  }).done(function(data){
+    console.log(data);
+    alert(data.text);
+  });
+  stopSpin();
   return jqxhr;
 }
 
@@ -196,6 +221,13 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 
+function resetUser(){
+  localStorage.removeItem('SC_user');
+  window.user = null;
+  location.hash = '#';
+  location.reload();
+}
+
 //HASHCHANGE AND LOAD MOVEMENT LIST INTO MEMORY
 async function hashchanged(){
   var hash = location.hash;
@@ -204,10 +236,7 @@ async function hashchanged(){
   //RESET CODE
   if(hash.startsWith('#reset')) {
     if(confirm('reset your local data?  You can still log back into your account afterward')){
-      localStorage.removeItem('SC_user');
-      window.user = null;
-      location.hash = '#';
-      location.reload();
+      resetUser();
     }
     else{
       location.hash = '#';
@@ -220,7 +249,15 @@ async function hashchanged(){
   if(local_user){
     if(!window.user){ //first time opening the website - let's check for changes to the user.
       console.log('requesting user', local_user.phone);
-      await requestUser(local_user.phone);
+      let result = await requestUser(local_user.phone, local_user.pin);
+      if(result.result == "success"){
+        console.log('got the user from db');
+      }
+      else {
+        alert("Please log in again")
+        resetUser();
+        return
+      }
     }
   }
   else if(!hash.startsWith('#onboarding')){
@@ -452,11 +489,15 @@ async function processOnboardForm(e) {
   let nameEl = document.getElementById('regUserName');
   let catEl = document.getElementById('regUserStaff');
   let phoneEl = document.getElementById('regUserPhone');
+  let pinEl = document.getElementById('regUserPin');
+  let emailEl = document.getElementById('regUserEmail');
   let accountEl = document.getElementById('staffAcct');
   let register = document.getElementById('register').checked;
 
   user.name = nameEl.value;
   user.phone = phoneEl.value.replace(/\D/g,'');
+  user.email = emailEl.value;
+  user.pin = pinEl.value;
   user.cat = (catEl.checked ? 'staff' : '!staff');
   user.mvmnts = {};
 
@@ -484,7 +525,7 @@ async function processOnboardForm(e) {
 
     //we send in and add a new user
     if(register){
-      let result = await registerUser(user.name, user.phone, user.mvmnts, user.cat);
+      let result = await registerUser(user.name, user.phone, user.mvmnts, user.cat, user.pin, user.email);
       if(result.result != "success"){
         alert("I'm sorry that phone number is already registered with a name, if it's yours, try unchecking register, and click Setup Device");
         return;
@@ -492,12 +533,12 @@ async function processOnboardForm(e) {
     }
     //OR we overwrite the existing.
     else {
-      let result = await updateUser(user.phone, user.mvmnts, user.cat);
+      let result = await updateUser(user.phone, user.mvmnts, user.cat, user.pin);
       if(result.result == "success"){
         console.log(result)
       }
       else {
-        alert("I'm sorry that phone number is not yet registered! Go ahead and check 'Register as new user' and enter your name. \n\n OR if you entered your number wrong, please try again :)")
+        alert(result.text);
         return;
       }
     }
@@ -505,12 +546,12 @@ async function processOnboardForm(e) {
   //attempt to load information from db
   else {
     console.log(user.phone);
-    let result = await requestUser(user.phone);
+    let result = await requestUser(user.phone, user.pin);
     if(result.result == "success"){
       console.log('got the user from db');
     }
     else {
-      alert("I'm sorry, that phone number is not registered.  Either you entered your number wrong, or you need to register.  To do so  please register using the custom link you were sent.")
+      alert("Your number and pin combo are not correct, or you need to register.  \n\nTo register please click on the custom link you were sent.")
       return
     }
   }
@@ -521,6 +562,8 @@ async function processOnboardForm(e) {
   //clear form
   document.getElementById('onboard-form').reset();
   document.getElementById('staffAcct').removeAttribute('required');
+  document.getElementById('regUserName').removeAttribute('required');
+  document.getElementById('regUserEmail').removeAttribute('required');
 
   return false;
 }
@@ -532,7 +575,7 @@ function processLocationForm(submit) {
   var form = $('#location-form');
 
   var disabled = form.find(':input:disabled').removeAttr('disabled');
-  window.formSubs[document.getElementById('movementId').value] = form.serialize();
+  window.formSubs[document.getElementById('movementId').value] = `userPin=${user.pin}&`+form.serialize();
   disabled.attr('disabled','disabled');
 
   let movement_num = parseInt(location.hash.split('/')[1]);
