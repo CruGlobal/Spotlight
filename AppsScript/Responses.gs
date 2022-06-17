@@ -109,13 +109,23 @@ function emailTeamStories(){
     let question = storyBox.replace(/^.*ͱ/,'');
     let body = `Hi ${teamName},
 
-You've got new comments for your question: "${question}"\n`;
+You've got new comments for your question: "${question}"\n\n`;
+
+    //group our movements
+    let mvmnts = {};
 
     for(story of teamStories[teamID]){
       let movementId = story[0];
       let storyTxt = story[1];
       let phone = story[2];
-      body += `- ${movements[movementId].name}(${users[phone].name}): \n     ${decodeURIComponent(storyTxt)}\n\n`;
+      let record = `• ${users[phone].name}: \n     ${decodeURIComponent(storyTxt)}\n`;
+      if(mvmnts[movementId] == undefined){
+        mvmnts[movementId] = [];
+      }
+      mvmnts[movementId].push(record);
+    }
+    for(mvmnt of Object.keys(mvmnts)) {
+      body += `${movements[mvmnt].name}\n ${mvmnts[mvmnt].join()}`
     }
     body += '\n - Spotlight'
 
@@ -131,6 +141,7 @@ You've got new comments for your question: "${question}"\n`;
 
 function testStoryCache(){
   Logger.log(SCRIPT_PROP.getProperty('storyCache'));
+ // SCRIPT_PROP.deleteProperty('storyCache');
 }
 
 function testResponseCache(){
