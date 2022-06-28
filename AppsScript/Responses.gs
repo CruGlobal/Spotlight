@@ -17,8 +17,10 @@ function saveResponseToCache(e){
       }
     }
   }
+
+  storyRegex = /&storyBox\=([^&]+)(?=&|$)|^storyBox\=([^&]+)(&|$)/;  //modified to only match entries that have entries.
     
-  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '')); //remove all our storyBox entries.
+  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '&storyBox=1')); //record that we had a story
   formSubs = formSubs.map(form => form.split('&').map(param => [param.split('=')[0],decodeURIComponent(param.split('=')[1])]));
 
   for(form of formSubs){
@@ -98,22 +100,38 @@ function emailTeamStories(){
   for(teamID of Object.keys(teamStories)) {
     let storyBox = teams[teamID].storyBox;
     let teamName = teams[teamID].name;
-    let email = storyBox.match(/Ͱ.*?ͱ/)[0].replace(/Ͱ|ͱ/g,'');
+    let email_match = storyBox.match(/Ͱ.*?ͱ/);
+    if(email_match == null){
+      continue;
+    }
+    let email = email_match[0].replace(/Ͱ|ͱ/g,'');
     let subject = 'StoryBox: ' + teamName + ' as of ' + new Date().toLocaleDateString();
     let question = storyBox.replace(/^.*ͱ/,'');
     let body = `Hi ${teamName},
 
-You've got new comments for your question: "${question}"\n`;
+You've got new comments for your question: "${question}"\n\n`;
+
+    //group our movements
+    let mvmnts = {};
 
     for(story of teamStories[teamID]){
       let movementId = story[0];
       let storyTxt = story[1];
       let phone = story[2];
-      body += `- ${movements[movementId].name}(${users[phone].name}): ${decodeURIComponent(storyTxt)}\n`;
+      let record = `• ${users[phone].name}: \n     ${decodeURIComponent(storyTxt)}\n`;
+      if(mvmnts[movementId] == undefined){
+        mvmnts[movementId] = [];
+      }
+      mvmnts[movementId].push(record);
+    }
+    for(mvmnt of Object.keys(mvmnts)) {
+      body += `${movements[mvmnt].name}\n ${mvmnts[mvmnt].join()}`
     }
     body += '\n - Spotlight'
 
-    GmailApp.sendEmail(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    let draft = GmailApp.createDraft(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    draft.send()
+    //GmailApp.moveMessageToTrash(draft.send());
   }
 
   SCRIPT_PROP.deleteProperty('storyCache');
@@ -123,6 +141,7 @@ You've got new comments for your question: "${question}"\n`;
 
 function testStoryCache(){
   Logger.log(SCRIPT_PROP.getProperty('storyCache'));
+ // SCRIPT_PROP.deleteProperty('storyCache');
 }
 
 function testResponseCache(){
@@ -196,7 +215,7 @@ function testResponseCache(){
     "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=1&storyBox=Jimmy%2C%20Bifor",
     "contentLength": -1
 }
-  Logger.log(saveResponseToCache(e))
+  //Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){
