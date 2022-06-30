@@ -551,7 +551,7 @@ async function processOnboardForm(e) {
       console.log('got the user from db');
     }
     else {
-      alert("Your number and pin combo are not correct, or you need to register.  \n\nTo register please click on the custom link you were sent.")
+      alert("Either your number and pin combo are not correct, or you need to register.  \n\nTo register please click on the custom link you were sent.")
       return
     }
   }
