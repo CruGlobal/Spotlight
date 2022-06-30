@@ -111,13 +111,23 @@ function emailTeamStories(){
     let question = storyBox.replace(/^.*ͱ/,'');
     let body = `Hi ${teamName},
 
-You've got new comments for your question: "${question}"\n`;
+You've got new comments for your question: "${question}"\n\n`;
+
+    //group our movements
+    let mvmnts = {};
 
     for(story of teamStories[teamID]){
       let movementId = story[0];
       let storyTxt = story[1];
       let phone = story[2];
-      body += `- ${movements[movementId].name}(${users[phone].name}): \n     ${decodeURIComponent(storyTxt)}\n\n`;
+      let record = `• ${users[phone].name}: \n     ${decodeURIComponent(storyTxt)}\n`;
+      if(mvmnts[movementId] == undefined){
+        mvmnts[movementId] = [];
+      }
+      mvmnts[movementId].push(record);
+    }
+    for(mvmnt of Object.keys(mvmnts)) {
+      body += `${movements[mvmnt].name}\n ${mvmnts[mvmnt].join()}`
     }
     body += '\n - Spotlight'
 
@@ -133,6 +143,7 @@ You've got new comments for your question: "${question}"\n`;
 
 function testStoryCache(){
   Logger.log(SCRIPT_PROP.getProperty('storyCache'));
+ // SCRIPT_PROP.deleteProperty('storyCache');
 }
 
 function testResponseCache(){
@@ -206,7 +217,7 @@ function testResponseCache(){
     "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=1&storyBox=Jimmy%2C%20Bifor",
     "contentLength": -1
 }
-  Logger.log(saveResponseToCache(e))
+  //Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){

@@ -41,8 +41,8 @@ function updateMovementsInCache(responses, strategies, teams, global){
 
     let movementId = param_ob.movementId;
 
-    movements[movementId].fb += parseInt(param_ob[global.fb]);
-    movements[movementId].g1 += parseInt(param_ob[global.g1]);
+    movements[movementId].fb += parseInt(param_ob[global.fb] || 0);
+    movements[movementId].g1 += parseInt(param_ob[global.g1] || 0);
     
     //need to know which strategy for this movement
     let strategy = movements[param_ob.movementId].strat;
@@ -121,8 +121,8 @@ function summarizeMovements(movements, strategies, teams, global){
     }
   }
   for(movement of summaryMovements){
-    groupNum[fbID] = (groupNum[fbID] || 0) + parseInt(movement.fb);
-    groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1);
+    groupNum[fbID] = (groupNum[fbID] || 0) + parseInt(movement.fb || 0);
+    groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1 || 0);
 
     //STRATEGY
     let stratID = strategies[movement.strat].summaryId;
@@ -147,10 +147,12 @@ function summarizeMovements(movements, strategies, teams, global){
   for(num of Object.keys(groupNum)) {
     if(Object.keys(groupNum).length > 3 && groupNum[num] == 0) {
       delete groupNum[num];
+      delete questions[num];
     }
   }
   if(Object.keys(groupNum).length > 3){
     delete groupNum[global.fb];
+    delete questions[global.fb];
   }
 
   let summary = {};
@@ -160,6 +162,9 @@ function summarizeMovements(movements, strategies, teams, global){
   return summary;
 }
 
+function testSummarize() {
+  Logger.log(summarizeMovements(['c11408']))
+}
 
 function myMovements() {
   Logger.log(SCRIPT_PROP.getProperty("movements"));
