@@ -1,6 +1,8 @@
 function saveResponseToCache(e){
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
-  let formSubs = e.queryString.split('+');
+  let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
+  let pin = e.queryString.match(/userPin=(\d*)&/)[1];
+  let formSubs = e.queryString.replace(pinRegex,'').split('+');
 
   var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
@@ -58,7 +60,7 @@ function saveResponseToCache(e){
     for(movement of movements){
       mvmnts[movement] = new Date().toLocaleString().split(',')[0];
     }
-    updateUserInCache(phone, mvmnts, false); 
+    updateUserInCache(phone, mvmnts, false, pin); 
     lock.releaseLock();
 
     //FOURTH Summarize movements
