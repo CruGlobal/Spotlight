@@ -215,7 +215,7 @@ function testResponseCache(){
     "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=1&storyBox=Jimmy%2C%20Bifor",
     "contentLength": -1
 }
-  Logger.log(saveResponseToCache(e))
+  //Logger.log(saveResponseToCache(e))
 }
 
 function writeCacheToSheets(){
