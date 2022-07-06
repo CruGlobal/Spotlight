@@ -468,7 +468,7 @@ async function hashchanged(){
         for(const item of data){
           let questionId = item[0];
           let value = item[1];
-          if(questionId.toLowerCase().indexOf("date") === -1){
+          if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
             let element = $('#'+questionId)[0];
             element.value = value;
             if(value != 0){
