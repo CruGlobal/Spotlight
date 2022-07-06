@@ -183,8 +183,8 @@ function writeUsersToSheets() {
       let userRow = [];
       userRow.push(userOb.tmstmp);
       userRow.push(userPhone);
-      userRow.push(userOb.pin);
-      userRow.push(userOb.email);
+      userRow.push(userOb.pin || '');
+      userRow.push(userOb.email || '');
       userRow.push(userOb.name);
       userRow.push(userOb.cat);
       userRow.push(userOb.mvmnts);

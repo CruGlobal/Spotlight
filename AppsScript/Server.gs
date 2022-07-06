@@ -18,6 +18,9 @@ function doGet(e){
   else if(e.parameter.updateUser){
     return updateUser(e);
   }
+  else if(e.parameter.requestPin){
+    return requestPin(e);
+  }
   //SAVE submitted form - recieves data; return summary of movement stats
   else {
     return saveForm(e);
@@ -101,6 +104,25 @@ function updateUser(e) {
       .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone number and pin do not match or is not registered'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+//SENDING User's pin to them at their email address | not found
+function requestPin(e) {
+  //check to see if we are authenticated
+  let user = getUser(e.parameter.phone);
+  if(user && user.email){
+    let subject = `Spotlight: requested pin for ${user.phone}`;
+    let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
+    try {
+      GmailApp.sendEmail(user.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight','bcc': 'spotlight@cru.org'});
+    }
+    catch(error){
+      GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    }
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify({'result':'success', 'text':'The pin associated with your phone number has been sent to the email address we have on file.\n\nIf you do not have access to that email address or have further questions - please let us know at spotlight@cru.org!'}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function testSaveForm(){
