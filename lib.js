@@ -12,7 +12,6 @@ function updateOnlineStatus(event) {
     event.type = 'windowLoad';
   }
   var condition = navigator.onLine ? "online" : "offline";
-  console.log(!online, (condition == 'online'));
 
   if(!(document.documentElement.classList=='' && condition=='online')){ //no need to notify of online if we start out that way.
     document.documentElement.className = condition;
