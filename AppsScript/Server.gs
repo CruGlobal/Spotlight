@@ -18,9 +18,6 @@ function doGet(e){
   else if(e.parameter.updateUser){
     return updateUser(e);
   }
-  else if(e.parameter.requestPin){
-    return requestPin(e);
-  }
   //SAVE submitted form - recieves data; return summary of movement stats
   else {
     return saveForm(e);
@@ -47,16 +44,8 @@ function sendMovements(e) {
 
 //SENDING User's movements, last entered date, question_rels, etc name || Not found
 function requestUser(e) {
-  //check to see if we are authenticated
-  let user = getUser(e.parameter.phone);
-  if(!user || user.pin != e.parameter.pin){
-    return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct, please login again'}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  //Now try to get information
   try {
-    let userInfo = gatherUserInfo(e.parameter.phone, e.parameter.pin)
+    let userInfo = gatherUserInfo(e.parameter.phone)
     
     if(userInfo){
       return ContentService
@@ -65,7 +54,7 @@ function requestUser(e) {
     }
     else {
       return ContentService
-            .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct'}))
+            .createTextOutput(JSON.stringify({'result':'failure', 'text':'That phone number is not registered'}))
             .setMimeType(ContentService.MimeType.JSON);
     }
   } catch(e){
@@ -93,7 +82,7 @@ function registerUser(e){
 
 //SAVE over existing user - receives phone number, movements; returns success, name || error no user found
 function updateUser(e) {
-  let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts, e.parameter.cat, e.parameter.pin);
+  let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts, e.parameter.cat);
   if(userInfo) {
     return ContentService
       .createTextOutput(JSON.stringify({"result":"success", "user": userInfo}))
@@ -101,28 +90,9 @@ function updateUser(e) {
   }
   else {
     return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone number and pin do not match or is not registered'}))
+      .createTextOutput(JSON.stringify({'result':'failure', 'text':'That phone number is not registered'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-//SENDING User's pin to them at their email address | not found
-function requestPin(e) {
-  //check to see if we are authenticated
-  let user = getUser(e.parameter.phone);
-  if(user && user.email){
-    let subject = `Spotlight: requested pin for ${user.phone}`;
-    let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
-    try {
-      GmailApp.sendEmail(user.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight','bcc': 'spotlight@cru.org'});
-    }
-    catch(error){
-      GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
-    }
-  }
-  return ContentService
-    .createTextOutput(JSON.stringify({'result':'success', 'text':'The pin associated with your phone number has been sent to the email address we have on file.\n\nIf you do not have access to that email address or have further questions - please let us know at spotlight@cru.org!'}))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function testSaveForm(){
@@ -177,13 +147,6 @@ function testSaveForm(){
 
 //SAVE form data to Responses, return summary for included movements
 function saveForm(e) {
-  //check to see if we are authenticated
-  let user = getUser(e.parameters.userPhone[0]);
-  if(!user || user.pin != e.parameters.userPin[0]){
-    return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct, please login again'}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
   try {
     let success = saveResponseToCache(e);  //uses Lock, will return summarizeMovements and gatherUserInfo
 

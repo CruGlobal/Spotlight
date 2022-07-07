@@ -31,12 +31,14 @@ updateOnlineStatus();
 
 function toggleRegister(){
   if($('#register')[0].checked){
+    $('.pin').show();
     $('#regUserName').prop('required',true);
     $('#regUserEmail').prop('required',true);
     $('.userToggle').show();
     $('#formSubmit span').show();
   }
   else{
+    $('.pin').hide();
     $('#regUserName').removeAttr('required');
     $('#regUserEmail').removeAttr('required');
     $('.userToggle').hide();
@@ -316,6 +318,7 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
+    $('.pin').hide();
     if(window.user){
       $('#notification').remove();
       $('#locations').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');

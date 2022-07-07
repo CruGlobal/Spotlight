@@ -73,14 +73,13 @@ function testmyPhone(){
   Logger.log(gatherUserInfo(8453320550).movements)
 }
 
-function updateUserInCache(phone, mvmnts, cat, pin){
-  //check to see if the phone is already registered, and if the pin matches
+function updateUserInCache(phone, mvmnts, cat){
+  //check to see if the phone is already registered.
   let user = getUser(phone);
-  if(!user || user.pin != pin){
+  if(!user){
     return false;
   }
-
-  //ok, we do have the user in our cache and they sent the right pin - time to update them.
+  //ok, we do have the user in our cache - time to update them.
   if(cat){ //default when onboarding
     var lock = LockService.getPublicLock();
     lock.waitLock(30000);  // wait 30 seconds before conceding defeat.

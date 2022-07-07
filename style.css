@@ -626,3 +626,7 @@ input.masked,
 .shell span {
   background-color: transparent;
   text-transform: uppercase; }
+
+.dn {
+	display: none;
+}

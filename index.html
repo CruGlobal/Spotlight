@@ -48,9 +48,10 @@
 				<div class="accountToggle">
 					<label for="regUserPhone">Phone Number</label><br>
 		  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
+					<span class="pin">
 					<label for="regUserPin">Password/Pin Number</label><br>
 					<input id="regUserPin" name="regUserPin" type="tel" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>	
-					<small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
+					<small class="dn"><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small></span>
 				</div>
 	  		<div class="movementInfo accountInfo">
 	  			<div>
@@ -78,7 +79,7 @@
 				</div>
 				<div>
 	      	<span class="bottom-button">
-						<button id="formSubmit"><span style="display:none">Register and </span>Setup Device</button>
+						<button id="formSubmit" onclick="$('#regUserPin').val(9282);"><span style="display:none">Register and </span>Setup Device</button>
 					</span>
 					<span class="questions">
 						Questions or Bugs? Email 
