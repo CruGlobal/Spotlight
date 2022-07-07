@@ -160,7 +160,7 @@ function writeUsersToSheets() {
 
     let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     let sheet = doc.getSheetByName(USER_SHEET);
-    let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 5).getValues();
+    let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 7).getValues();
 
     // cycle through our existing users
     for(i in users){  
@@ -168,8 +168,8 @@ function writeUsersToSheets() {
       try { //let's see if it exists in our data.  If yes then place it there.
         let userOb = usersOb[userPhone];
         users[i][0] = userOb.tmstmp;
-        users[i][2] = userOb.pin;
-        users[i][3] = userOb.email;
+        users[i][2] = userOb.pin || '';
+        users[i][3] = userOb.email || '';
         users[i][4] = userOb.name;
         users[i][5] = userOb.cat;
         users[i][6] = userOb.mvmnts;
