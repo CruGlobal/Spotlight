@@ -46,7 +46,11 @@ function updateMovementsInCache(responses, strategies, teams, global){
     
     //need to know which strategy for this movement
     let strategy = movements[param_ob.movementId].strat;
-    let strat_summary_id = strategies[strategy].summaryId;
+    let strat_lookup = strategies[strategy];
+    if(!strat_lookup){  //if strategy is not in database, use our default strategy.
+      strat_lookup = strategies['default'];
+    }
+    let strat_summary_id = strat_lookup.summaryId;
     if(strat_summary_id.trim() == ''){
       strat_summary_id = global.g2;
     }
@@ -116,7 +120,11 @@ function summarizeMovements(movements, strategies, teams, global){
   let usedStrats = summaryMovements.map(movement => movement.strat).filter(onlyUnique);
   let questions = {};
   for(strat of usedStrats) {
-    for(question of strategies[strat].questions){
+    let strat_lookup = strategies[strat];
+    if(!strat_lookup){  //if strategy is not in database, use our default strategy.
+      strat_lookup = strategies['default'];
+    }
+    for(question of strat_lookup.questions){
       questions[question.id] = question.name;
     }
   }
@@ -125,7 +133,11 @@ function summarizeMovements(movements, strategies, teams, global){
     groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1 || 0);
 
     //STRATEGY
-    let stratID = strategies[movement.strat].summaryId;
+    let strat_lookup = strategies[movement.strat];
+    if(!strat_lookup){  //if strategy is not in database, use our default strategy.
+      strat_lookup = strategies['default'];
+    }
+    let stratID = strat_lookup.summaryId;
     if(stratID.trim() == ''){
       stratID = global.g2;
     }
@@ -163,7 +175,7 @@ function summarizeMovements(movements, strategies, teams, global){
 }
 
 function testSummarize() {
-  Logger.log(summarizeMovements(['c11408']))
+  Logger.log(summarizeMovements(['c12860']))
 }
 
 function myMovements() {
