@@ -36,10 +36,19 @@ function getStrategies(strategiesList, userCat) {
     let subset = {};
     for(strategy of strategiesList){
       subset[strategy] = strategies[strategy];
-      subset[strategy].questions = subset[strategy].questions.filter(question => ['','both',userCat].indexOf(question.users.toLowerCase()) > -1);
+      if(!subset[strategy]){                     //use default strategy if strategy not found
+        subset[strategy] = strategies['default'];
+      }
+      if(userCat){
+        subset[strategy].questions = subset[strategy].questions.filter(question => ['','both',userCat].indexOf(question.users.toLowerCase()) > -1);
+      }
     }
     strategies = subset;
   }
 
   return strategies;
+}
+
+function testStrategies(){
+  Logger.log(getStrategies(['bb', 'default', 'G1']))
 }
