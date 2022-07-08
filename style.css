@@ -111,6 +111,11 @@ p {
 h1 {
 	margin-bottom: 0;
 }
+.link {
+	text-decoration: underline;
+	color: blue;
+	cursor: pointer;
+}
 .transition {
 	transition: transform .25s !important;
 	transform: translate3d(-120%,0,0);
@@ -580,6 +585,7 @@ span[rel="tooltip"] {
   transition: none !important;
 }
 
+#regUserPin, #regUserPinMask,
 #staffAcct, #staffAcctMask {
 	letter-spacing: 0.3em;
 }
@@ -588,7 +594,7 @@ span[rel="tooltip"] {
 	text-decoration: underline;
 }
 
-.staffToggle, .userToggle {
+.staffToggle, .userToggle, .accountToggle {
   background-color: rgba(0, 0, 0, 0.15);
   padding: 1rem;
   border-bottom-left-radius: 1rem;

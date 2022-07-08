@@ -40,14 +40,17 @@
 					</div>
 				<br>
 				<br>
-				<b>Associate with my account</b>
+				<b>Account Login</b>
 				</div>
 				<div class="loginInfo">
-					<b>If you have previously registered, go ahead and enter your phone number!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+					<b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
 				</div>
-				<div>
+				<div class="accountToggle">
 					<label for="regUserPhone">Phone Number</label><br>
-		  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890">
+		  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
+					<label for="regUserPin">Password/Pin Number</label><br>
+					<input id="regUserPin" name="regUserPin" type="tel" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>	
+					<small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
 				</div>
 	  		<div class="movementInfo accountInfo">
 	  			<div>
@@ -56,6 +59,8 @@
 			  		<div class="userToggle">
 				  		<label for="regUserName">First name</label><br>
 							<input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
+							<label for="regUserEmail">Email for account recovery</label><br>
+							<input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
 						</div>
 					</div><br>
 					<div>

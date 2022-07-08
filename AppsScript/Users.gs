@@ -2,15 +2,17 @@ function setUserScriptProperty(){
   let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
   let sheet = doc.getSheetByName(USER_SHEET_UPDATE);
   
-  let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 6).getValues();
+  let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 7).getValues();
   let userObjs = {};
   //for each row in the 2d array from getValues();
   for(user of users){
     let userOb = {};
     userOb.tmstmp=GoogleDate(user[0]);
-    userOb.name=user[2];
-    userOb.cat=user[3];
-    userOb.mvmnts=user[4];
+    userOb.pin=user[2];
+    userOb.email=user[3];
+    userOb.name=user[4];
+    userOb.cat=user[5];
+    userOb.mvmnts=user[6];
     if(user[5]!= ''){
       userOb.txtOn=user[5];
     }
@@ -53,6 +55,8 @@ function registerUserInCache(e){
   userOb.tmstmp = GoogleDate(new Date());
   userOb.name = e.parameter.name;
   userOb.cat = e.parameter.cat;
+  userOb.email = e.parameter.email;
+  userOb.pin = e.parameter.pin;
 
   //A js object that has the movement ids as keys and the date updated as the value.
   userOb.mvmnts = e.parameter.mvmnts;
@@ -69,13 +73,14 @@ function testmyPhone(){
   Logger.log(gatherUserInfo(8453320550).movements)
 }
 
-function updateUserInCache(phone, mvmnts, cat){
-  //check to see if the phone is already registered.
+function updateUserInCache(phone, mvmnts, cat, pin){
+  //check to see if the phone is already registered, and if the pin matches
   let user = getUser(phone);
-  if(!user){
+  if(!user || user.pin != pin){
     return false;
   }
-  //ok, we do have the user in our cache - time to update them.
+
+  //ok, we do have the user in our cache and they sent the right pin - time to update them.
   if(cat){ //default when onboarding
     var lock = LockService.getPublicLock();
     lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
@@ -155,7 +160,7 @@ function writeUsersToSheets() {
 
     let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     let sheet = doc.getSheetByName(USER_SHEET);
-    let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 5).getValues();
+    let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 7).getValues();
 
     // cycle through our existing users
     for(i in users){  
@@ -163,9 +168,11 @@ function writeUsersToSheets() {
       try { //let's see if it exists in our data.  If yes then place it there.
         let userOb = usersOb[userPhone];
         users[i][0] = userOb.tmstmp;
-        users[i][2] = userOb.name;
-        users[i][3] = userOb.cat;
-        users[i][4] = userOb.mvmnts;
+        users[i][2] = userOb.pin || '';
+        users[i][3] = userOb.email || '';
+        users[i][4] = userOb.name;
+        users[i][5] = userOb.cat;
+        users[i][6] = userOb.mvmnts;
         delete usersOb[userPhone];
       } catch {
         Logger.log('missing user: '+ userPhone + ' in cached data');
@@ -176,6 +183,8 @@ function writeUsersToSheets() {
       let userRow = [];
       userRow.push(userOb.tmstmp);
       userRow.push(userPhone);
+      userRow.push(userOb.pin || '');
+      userRow.push(userOb.email || '');
       userRow.push(userOb.name);
       userRow.push(userOb.cat);
       userRow.push(userOb.mvmnts);
