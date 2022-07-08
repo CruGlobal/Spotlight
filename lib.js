@@ -1,8 +1,8 @@
 // Production
-//window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
+window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
 
 // Dev
-window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbxWTt86lv0Jpr7AqTaL1yHzTv5NOl7UdAOfYeSUcx8n9-IOLUPPcEATLhV1K8fuCfblBg/exec";
+//window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbxWTt86lv0Jpr7AqTaL1yHzTv5NOl7UdAOfYeSUcx8n9-IOLUPPcEATLhV1K8fuCfblBg/exec";
 
 var online = false;
 
@@ -31,12 +31,14 @@ updateOnlineStatus();
 
 function toggleRegister(){
   if($('#register')[0].checked){
+    $('.pin').show();
     $('#regUserName').prop('required',true);
     $('#regUserEmail').prop('required',true);
     $('.userToggle').show();
     $('#formSubmit span').show();
   }
   else{
+    $('.pin').hide();
     $('#regUserName').removeAttr('required');
     $('#regUserEmail').removeAttr('required');
     $('.userToggle').hide();
@@ -316,6 +318,7 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
+    $('.pin').hide();
     if(window.user){
       $('#notification').remove();
       $('#locations').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
