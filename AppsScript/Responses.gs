@@ -1,6 +1,7 @@
 function saveResponseToCache(e){
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
-  let formSubs = e.queryString.split('+');
+  let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
+  let formSubs = e.queryString.replace(pinRegex,'').split('+');
 
   var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;

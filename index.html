@@ -9,8 +9,8 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#FFCF07">
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" rel="stylesheet" type="text/css">
 
@@ -40,14 +40,18 @@
 					</div>
 				<br>
 				<br>
-				<b>Associate with my account</b>
+				<b>Account Login</b>
 				</div>
 				<div class="loginInfo">
-					<b>If you have previously registered, go ahead and enter your phone number!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+					<b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
 				</div>
-				<div>
+				<div class="accountToggle">
 					<label for="regUserPhone">Phone Number</label><br>
-		  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890">
+		  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
+					<span class="pin">
+					<label for="regUserPin">Password/Pin Number</label><br>
+					<input id="regUserPin" name="regUserPin" type="tel" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>	
+					<small class="dn"><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small></span>
 				</div>
 	  		<div class="movementInfo accountInfo">
 	  			<div>
@@ -56,6 +60,8 @@
 			  		<div class="userToggle">
 				  		<label for="regUserName">First name</label><br>
 							<input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
+							<label for="regUserEmail">Email for account recovery</label><br>
+							<input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
 						</div>
 					</div><br>
 					<div>
@@ -73,7 +79,7 @@
 				</div>
 				<div>
 	      	<span class="bottom-button">
-						<button id="formSubmit"><span style="display:none">Register and </span>Setup Device</button>
+						<button id="formSubmit" onclick="$('#regUserPin').val(9282);"><span style="display:none">Register and </span>Setup Device</button>
 					</span>
 					<span class="questions">
 						Questions or Bugs? Email 
@@ -99,9 +105,13 @@
 						<span>To: <b class="endDate"></b></span>
 					</div>
 				</div>
+				<h2 style="width: 100%; display: flex;	justify-content: space-between;">
+					<a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
+					<span id="movementName">University of Central Florida Cru</span>
+					<a class="mvBtn clicky" onclick="goToNextMovement();"> ▶</a>
+				</h2>
 
 				<div id="slideable">
-					<h2 id="movementName">University of Central Florida Cru</h2>
 					<input type="hidden" id="movementId" name="movementId">
 					<input type="hidden" id="userName" name="userName">
 					<input type="hidden" id="userPhone" name="userPhone">
@@ -114,9 +124,9 @@
 				</div>
 				<div>
 					<span class="bottom-button">
-						<button type="button" id="movementSkip" onclick="goToNextMovement();" class="white">Skip</button>
-						<button type="button" id="movementNext" style="width: 40%;" onclick="processLocationForm();">Save & Next</button>
-						<button type="button" id="movementSubmit" onclick="submitLocationForm();" class="white">Submit</button>
+						<button type="button" onclick="goToPrevMovement();" class="white mvBtn">Previous</button>
+						<button type="button" style="width: 40%;" onclick="submitLocationForm();">Submit</button>
+						<button type="button" onclick="goToNextMovement();" class="white mvBtn">Next</button>
 					</span>
 					<span class="questions">
 						Questions or Bugs? Email 

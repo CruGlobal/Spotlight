@@ -1,13 +1,46 @@
-window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
+// Production
+//window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWcw6lK5dIgwKw8k-f5XJ4zi1jE-5cjFBdYj8VRAi5fjtY2A2JurzkTM/exec";
+
+// Dev
+window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbxWTt86lv0Jpr7AqTaL1yHzTv5NOl7UdAOfYeSUcx8n9-IOLUPPcEATLhV1K8fuCfblBg/exec";
+
+var online = false;
+
+function updateOnlineStatus(event) {
+  if(event == undefined) {
+    event = {};
+    event.type = 'windowLoad';
+  }
+  var condition = navigator.onLine ? "online" : "offline";
+
+  if(!(document.documentElement.classList=='' && condition=='online')){ //no need to notify of online if we start out that way.
+    document.documentElement.className = condition;
+  }
+  online = navigator.onLine;
+  console.log("beforeend", "Event: " + event.type + "; Status: " + condition);
+}
+//Update Online status
+window.addEventListener('load', function() {
+  function update(event) {
+    updateOnlineStatus(event);
+  }
+  window.addEventListener('online',  update);
+  window.addEventListener('offline', update);
+});
+updateOnlineStatus();
 
 function toggleRegister(){
   if($('#register')[0].checked){
+    $('.pin').show();
     $('#regUserName').prop('required',true);
+    $('#regUserEmail').prop('required',true);
     $('.userToggle').show();
     $('#formSubmit span').show();
   }
   else{
+    $('.pin').hide();
     $('#regUserName').removeAttr('required');
+    $('#regUserEmail').removeAttr('required');
     $('.userToggle').hide();
     $('#formSubmit span').hide();
   }
@@ -45,7 +78,7 @@ function getUser(){
   }
   catch(error) {
     console.log(error, "Clearing local storage");
-    localStorage.removeItem('SC_user');
+    removeLocalStorage();
     return false;
   }
 }
@@ -56,66 +89,102 @@ function setUser(user){
 
 async function loadMovements(listOfMovementIDs){
   startSpin();
+  let success = false;
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
     data: "movements="+listOfMovementIDs.join(',')
-  }).done(function(data){
+  }).then(function(data){
     if(data.result == 'error'){
       alert(data.error);
     }
+    success = data;
+  }).catch(function(error){
+    catchError(error);
+  }).then(function(data){
+    stopSpin();
   });
-  stopSpin();
-  return jqxhr;
+  return success;
 }
 
-async function registerUser(name, phone, mvmnts, cat){
+async function registerUser(name, phone, mvmnts, cat, pin, email){
   startSpin();
   phone = phone.replace(/\D/g,'');
-  console.log("registerUser=true&phone="+phone+"&name="+name+"&cat="+cat+"&mvmnts="+JSON.stringify(mvmnts));
+  let success = false;
+  console.log(`registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`);
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "registerUser=true&phone="+phone+"&name="+name+"&cat="+cat+"&mvmnts="+JSON.stringify(mvmnts)
-  }).done(function(data){
+    data: `registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`
+  }).then(function(data){
     console.log(data);
     setUser(data.user);
+    success = data;
+  }).catch(function(error){
+    catchError(error, false);
+  }).then(function(data){
+    stopSpin();
   });
-  stopSpin();
-  return jqxhr;
+  return success;
 }
-async function updateUser(phone, mvmnts, cat){
+async function updateUser(phone, mvmnts, cat, pin){
   startSpin();
   phone = phone.replace(/\D/g,'');
+  let success = false;
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "updateUser=true&phone="+phone+"&mvmnts="+JSON.stringify(mvmnts)+"&cat="+cat
-  }).done(function(data){
+    data: `updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`
+  }).then(function(data){
     console.log(data);
     setUser(data.user);
+    success = data;
+  }).catch(function(error){
+    catchError(error, false);
+  }).then(function(data){
+    stopSpin();
   });
-  stopSpin();
-  return jqxhr;
+  return success;
 }
-async function requestUser(phone, spin=true){
+async function requestUser(phone, pin, spin=true){
   if(spin) {startSpin();}
+  let success = false;
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
-    data: "requestUser=true&phone="+phone
-  }).done(function(data){
-    console.log(data);
-//ERROR HANDLING required!!!!!
+    data: `requestUser=true&phone=${phone}&pin=${pin}`
+  }).then(function(data){
+    success = data;
     let user = data.user;
     setUser(user);
     window.user = user;
+  }).catch(function(error){
+    catchError(error, false);
   });
   if(spin) {stopSpin();}
+  return success;
+}
+async function requestPin(){
+  let phone = document.getElementById('regUserPhone').value.replace(/\D/g,'');
+  if(phone.length != 10){
+    alert('please enter a valid 10 digit phone number');
+    return
+  }
+  startSpin()
+  var jqxhr = await $.ajax({
+    url: window.indicatorAppURL,
+    method: "GET",
+    dataType: "json",
+    data: `requestPin=true&phone=${phone}`
+  }).done(function(data){
+    console.log(data);
+    alert(data.text);
+  });
+  stopSpin();
   return jqxhr;
 }
 
@@ -129,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function(){
     elment.dispatchEvent(new Event('keyup'));
   }
 
-  window.formSubs = {};
+  window.formSubs = JSON.parse(localStorage.getItem('formSubs')) || {};
 
   document.body.addEventListener("click", function (e) {
     if(document.body.classList.contains('summary')){
@@ -196,6 +265,12 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 
+function resetUser(){
+  removeLocalStorage();
+  location.hash = '#';
+  location.reload();
+}
+
 //HASHCHANGE AND LOAD MOVEMENT LIST INTO MEMORY
 async function hashchanged(){
   var hash = location.hash;
@@ -204,10 +279,7 @@ async function hashchanged(){
   //RESET CODE
   if(hash.startsWith('#reset')) {
     if(confirm('reset your local data?  You can still log back into your account afterward')){
-      localStorage.removeItem('SC_user');
-      window.user = null;
-      location.hash = '#';
-      location.reload();
+      resetUser();
     }
     else{
       location.hash = '#';
@@ -220,7 +292,18 @@ async function hashchanged(){
   if(local_user){
     if(!window.user){ //first time opening the website - let's check for changes to the user.
       console.log('requesting user', local_user.phone);
-      await requestUser(local_user.phone);
+      let result = await requestUser(local_user.phone, local_user.pin);
+      if(!result){ //we'll go with what we've got if no internet
+        window.user = local_user;
+      }
+      else if(result.result == "success"){
+        console.log('got the user from db');
+      }
+      else {
+        alert("Please log in again")
+        resetUser();
+        return;
+      }
     }
   }
   else if(!hash.startsWith('#onboarding')){
@@ -235,9 +318,10 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
+    $('.pin').hide();
     if(window.user){
       $('#notification').remove();
-      $('#locations').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="delete window.user; localStorage.removeItem(\'SC_user\'); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
+      $('#locations').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
       location.hash = "#";
       return;
     }
@@ -257,6 +341,11 @@ async function hashchanged(){
     //then lets show our movements page
     if(movements){
       let movementsList = await loadMovements(movements);
+      if(!movementsList){
+        location.hash = '#onboarding';
+        $('#onboarding').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
+        return;
+      }
       for(movement of movementsList) {
         $('#movements').append('<input id="n'+movement.id+'" name="'+movement.id+'" type="checkbox" ><label for="n'+movement.id+'" >'+movement.name+'</label>');
       }
@@ -279,20 +368,10 @@ async function hashchanged(){
     // #locations - start with current location
     let user = window.user;
     let movement_num = parseInt(hash.split('/')[1]);
+    (user.movements.length == 1 ? $('.mvBtn').hide() : $('.mvBtn').show());
 
     //if we fail, redirect to first location
     try {
-      if(user.movements.length == movement_num + 1){
-        $('#movementNext').addClass('hideLeft');
-        $('#movementSkip').text('Reset');
-        $('#movementSubmit').text('Submit').removeClass('white');
-      }
-      else{
-        $('#movementNext').removeClass('hideLeft');
-        $('#movementSkip').text('Skip');
-        $('#movementSubmit').text('Submit').addClass('white');
-      }
-
       var movement = user.movements[movement_num];
       let strategy = user.strategies[movement.strat];
 
@@ -325,7 +404,7 @@ async function hashchanged(){
           <span class="inc button">+</span>
         </div>`;
       }
-      //WORKING HERE to add Team Questions.  Will need to send team table, and what teamid in user.movements
+      //add Team Questions.  Will need to send team table, and what teamid in user.movements
       for(i = 1; i <= 3; i++){
         try {
           let teamQ = user.teams[movement.tID]['teamQ'+i].trim().replace(/^.*Ͱ/,'');
@@ -385,6 +464,28 @@ async function hashchanged(){
       $('#endDate').val(endDate);
       $('.endDate').text(endDate);
 
+      //let's load the data from formSubs
+      let formSub = window.formSubs[movement.id];
+      if(formSub != undefined){
+        let data = unserialize(formSub);
+        for(const item of data){
+          let questionId = item[0];
+          let value = item[1];
+          if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
+            let element = $('#'+questionId)[0];
+            element.value = value;
+            if(value != 0){
+              setTimeout(() => {
+                element.classList.add('highlightBg');
+              },200);
+              setTimeout(() => {
+                element.classList.remove('highlightBg');
+              },2200);
+            }
+          }
+        }
+      }
+
       projector.classList = 'locations';
       window.document.title = "Enter Stats for "+movement.name;
     }
@@ -415,12 +516,10 @@ async function hashchanged(){
       }
       projector.classList = 'summary';
       window.document.title = "Stats Summary";
-      console.log(window.statSummary);
       let time = 500;
 
       function doSetTimeout(stat,time) {
         setTimeout(function(){
-          console.log(time,stat,'#'+stat);
           party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
             count: party.variation.range(40, 80)
           })
@@ -428,7 +527,6 @@ async function hashchanged(){
       }
 
       for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
-        console.log(stat);
         if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
           doSetTimeout(stat,time);
           time += 2000;
@@ -452,11 +550,15 @@ async function processOnboardForm(e) {
   let nameEl = document.getElementById('regUserName');
   let catEl = document.getElementById('regUserStaff');
   let phoneEl = document.getElementById('regUserPhone');
+  let pinEl = document.getElementById('regUserPin');
+  let emailEl = document.getElementById('regUserEmail');
   let accountEl = document.getElementById('staffAcct');
   let register = document.getElementById('register').checked;
 
   user.name = nameEl.value;
   user.phone = phoneEl.value.replace(/\D/g,'');
+  user.email = emailEl.value;
+  user.pin = pinEl.value;
   user.cat = (catEl.checked ? 'staff' : '!staff');
   user.mvmnts = {};
 
@@ -484,34 +586,45 @@ async function processOnboardForm(e) {
 
     //we send in and add a new user
     if(register){
-      let result = await registerUser(user.name, user.phone, user.mvmnts, user.cat);
-      if(result.result != "success"){
+      let result = await registerUser(user.name, user.phone, user.mvmnts, user.cat, user.pin, user.email);
+      if(!result){ //assuming we're offline;
+        alert("You're currently offline, please try again when you have data");
+        return;
+      }
+      else if(result.result != "success"){
         alert("I'm sorry that phone number is already registered with a name, if it's yours, try unchecking register, and click Setup Device");
         return;
       }
     }
     //OR we overwrite the existing.
     else {
-      let result = await updateUser(user.phone, user.mvmnts, user.cat);
-      if(result.result == "success"){
+      let result = await updateUser(user.phone, user.mvmnts, user.cat, user.pin);
+      if(!result){ //assuming we're offline;
+        alert("You're currently offline, please try again when you have data");
+        return;
+      }
+      else if(result.result == "success"){
         console.log(result)
       }
       else {
-        alert("I'm sorry that phone number is not yet registered! Go ahead and check 'Register as new user' and enter your name. \n\n OR if you entered your number wrong, please try again :)")
+        alert(result.text);
         return;
       }
     }
   }
   //attempt to load information from db
   else {
-    console.log(user.phone);
-    let result = await requestUser(user.phone);
-    if(result.result == "success"){
+    let result = await requestUser(user.phone, user.pin);
+    if(!result){
+      alert("You're currently offline, please try again when you have data");
+      return;
+    }
+    else if(result.result == "success"){
       console.log('got the user from db');
     }
     else {
-      alert("I'm sorry, that phone number is not registered.  Either you entered your number wrong, or you need to register.  To do so  please register using the custom link you were sent.")
-      return
+      alert("Either your number and pin combo are not correct, or you need to register.  \n\nTo register please click on the custom link you were sent.")
+      return;
     }
   }
 
@@ -521,39 +634,79 @@ async function processOnboardForm(e) {
   //clear form
   document.getElementById('onboard-form').reset();
   document.getElementById('staffAcct').removeAttribute('required');
+  document.getElementById('regUserName').removeAttribute('required');
+  document.getElementById('regUserEmail').removeAttribute('required');
 
   return false;
 }
 
 //PROCESS LOCATION FORM
-function processLocationForm(submit) {
+function processLocationForm(submitMovementId) {
   let user = window.user;
   //save the data from the form for submittal later
   var form = $('#location-form');
 
   var disabled = form.find(':input:disabled').removeAttr('disabled');
-  window.formSubs[document.getElementById('movementId').value] = form.serialize();
+
+  let serializedForm = form.serialize();
+  let data = unserialize(serializedForm);
+  let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
+                               .indexOf(itm[0]) === -1)
+                .map(itm => itm[1])
+                .reduce((total, amount) => Number(total) + Number(amount));
+  let movementId = document.getElementById('movementId').value;
+  if(sum != 0 || submitMovementId == movementId){
+    window.formSubs[document.getElementById('movementId').value] = `userPin=${user.pin}&`+serializedForm;
+  }
+  else {
+    delete window.formSubs[movementId];
+  }  
+  localStorage.setItem('formSubs', JSON.stringify(window.formSubs));
   disabled.attr('disabled','disabled');
 
   let movement_num = parseInt(location.hash.split('/')[1]);
 
-  //advance the location if we're at the end let's submit!
-  if(!submit && user.movements.length != movement_num + 1){
-    goToNextMovement();
-  }
-
   //clear form
   $('input[type="checkbox"]').prop('checked', false);
-  $('input[type="number"]').val(0);
 
   //clear notification
   $('#notification').remove();
-
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
 async function submitLocationForm(){
-  processLocationForm(true);
+  let movementId = document.getElementById('movementId').value;
+  processLocationForm(movementId);
+
+  //notify user that they are submitting data for movements they can't see
+  let startingMvmnt = parseInt(location.hash.split('/')[1]);
+  let prompt = false;
+
+  let message = "You are about to submit data for the following locations:\n";
+
+  for(const [key, formSub] of Object.entries(window.formSubs)) {
+    let data = unserialize(formSub);
+    let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
+                                 .indexOf(itm[0]) === -1)
+                  .map(itm => itm[1])
+                  .reduce((total, amount) => Number(total) + Number(amount));
+    if(sum != 0 || key == movementId){
+      let currentMvmnt = window.user.movements.map(mvmnt => mvmnt.id).indexOf(key);
+      console.log(key)
+      message += `* ${currentMvmnt + 1}: ${window.user.movements.filter(itm => itm.id == key)[0].name}\n`
+      if(startingMvmnt != currentMvmnt){ //Only need to prompt the user if they can't see all the data they are submitting
+        prompt = true;
+      }
+    }
+  }
+
+  message += 'Do you want to continue?'
+
+  if(prompt) {
+    if(!window.confirm(message)) {
+      return;
+    }
+  }
 
   startSpin();
   var url  =  window.indicatorAppURL;
@@ -564,36 +717,50 @@ async function submitLocationForm(){
     method: "GET",
     dataType: "json",
     data: Object.values(window.formSubs).join('+')
-  }).done(function(data){
+  }).then(function(data){
     console.log(data);
     window.statSummary = data.summary;
     location.hash = "#summary";
     setUser(data.user);
     window.user = data.user;
+    window.formSubs = {}; //reset window.formSubs
+  }).catch(function(error){
+    catchError(error);
+  }).then(function(data){
+    stopSpin();
   });
-  window.formSubs = {}; //reset window.formSubs
-  //THen change the location
-  stopSpin();
 }
 
 function goToNextMovement() {
-  $('input[type="number"]').val(0);
-
+  processLocationForm();
   $('#slideable').addClass('transition');
   setTimeout(function(){
     $('#slideable').removeClass("transition");
   }, 250);
-  //$('#location-form').show( { direction: "right" }, 200);
   let movement_num = parseInt(location.hash.split('/')[1]);
   if(window.user.movements.length == movement_num + 1){
     movement_num = 0;
-    window.formSubs = {};
     location.hash = "#";
   }
   else{
     movement_num += 1;
     location.hash = "#locations/"+movement_num+"/"+user.movements[movement_num].id;
   }
+}
+function goToPrevMovement() {
+  processLocationForm();
+  $('#slideable').addClass('transition-l');
+  setTimeout(function(){
+    $('#slideable').removeClass("transition-l");
+  }, 250);
+  let movement_num = parseInt(location.hash.split('/')[1]);
+  if(movement_num == 0){
+    movement_num = window.user.movements.length - 1;
+  }
+  else{
+    movement_num -= 1;
+  }
+  location.hash = "#locations/"+movement_num+"/"+user.movements[movement_num].id;
 }
 
 function startSpin() {
@@ -630,7 +797,7 @@ async function setTextReminder(){
     method: "GET",
     dataType: "json",
     data: "updateUser=true&phone="+window.user.phone+"&txtReminderTime="+encodeURI(time+' '+Intl.DateTimeFormat().resolvedOptions().timeZone)
-  }).done(function(data){
+  }).then(function(data){
     console.log(data);
     if(data.result=="success"){
       alert('Text Reminders are set for: '+time+ '\n\nRespond to a text with "STOP" to stop at any time');
@@ -639,8 +806,19 @@ async function setTextReminder(){
       alert('Could not complete your request');
     }
     $('#blurBackground').click();
+  }).catch(function(error){
+    catchError(error);
+  }).then(function(data){
+    stopSpin();
   });
-  stopSpin();
+}
+
+function catchError(error, notify=true){
+  if(!navigator.onLine && notify){
+    alert('You are offline, try submitting again when you are back online.')
+  }
+  console.log(error);
+  return; 
 }
 
 //TOOLTIP CODE
@@ -717,3 +895,20 @@ function setToolTips() {
     tooltip.bind( 'click', remove_tooltip );
   });
 };
+
+function removeLocalStorage(){
+  localStorage.removeItem('SC_user');
+  localStorage.removeItem('formSubs');
+  window.formSubs = {};
+  window.user = null;
+}
+
+function unserialize(data) {
+  data = data.split('&');
+  var response = [];
+  for (var k in data){
+    var newData = data[k].split('=');
+    response.push([newData[0], decodeURI(newData[1])]);
+  }
+  return response;
+}
