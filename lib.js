@@ -320,7 +320,10 @@ async function hashchanged(){
     $('.pin').hide();
     if(window.user){
       $('#notification').remove();
-      $('#locations').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
+      let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
+        $('#notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
+        onclick="$('#notification').remove();">X</button></div>`
+      $('#locations').prepend(notification);
       location.hash = "#";
       return;
     }
