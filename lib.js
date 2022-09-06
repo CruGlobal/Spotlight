@@ -112,14 +112,13 @@ async function registerUser(name, phone, mvmnts, cat, pin, email){
   startSpin();
   phone = phone.replace(/\D/g,'');
   let success = false;
-  console.log(`registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`);
   var jqxhr = await $.ajax({
     url: window.indicatorAppURL,
     method: "GET",
     dataType: "json",
     data: `registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`
   }).then(function(data){
-    console.log(data);
+    //console.log(data);
     setUser(data.user);
     success = data;
   }).catch(function(error){
@@ -139,7 +138,7 @@ async function updateUser(phone, mvmnts, cat, pin){
     dataType: "json",
     data: `updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`
   }).then(function(data){
-    console.log(data);
+    //console.log(data);
     setUser(data.user);
     success = data;
   }).catch(function(error){
@@ -181,7 +180,7 @@ async function requestPin(){
     dataType: "json",
     data: `requestPin=true&phone=${phone}`
   }).done(function(data){
-    console.log(data);
+    //console.log(data);
     alert(data.text);
   });
   stopSpin();
