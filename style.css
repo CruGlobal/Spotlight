@@ -9,6 +9,8 @@
   --medium-gray: #9C9FA1;
   --light-gray: #EBECEC;
   --tooltip-color: var(--dark-gray);
+  --projector-width: min(850px, 100vw);
+  --app-width: min(450px, 100vw);
 }
 html:after{
 	display: block;
@@ -17,7 +19,7 @@ html:after{
 	right: 0;
 	left: 0;
 	height: 1.5rem;
-	max-width: 450px;
+	max-width: var(--app-width);
 	margin-left: auto;
 	margin-right: auto;
 	text-align:  center;
@@ -51,6 +53,7 @@ html.online:after {
 body {
 	overflow: hidden;
 	font-size: 16px;
+	margin: 0;
 }
 object,
 img {
@@ -264,6 +267,7 @@ h1 {
     linear-gradient(to bottom right,rgba(255, 255, 255, 0.3) 33%,white,rgba(255, 255, 255, 0.3) 66%);
   background-size:300% 300%,cover;
   animation: change 2s linear infinite;
+  z-index: 200;
 }
 #spin-container.spin  {
 	display: flex;
@@ -281,7 +285,6 @@ h1 {
 .cards {
   display: flex;
   justify-content: space-around;
-  align-items: center;
   flex-wrap: wrap;
   row-gap: 3rem;
 	margin-bottom: 2rem;
@@ -289,8 +292,7 @@ h1 {
 }
 .card {
   flex-shrink: 0;
-	width: clamp(9.75rem, 42vw, 450px * 0.4);
-	height: 250px;
+	width: clamp(9.75rem, 42vw, var(--app-width) * 0.4);
 	padding: 0 0.5rem;
 	filter: drop-shadow(.25rem .5rem 0.5rem var(--medium-gray));
 	background-color: white;
@@ -354,18 +356,48 @@ button:active,
 button:hover {
   background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
 }
+.initial .sidebar,
+.onboarding .sidebar {
+	transform: translate3d(calc(100% + 100px), 0px, 0px);
+}
+.sidebar{
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	width: 200px;
+	height: 100%;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	transform: translate3d(100%,0,0);
+	transition:  transform .25s ease, filter .25s ease;
+	z-index: 100;
+	background: white;
+}
+.sidebar:hover,
+.menu .sidebar {
+	filter: drop-shadow(2px 4px 6px var(--medium-gray));
+}
+#projector {
+	position: relative;
+	height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  overflow-y: auto;
+  width: var(--projector-width);
+}
 .screen {
 	position: fixed;
 	display: flex;
 	flex-direction: column;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	left: 0;
 	height: 100%;
-	transform: translate3d(100%,0,0);
+	right: 0;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	transform: translate3d(max(100vw - 100%, 100vw),0,0);
 	transition:  transform .25s;
-	padding: 0 1rem 0 1rem;
+	padding: 0 1rem;
 	overflow-y: auto;
 }
 .last-el-bottom {
@@ -380,6 +412,77 @@ button:hover {
 }
 .last-el-bottom > * {
 	flex-shrink: 0;
+}
+#menu {
+	padding: 0 1rem;
+}
+#menu ul {
+	padding: 0;
+}
+#menu li {
+	list-style: none;
+	line-height: 2rem;
+	font-size: 18px;
+}
+#menu a {
+	display: block;
+	background: white;
+	border-bottom: 1px var(--medium-gray) solid;
+	padding: 1rem;
+	text-decoration: none;
+	color: var(--dark-gray);
+}
+#menu li:active,
+#menu li:hover {
+	filter: brightness(0.9);
+}
+#menu li:first-child {
+	border-top: 1px var(--medium-gray) solid;
+}
+
+#hamburger-tab {
+	position: absolute;
+	transform: translate3d(-76px,30px,0); 
+	background:white; width:77px;
+  border-top-left-radius: 2rem;
+  border-bottom-left-radius: 2rem;
+
+}
+.menu #hamburger-tab {
+	width: 40px;
+	transform: translate3d(-56px, 30px, 0px);
+}
+.hamburger {
+  width: 2.5rem;
+  cursor: pointer;
+  height: 2.5rem;
+  padding: 0 10px;
+  cursor:pointer;
+}
+.hamburger:after,
+.hamburger:before,
+.hamburger div {
+  background-color: #000;
+  border-radius: 3px;
+  content: "";
+  display: block;
+  height: 3px;
+  margin: 5px 0;
+  transition: all 0.2s ease-in-out;
+}
+.hamburger.active:before {
+  background-color: #000;
+  transform: translateY(8px) rotate(135deg);
+  
+}
+.hamburger.active:after {
+  background-color: #000;
+  transform: translateY(-8px) rotate(-135deg);
+  
+}
+.hamburger.active div {
+  background-color: #000;
+  transform: scale(0);
 }
 
 .clicky {
@@ -429,6 +532,9 @@ button {
 .locations #locations,
 .summary #summary {
 	transform: translate3d(0,0,0);
+}
+.menu #menu {
+	transform: translate3d(0, 0, 0);
 }
 #reminder {
 	position: relative;
@@ -575,9 +681,13 @@ span[rel="tooltip"] {
   margin: 0;
 }
 @media only screen and (min-device-width: 500px){
-	.screen {
-	  padding-left: calc((100vw - 450px)/2);
-	  padding-right: calc((100vw - 450px)/2);	
+	.screen{
+		padding-left: calc((100vw - var(--app-width))/2);
+	  padding-right: calc((100vw - var(--app-width))/2);	
+	} 
+	#projector {
+	  margin-left: calc((100vw - var(--projector-width))/2);
+	  margin-right: calc((100vw - var(--projector-width))/2);	
 	}
 }
 
