@@ -186,6 +186,32 @@ async function requestPin(){
   stopSpin();
   return jqxhr;
 }
+async function requestSummary(){
+  let phone = user.phone;
+  console.log(phone);
+  if(phone.length != 10){
+    alert('user not set up properly...');
+    return
+  }
+  startSpin()
+  var jqxhr = await $.ajax({
+    url: window.indicatorAppURL,
+    method: "GET",
+    dataType: "json",
+    data: `requestSummary=true&phone=${phone}`
+  }).then(function(data){
+    console.log(data);
+    window.statSummary = data.summary;
+    location.hash = "#summary";
+    setUser(data.user);
+    window.user = data.user;
+  }).catch(function(error){
+    catchError(error);
+  }).then(function(data){
+    stopSpin();
+  });
+  return jqxhr;
+}
 
 //ADD EVENT LISTENERS HASHCHANGE, AND setup variables
 document.addEventListener("DOMContentLoaded", function(){
@@ -196,11 +222,19 @@ document.addEventListener("DOMContentLoaded", function(){
   for(elment of document.getElementsByClassName('masked')){
     elment.dispatchEvent(new Event('keyup'));
   }
+  const links = document.querySelectorAll("[data-part1][data-part2][data-part3][data-part4]");
+  for (const link of links) {
+    const attrs = link.dataset;
+    link.setAttribute(
+      "href",
+      `mailto:${attrs.part1}@${attrs.part2}.${attrs.part3}?subject=${encodeURIComponent(attrs.part4)}`
+    );
+  }
 
   window.formSubs = JSON.parse(localStorage.getItem('formSubs')) || {};
 
   document.body.addEventListener("click", function (e) {
-    if(document.body.classList.contains('summary')){
+    if(document.getElementById('projector').classList.contains('summary')){
       party.confetti(e, {
           count: party.variation.range(20, 20)
         });
@@ -274,6 +308,9 @@ function resetUser(){
 async function hashchanged(){
   var hash = location.hash;
   let projector = document.getElementById('projector');
+
+  //Set sidebar menu icon
+  document.getElementsByClassName('hamburger')[0].classList.remove('active');
 
   //RESET CODE
   if(hash.startsWith('#reset')) {

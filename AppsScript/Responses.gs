@@ -64,11 +64,12 @@ function saveResponseToCache(e){
     updateUserInCache(phone, mvmnts, false, pin); 
     lock.releaseLock();
 
-    //FOURTH Summarize movements
-    let summary = summarizeMovements(movements, strategies, teams, global);
-
     //FITH Gather user information
     let userInfo = gatherUserInfo(phone);
+
+    //FOURTH Summarize movements
+    let summary = summarizeMovements(Object.keys(userInfo.mvmnts), strategies, teams, global);
+
 
     result = {'summary': summary, 'userInfo': userInfo};
     

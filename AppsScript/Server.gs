@@ -21,6 +21,9 @@ function doGet(e){
   else if(e.parameter.requestPin){
     return requestPin(e);
   }
+  else if(e.parameter.requestSummary){
+    return requestSummary(e);
+  }
   //SAVE submitted form - recieves data; return summary of movement stats
   else {
     return saveForm(e);
@@ -173,6 +176,44 @@ function testSaveForm(){
   };
 
   saveForm(e);
+}
+
+//SENDING summary | not found
+function requestSummary(e) {
+  //check to see if we are authenticated
+  try {
+    let user = getUser(e.parameter.phone);
+    let movements = Object.keys(user.mvmnts);
+    let summary = summarizeMovements(movements);
+    let userInfo = gatherUserInfo(e.parameter.phone);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({"result":"success", "summary": summary, 'user': userInfo, 'orig_e': e}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not find movements associated with user','error': error}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function testRequestSummary(){
+  let e = {
+    "parameters": {
+        "phone": [
+            "8453320550"
+        ],
+        "requestSummary": [true]
+    },
+    "contextPath": "",
+    "contentLength": -1,
+    "queryString": "requestSummary=true&phone=8453320550",
+    "parameter": {
+        "requestSummary": true,
+        "phone": "8453320550",
+    }
+  };
+  requestSummary(e);
 }
 
 //SAVE form data to Responses, return summary for included movements
