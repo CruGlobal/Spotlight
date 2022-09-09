@@ -314,7 +314,7 @@ async function hashchanged(){
 
   //RESET CODE
   if(hash.startsWith('#reset')) {
-    if(confirm('reset your local data?  You can still log back into your account afterward')){
+    if(confirm('Log out?')){
       resetUser();
     }
     else{
