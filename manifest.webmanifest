@@ -15,6 +15,6 @@
   ],
   "theme_color": "#FFCF07",
   "start_url": "/Spotlight/",
-  "background_color": "#FFCF07",
+  "background_color": "white",
   "display": "standalone"
 }
