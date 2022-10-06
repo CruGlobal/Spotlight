@@ -763,6 +763,7 @@ async function submitLocationForm(){
     setUser(data.user);
     window.user = data.user;
     window.formSubs = {}; //reset window.formSubs
+    localStorage.setItem('formSubs', JSON.stringify(window.formSubs));
   }).catch(function(error){
     catchError(error);
   }).then(function(data){
