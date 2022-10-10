@@ -267,14 +267,12 @@ document.addEventListener("DOMContentLoaded", function(){
     if(e.target && e.target.nodeName == "INPUT") {
       //get all question values
       let varVals = {};
-      for(question of $('#statsList input')){
+      for(question of $('#statsList input')){ //compile object for tooLow calcs.
         varVals[question.id] = question.value;
       }
 
-      //do the thing
       for(question of Object.keys(user.questionRels)){
         let tooLow = 0;
-         
         //checking if any are greater than the question
         if(user.questionRels[question].lessThan) {
           for(relVar of user.questionRels[question].lessThan){
@@ -282,18 +280,19 @@ document.addEventListener("DOMContentLoaded", function(){
           }
         }
         if(document.getElementById(question)){
-          if(tooLow){
+          if(tooLow){ //Add Too Low bubble
             document.getElementById(question).parentElement.classList.add('tooLow');
           } else {
             document.getElementById(question).parentElement.classList.remove('tooLow');
           }
-          if(parseInt(varVals[question]) < 0){
+          if(parseInt(varVals[question]) < 0){  //Add red highlight to negative numbers
             document.getElementById(question).classList.add('negative');
           } else {
             document.getElementById(question).classList.remove('negative');
           }
         }
       }
+      processLocationForm();
     }
   });
 });
@@ -511,7 +510,9 @@ async function hashchanged(){
           let questionId = item[0];
           let value = item[1];
           if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
-            let element = $('#'+questionId)[0];
+            let element = $('#'+questionId);
+            element.trigger("change");
+            element = element[0];
             element.value = value;
             if(value != 0){
               setTimeout(() => {
@@ -772,7 +773,6 @@ async function submitLocationForm(){
 }
 
 function goToNextMovement() {
-  processLocationForm();
   $('#slideable').addClass('transition');
   setTimeout(function(){
     $('#slideable').removeClass("transition");
@@ -788,7 +788,6 @@ function goToNextMovement() {
   }
 }
 function goToPrevMovement() {
-  processLocationForm();
   $('#slideable').addClass('transition-l');
   setTimeout(function(){
     $('#slideable').removeClass("transition-l");
