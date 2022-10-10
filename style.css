@@ -603,6 +603,17 @@ button {
   padding-bottom: calc(50% - .5rem);
   padding-top: calc(50% - .4rem);
 }
+.negative {
+	color: red;
+}
+.statsListRight input {
+	padding: 4px 0px;
+	text-align: center;
+}
+.statsListRight input {
+	padding: 4px 0px;
+	text-align: center;
+}
 /*+/- Buttons*/
 /*TOOLTIP CSS*/
 .statsListRight span {

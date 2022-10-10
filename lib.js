@@ -254,15 +254,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if(e.target && e.target.classList.contains('button')){
       let $button = $(e.target);
       let oldValue = $button.parent().find("input").val();
+      let newVal = parseInt(oldValue) || 0;
       if ($button.text() == "+") {
-        var newVal = parseFloat(oldValue) + 1;
+        newVal += 1;
       } else {
-       // Don't allow decrementing below zero
-        if (oldValue > 0) {
-          var newVal = parseFloat(oldValue) - 1;
-        } else {
-          newVal = 0;
-        }
+        newVal -= 1;
       }
       $button.parent().find("input").val(newVal).trigger("change");
     }
@@ -288,9 +284,13 @@ document.addEventListener("DOMContentLoaded", function(){
         if(document.getElementById(question)){
           if(tooLow){
             document.getElementById(question).parentElement.classList.add('tooLow');
-          }
-          else {
+          } else {
             document.getElementById(question).parentElement.classList.remove('tooLow');
+          }
+          if(parseInt(varVals[question]) < 0){
+            document.getElementById(question).classList.add('negative');
+          } else {
+            document.getElementById(question).classList.remove('negative');
           }
         }
       }
@@ -439,7 +439,7 @@ async function hashchanged(){
         </div>
         <div class="statsListRight" data-over="should be as high as ${helpText}">
           <span class="dec button">-</span>
-          <input id="${question.id}" name="${question.id}" type="number" min="0" max="100" step="1" inputmode="numeric" value="0">
+          <input id="${question.id}" name="${question.id}" type="number" inputmode="numeric" value="0">
           <span class="inc button">+</span>
         </div>`;
       }
@@ -454,7 +454,7 @@ async function hashchanged(){
             </div>
             <div class="statsListRight">
               <span class="dec button">-</span>
-              <input id="teamQ${i}" name="teamQ${i}" type="number" min="0" max="100" step="1" inputmode="numeric" value="0">
+              <input id="teamQ${i}" name="teamQ${i}" type="number" inputmode="numeric" value="0">
               <span class="inc button">+</span>
             </div>`;
           }
