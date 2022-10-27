@@ -21,6 +21,15 @@ function updateOnlineStatus(event) {
 }
 //Update Online status
 window.addEventListener('load', function() {
+  let fontSize = localStorage.getItem('fontSize') || 16;
+  document.documentElement.style.fontSize = fontSize+'px';
+  document.getElementById('fontSize').value = fontSize;
+  document.getElementById('fontSizeOutput').value = fontSize +'px'; 
+
+  let mainColor = localStorage.getItem('main-color') || '#FFCF07';
+  document.documentElement.style.setProperty('--main-color', mainColor);
+  document.querySelector("meta[name=theme-color]").setAttribute("content", mainColor);
+
   function update(event) {
     updateOnlineStatus(event);
   }
@@ -251,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   //add +/- buttons to input[type="number"]
   $("#statsList").on("click", function(e) {
-    if(e.target && e.target.classList.contains('button')){
+    if(e.target && (e.target.classList.contains('inc') || e.target.classList.contains('dec'))) {
       let $button = $(e.target);
       let oldValue = $button.parent().find("input").val();
       let newVal = parseInt(oldValue) || 0;
@@ -415,22 +424,30 @@ async function hashchanged(){
 
       document.getElementById('strategyWelcomeText').innerHTML = user.name + ', ' +strategy.welcomeText.charAt(0).toLowerCase() + strategy.welcomeText.slice(1); 
       document.documentElement.style.setProperty('--main-color', strategy.primaryColor);
+      document.querySelector("meta[name=theme-color]").setAttribute("content", strategy.primaryColor);
+      localStorage.setItem('main-color', strategy.primaryColor);
 
-      let statsListContent='';
-      for(question of strategy.questions){
+      let statsListContent = '<div class="grid">';
+      for(i = 0; i < strategy.questions.length; i++){
+        let question = strategy.questions[i];
+       
+        if(i === strategy.beforeMore){
+          statsListContent += `</div><span class="button punch" onclick="toggleMore(this);">More</span><div class="grid hide collapsible">`;
+        }
+
         let helpText='';
         if(user.questionRels[question.id] && user.questionRels[question.id].lessThan){
           helpText = user.questionRels[question.id].lessThan;
           let newHelp = [];
-          for(i = 0; i < helpText.length; i++){
+          for(j = 0; j < helpText.length; j++){
             try {
-              newHelp.push(strategy.questions.filter(item => item.id == helpText[i])[0].name);
+              newHelp.push(strategy.questions.filter(item => item.id == helpText[j])[0].name);
             }
             catch {
             }
           }
           helpText = newHelp;
-          helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1');
+          helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1'); //combines the various indicators in a list.
         }
         statsListContent += `<div class="statsListLeft">
           <label for="${question.id}">${question.name}</label>
@@ -442,6 +459,7 @@ async function hashchanged(){
           <span class="inc button">+</span>
         </div>`;
       }
+      statsListContent += '</div><div class="grid">';
       //add Team Questions.  Will need to send team table, and what teamid in user.movements
       for(i = 1; i <= 3; i++){
         try {
@@ -462,6 +480,8 @@ async function hashchanged(){
           
         }
       }
+
+      statsListContent += '</div>'
 
       document.getElementById('statsList').innerHTML = statsListContent;
       setToolTips();
@@ -513,8 +533,10 @@ async function hashchanged(){
             let element = $('#'+questionId);
             element.trigger("change");
             element = element[0];
-            element.value = value;
+            element.value = value; //set value in the form
             if(value != 0){
+              let hidden = element.closest('.grid.hide');
+              if(hidden) { toggleMore(hidden.previousElementSibling)} //if in a hidden grid, let's reveal it.
               setTimeout(() => {
                 element.classList.add('highlightBg');
               },200);
@@ -536,7 +558,7 @@ async function hashchanged(){
   }
 //SUMMARY!-----------------------------------------------------------------
   else if(hash.startsWith('#summary')) {
-    console.log(window.statSummary)
+    //console.log(window.statSummary)
     if(window.statSummary){
       $('.cards').html('');
 
@@ -858,6 +880,11 @@ function catchError(error, notify=true){
   }
   console.log(error);
   return; 
+}
+
+function toggleMore(el) {
+  el.nextElementSibling.classList.toggle('hide'); 
+  el.textContent = (el.textContent == 'More' ? 'Less' : 'More');
 }
 
 //TOOLTIP CODE

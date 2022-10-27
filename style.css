@@ -52,7 +52,6 @@ html.online:after {
 }
 body {
 	overflow: hidden;
-	font-size: 16px;
 	margin: 0;
 }
 object,
@@ -148,26 +147,6 @@ h1 {
 #location-form{
 	overflow-x: hidden;
 }
-#fiftypercent {
-	display: flex;
-}
-#fiftypercent div {
-	flex: 1 1 20px;
-	background-color: var(--light-gray);
-	padding:0.5rem;
-	border-radius: 2px;
-}
-#fiftypercent div:last-child{
-	margin: 0 0 0 .5rem;
-}
-#fiftypercent div:first-child{
-	margin: 0 .5rem 0 0;
-}
-
-#fiftypercent input {
-	width: 100%;
-}
-
 #movements {
 	display: grid;
 	grid-template-columns: 20px 1fr;
@@ -179,21 +158,35 @@ h1 {
 #onboard-form > * {
 	margin-top: 1rem;
 }
-#statsList {
- display: grid;
- grid-template-columns: 1fr 8.5rem;
- grid-gap: 1rem;
- transition: background 2s;
+#statsList .grid {
+  display: grid;
+  grid-template-columns: 1fr 8.5rem;
+  grid-gap: 1.2rem;
+}
+#statsList .grid:nth-last-child(2) {
+	margin-bottom: 1rem;
+}
+.collapsible {
+	max-height: 40rem;
+	overflow: hidden;
+	transition: max-height .3s, opacity .3s;
+	opacity: 1;
+}
+.grid.hide {
+	margin: 0 !important;
+	max-height: 0 !important;
+	opacity: 0 !important;
 }
 #statsList input {
 	width: 2.3rem;
+  transition: background 2s;
 }
-.statsListLeft {
+.grid .statsListLeft {
 	white-space: nowrap;
 	overflow: hidden;
 	white-space: normal;
 }
-.statsListLeft label {
+.grid .statsListLeft label {
 	text-overflow: ellipsis;
 	overflow: hidden;
 	max-width: calc(100% - 2.2rem);
@@ -327,6 +320,7 @@ h1 {
 	margin-bottom: 1rem;
 }
 
+.punch,
 button {
 	color: #fff;
 	background-color: var(--main-color);
@@ -422,9 +416,9 @@ button:hover {
 #menu li {
 	list-style: none;
 	line-height: 2rem;
-	font-size: 18px;
+	font-size: 1.125rem;
 }
-#menu a {
+#menu li > * {
 	display: block;
 	background: white;
 	border-bottom: 1px var(--medium-gray) solid;
@@ -432,8 +426,8 @@ button:hover {
 	text-decoration: none;
 	color: var(--dark-gray);
 }
-#menu li:active,
-#menu li:hover {
+#menu li a:active,
+#menu li a:hover {
 	filter: brightness(0.9);
 }
 #menu li:first-child {
@@ -627,6 +621,8 @@ button {
   margin: 0 .3rem;
 }
 span[rel="tooltip"] {
+	position: relative;
+	top: .1rem;
 	font-weight: bold;
 	font-family: serif;
   text-align: center;
@@ -638,8 +634,6 @@ span[rel="tooltip"] {
   height: 1.6rem;
   padding-top: .2rem;
   filter: brightness(0.8);
-}
-span[rel="tooltip"] {
   cursor: help;
 }
 #statsList span.button {

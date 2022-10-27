@@ -31,17 +31,17 @@
 					<button style="background:unset;" class="hamburger" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
 				</div>
 				<div style="height: 100%; overflow: auto;">
-					<h3 style="margin-top: 3rem;">Shortcuts</h3>
+					<h3 style="margin-top: 3rem;">Options</h3>
 					<ul>
 						<li>
-							<a href="#locations">Enter More</a>
+							<a href="#locations">Enter Daily</a>
 						</li>
+						<!--li>
+							<a href="#locations">Enter Semester / Quarter</a>
+						</li-->
 						<li>
 							<a href="#summary" onclick="requestSummary(); return false;">Celebration Summary</a>
 						</li>
-						<!--li>
-							<a href="#summary">Enter Weekly / Quarterly Data</a>
-						</li-->
 						<li>
 							<a href="#reset">Logout</a>
 						</li>
@@ -55,6 +55,19 @@
 							<a href="https://sites.google.com/cru.org/infobasehelp" target="_blank">Infobase</a>
 						</li>
 						<li><a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: ">Contact Us</a>
+						</li>
+					</ul>
+					<h3>Settings</h3>
+					<ul>
+						<li>
+							<label>
+                  Font Size: <output id="fontSizeOutput">16px</output><br>
+                  <input id="fontSize" type="range" min="16" max="20" value="16" id="fontSize" name="fontSize" list="tickmarks" onchange="document.getElementById('fontSizeOutput').value=this.value+'px'; document.documentElement.style.fontSize = this.value+'px'; localStorage.setItem('fontSize', this.value);" style="width: 130px">
+                  <datalist id="tickmarks">
+                    <option value="16" label="16px"></option>
+                    <option value="20" label="20px"></option>
+                  </datalist>
+                </label>
 						</li>
 					</ul>
 				</div>
@@ -124,19 +137,13 @@
 			<div id="locations" class="screen last-el-bottom">
 				<h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
 				<h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+				<small class="endDate" style="color: var(--main-color);"></small>
 				<p id="strategyWelcomeText"></p>
 
 				<form class="last-el-bottom" id="location-form">
-					<div id="fiftypercent">
-						<div>
-							<input id="startDate" name="startDate" type="hidden" >
-							<span>From: <b class="startDate"></b></span>
-						</div>
-						<div>
-							<input id="endDate" name="endDate" type="hidden">
-							<span>To: <b class="endDate"></b></span>
-						</div>
-					</div>
+					<input id="startDate" name="startDate" type="hidden" >
+					<span>You last entered data on <b class="startDate"></b></span>
+					<input id="endDate" name="endDate" type="hidden">
 					<h2 style="width: 100%; display: flex;	justify-content: space-between;">
 						<a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
 						<span id="movementName">University of Central Florida Cru</span>
@@ -148,7 +155,7 @@
 						<input type="hidden" id="userName" name="userName">
 						<input type="hidden" id="userPhone" name="userPhone">
 
-						<h4 style="margin-top: 0;">My activity (best estimate)</h4>
+						<h4 style="margin-top: 0;">My daily activity</h4>
 
 					  <div id="statsList"></div>
 					  <div id="storyBoxContainer"></div>
