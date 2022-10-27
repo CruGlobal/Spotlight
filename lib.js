@@ -507,15 +507,8 @@ async function hashchanged(){
       $('#userPhone').val(user.phone); //hidden field
 
       // set dates for the movement
-      var fourteenDays = new Date(); //used if the date is older than 
-      fourteenDays.setTime(fourteenDays.getTime() - (24*60*60*1000) * 14);
-
       let endDate = new Date().toLocaleString().split(',')[0];
-      let startDate = user.mvmnts[movement.id];
-
-      if(new Date(startDate).getTime() < fourteenDays.getTime()){
-        startDate = fourteenDays.toLocaleString().split(',')[0];
-      }
+      let startDate = user.mvmnts[movement.id] || "this is your first time! 😃";
 
       $('#startDate').val(startDate);
       $('.startDate').text(startDate);
