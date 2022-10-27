@@ -372,6 +372,11 @@ button:hover {
 .menu .sidebar {
 	filter: drop-shadow(2px 4px 6px var(--medium-gray));
 }
+@media only screen and (max-device-width: 850px){
+	html:not([data-scroll='0']) #projector:not(.menu) #hamburger-tab {
+		filter: drop-shadow(2px 4px 6px var(--medium-gray));
+	}
+}
 #projector {
 	position: relative;
 	height: 100vh;
@@ -440,7 +445,7 @@ button:hover {
 	background:white; width:77px;
   border-top-left-radius: 2rem;
   border-bottom-left-radius: 2rem;
-
+	transition: filter .2s;
 }
 .menu #hamburger-tab {
 	width: 40px;

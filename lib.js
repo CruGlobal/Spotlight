@@ -30,6 +30,10 @@ window.addEventListener('load', function() {
   document.documentElement.style.setProperty('--main-color', mainColor);
   document.querySelector("meta[name=theme-color]").setAttribute("content", mainColor);
 
+  // Listen for new scroll events, here we debounce our `storeScroll` function
+  document.getElementById('locations').addEventListener('scroll', debounce(storeScrollLocations), { passive: true });
+  document.getElementById('summary').addEventListener('scroll', debounce(storeScrollSummary), { passive: true });
+
   function update(event) {
     updateOnlineStatus(event);
   }
@@ -543,6 +547,8 @@ async function hashchanged(){
 
       projector.classList = 'locations';
       window.document.title = "Enter Stats for "+movement.name;
+      // Update scroll position for first time
+      storeScrollLocations();
     }
     catch(error){
       console.log(error);
@@ -587,6 +593,8 @@ async function hashchanged(){
           time += 2000;
         }
       }
+      // Update scroll position for first time
+      storeScrollSummary();
       //window.statSummary.groupNum = null;
     }
     else {
@@ -970,4 +978,31 @@ function unserialize(data) {
     response.push([newData[0], decodeURI(newData[1])]);
   }
   return response;
+}
+
+// The debounce function receives our function as a parameter
+const debounce = (fn) => {
+  // This holds the requestAnimationFrame reference, so we can cancel it if we wish
+  let frame;
+  // The debounce function returns a new function that can receive a variable number of arguments
+  return (...params) => {
+    // If the frame variable has been defined, clear it now, and queue for next frame
+    if (frame) { 
+      cancelAnimationFrame(frame);
+    }
+    // Queue our function call for the next frame
+    frame = requestAnimationFrame(() => {
+      // Call our function and pass any params we received
+      fn(...params);
+    });
+  } 
+};
+
+// Reads out the scroll position and stores it in the data attribute
+// so we can use it in our stylesheets
+const storeScrollLocations = () => {
+  document.documentElement.dataset.scroll = document.getElementById('locations').scrollTop;
+}
+const storeScrollSummary = () => {
+  document.documentElement.dataset.scroll = document.getElementById('summary').scrollTop;
 }
