@@ -46,6 +46,7 @@ function updateScriptProperties(){
 }
 
 function updateAutoScriptProperties() {
+  setQuestionRelsScriptProperty();
   setGlobalSumsScriptProperty();
   setTeamsScriptProperty();
   setStrategiesScriptProperty();

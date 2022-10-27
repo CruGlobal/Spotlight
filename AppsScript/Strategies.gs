@@ -7,7 +7,7 @@ function setStrategiesScriptProperty(){
   //Data arranged in columns, so we are iterating over them instead of rows.
   for(j = 0; j < strategies[0].length -1; j++){ //j = columns
     let questions = [];  //list of objects because the order matters for the app.
-    for(i = 4; i < 61; i+=4){  //i = row indices starting at 0; start at 4 - first question(in 5th row), i < 61 because 61 is 15th question's start row,  i+=4 because their are 4 rows per question
+    for(i = 5; i < 62; i+=4){  //i = row indices starting at 0; start at 5 - first question(in 6th row), i < 62 because 62 is 15th question's start row,  i+=4 because their are 4 rows per question
       if(strategies[i][j] != ''){ // if there is a strategy selected.
         let question = {};
         question.id = strategies[i][j];
@@ -21,6 +21,7 @@ function setStrategiesScriptProperty(){
     strategy.welcomeText = strategies[1][j];
     strategy.primaryColor = strategies[2][j];
     strategy.summaryId = strategies[3][j];
+    strategy.beforeMore = strategies[4][j];
     strategy.questions = questions;
     
     stratObjs[strategies[0][j]] = strategy;
