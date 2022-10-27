@@ -513,6 +513,9 @@ async function hashchanged(){
             let element = $('#'+questionId);
             element.trigger("change");
             element = element[0];
+            if(!element){
+              continue;
+            }
             element.value = value;
             if(value != 0){
               setTimeout(() => {
