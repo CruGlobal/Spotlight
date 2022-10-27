@@ -530,6 +530,9 @@ async function hashchanged(){
             let element = $('#'+questionId);
             element.trigger("change");
             element = element[0];
+            if(!element){
+              continue;
+            }
             element.value = value; //set value in the form
             if(value != 0){
               let hidden = element.closest('.grid.hide');
