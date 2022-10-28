@@ -137,13 +137,11 @@
 			<div id="locations" class="screen last-el-bottom">
 				<h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
 				<h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
-				<small class="endDate" style="color: var(--main-color);"></small>
+				<small class="todayDate" style="color: var(--main-color);"></small>
 				<p id="strategyWelcomeText"></p>
 
 				<form class="last-el-bottom" id="location-form">
-					<input id="startDate" name="startDate" type="hidden" >
-					<span>You last entered data on <b class="startDate"></b></span>
-					<input id="endDate" name="endDate" type="hidden">
+					<span class="lastUpdate"></span>
 					<h2 style="width: 100%; display: flex;	justify-content: space-between;">
 						<a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
 						<span id="movementName">University of Central Florida Cru</span>

@@ -511,13 +511,17 @@ async function hashchanged(){
       $('#userPhone').val(user.phone); //hidden field
 
       // set dates for the movement
-      let endDate = new Date().toLocaleString().split(',')[0];
-      let startDate = user.mvmnts[movement.id] || "this is your first time! 😃";
+      let todayDate = new Date().toLocaleString().split(',')[0];
+      let lastUpdate = user.mvmnts[movement.id];
+      if(!lastUpdate) {
+        lastUpdate = "";
+      }
+      else {
+        lastUpdate = `You last entered data on <b>${lastUpdate}</b>`;
+      }
 
-      $('#startDate').val(startDate);
-      $('.startDate').text(startDate);
-      $('#endDate').val(endDate);
-      $('.endDate').text(endDate);
+      $('.lastUpdate').html(lastUpdate);
+      $('.todayDate').text(todayDate);
 
       //let's load the data from formSubs
       let formSub = window.formSubs[movement.id];
