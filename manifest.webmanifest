@@ -13,7 +13,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#FFCF07",
+  "theme_color": "white",
   "start_url": "/Spotlight/",
   "background_color": "white",
   "display": "standalone"

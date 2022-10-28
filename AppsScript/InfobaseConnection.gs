@@ -33,7 +33,7 @@ function getStatsPeriodDates() {
 
   return {'begin': begin, 'end': end};
 }
-function getStatsForPeriod(){ //defaults to the previous sunday until now.
+function getStatsForPeriod(movementsList){ //defaults to the previous sunday until now.
   let period = getStatsPeriodDates();
   Logger.log(JSON.stringify(period));
   
@@ -62,7 +62,7 @@ function getStatsForPeriod(){ //defaults to the previous sunday until now.
 
   for(row of data){ //rows are response submissions
     let movementId = String(row[5]);
-    if(movementId.toLowerCase().indexOf('c') != 0){ //We don't want to include SM IDs which are also possible can be smc
+    if(movementId.toLowerCase().indexOf('c') != 0 || movementsList.indexOf(parseInt(movementId.replace('c', ''))) == -1){ //We don't want to include SM IDs or non-infobase movement ids
       continue;
     }
 
@@ -89,7 +89,6 @@ function getStatsForPeriod(){ //defaults to the previous sunday until now.
       //Logger.log('not in range');
     }
   }
-  //Logger.log(JSON.stringify(Object.values(movementsObject)))
   return Object.values(movementsObject);
 }
 function submitMovementData() {
@@ -137,7 +136,11 @@ function submitMovementData() {
     ]
   });*/
 
-  let statistics = JSON.stringify({'statistics': getStatsForPeriod()});
+  let allMovements = getAllMovements()
+  let listOfPossibleMovements = allMovements.activities.map(min => min.id); //get movements from Infobase
+
+  let statistics = JSON.stringify({'statistics': getStatsForPeriod(listOfPossibleMovements)});
+  Logger.log(JSON.parse(statistics).statistics.length);
 
   var requestOptions = {
     method: 'POST',
@@ -156,3 +159,18 @@ function submitMovementData() {
 
 }
 
+function getAllMovements() {
+  var myHeaders = {};
+  myHeaders.Authorization = "Bearer " + getKey();
+
+  var requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    contentType: "application/json",
+    redirect: 'follow'
+  };
+
+  let url = 'https://infobase-stage.cru.org/api/v1/activities?per_page=10000';
+
+  return JSON.parse(UrlFetchApp.fetch(url, requestOptions));
+}
