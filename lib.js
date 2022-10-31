@@ -26,8 +26,58 @@ window.addEventListener('load', function() {
   }
   window.addEventListener('online',  update);
   window.addEventListener('offline', update);
+
+  //let people install on their own schedule
+//ANDROID
+  window.deferredPrompt;
+  const addBtn = document.querySelector('.add-button');
+  addBtn.style.display = 'none';
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    window.deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    addBtn.style.display = 'block';
+  });
+//iOS - Detects if device is on iOS 
+  const isIos = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test( userAgent );
+  }
+  // Detects if device is in standalone mode
+  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  // Checks if should display install popup notification:
+  if (isIos() && !isInStandaloneMode()) {
+    document.addEventListener('click', (e) => {
+      document.getElementById('install-prompt').style.display = 'none';
+    });
+    document.querySelector('.add-button').style.display = 'block';
+  }
 });
 updateOnlineStatus();
+
+function installPWA(){
+  if(window.deferredPrompt){ //we've got a deferred prompt!
+    // Show the prompt
+    window.deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    window.deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        addBtn.style.display = 'none';
+        window.deferredPrompt = null;
+        console.log('User accepted the A2HS prompt');
+      } else {
+        console.log('User dismissed the A2HS prompt');
+      }
+      //window.deferredPrompt = null;  //if you want to nullify after a cancel
+    });
+  }
+  else { //we don't have a deferred - let's show iOS or others.
+    document.getElementById('install-prompt').style.display = 'block';
+  }
+}
 
 function toggleRegister(){
   if($('#register')[0].checked){
@@ -184,32 +234,6 @@ async function requestPin(){
     alert(data.text);
   });
   stopSpin();
-  return jqxhr;
-}
-async function requestSummary(){
-  let phone = user.phone;
-  console.log(phone);
-  if(phone.length != 10){
-    alert('user not set up properly...');
-    return
-  }
-  startSpin()
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
-    method: "GET",
-    dataType: "json",
-    data: `requestSummary=true&phone=${phone}`
-  }).then(function(data){
-    console.log(data);
-    window.statSummary = data.summary;
-    location.hash = "#summary";
-    setUser(data.user);
-    window.user = data.user;
-  }).catch(function(error){
-    catchError(error);
-  }).then(function(data){
-    stopSpin();
-  });
   return jqxhr;
 }
 
@@ -539,47 +563,67 @@ async function hashchanged(){
   }
 //SUMMARY!-----------------------------------------------------------------
   else if(hash.startsWith('#summary')) {
+    if(!window.statSummary){
+      let phone = user.phone;
+      console.log(phone);
+      if(phone.length != 10){
+        alert('user not set up properly...');
+        return
+      }
+      startSpin()
+      var jqxhr = await $.ajax({
+        url: window.indicatorAppURL,
+        method: "GET",
+        dataType: "json",
+        data: `requestSummary=true&phone=${phone}`
+      }).then(function(data){
+        console.log(data);
+        window.statSummary = data.summary;
+        setUser(data.user);
+        window.user = data.user;
+      }).catch(function(error){
+        catchError(error);
+      }).then(function(data){
+        stopSpin();
+      });
+    }
+
     console.log(window.statSummary)
-    if(window.statSummary){
-      $('.cards').html('');
+    $('.cards').html('');
 
-      for(question of Object.keys(window.statSummary.groupNum)){
-        let num = window.statSummary.groupNum[question];
-        //let text = window.user.strategies[]
-        let card = `<div class="card">
-          <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
-            <img src="genericQ.png" width="80px" height="80px">
-          </object>
-          <p>Your group had</p>
-          <h1 id="${question+'Sum'}">${num}</h1>
-          <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
-        </div>`;
+    for(question of Object.keys(window.statSummary.groupNum)){
+      let num = window.statSummary.groupNum[question];
+      //let text = window.user.strategies[]
+      let card = `<div class="card">
+        <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
+          <img src="genericQ.png" width="80px" height="80px">
+        </object>
+        <p>Your group had</p>
+        <h1 id="${question+'Sum'}">${num}</h1>
+        <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
+      </div>`;
 
-        $('.cards').append(card);
-      }
-      projector.classList = 'summary';
-      window.document.title = "Stats Summary";
-      let time = 500;
-
-      function doSetTimeout(stat,time) {
-        setTimeout(function(){
-          party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
-            count: party.variation.range(40, 80)
-          })
-        }, time);
-      }
-
-      for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
-        if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
-          doSetTimeout(stat,time);
-          time += 2000;
-        }
-      }
-      //window.statSummary.groupNum = null;
+      $('.cards').append(card);
     }
-    else {
-      location.hash = '#';
+    projector.classList = 'summary';
+    window.document.title = "Stats Summary";
+    let time = 500;
+
+    function doSetTimeout(stat,time) {
+      setTimeout(function(){
+        party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
+          count: party.variation.range(40, 80)
+        })
+      }, time);
     }
+
+    for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
+      if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
+        doSetTimeout(stat,time);
+        time += 2000;
+      }
+    }
+    window.statSummary = null;
   }
   else {
     location.hash = '#';
