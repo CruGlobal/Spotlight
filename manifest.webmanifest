@@ -19,9 +19,13 @@
   "display": "standalone",
   "screenshots": [
     {
-      "src": "/Screenshot1.jpg",
-      "sizes": "375x667",
-      "type": "image/jpg"
+      "src": "/Screenshot1.png",
+      "sizes": "1442x3202",
+      "type": "image/png"
+    },{
+      "src": "/Screenshot2.png",
+      "sizes": "1442x3202",
+      "type": "image/png"
     }
   ],
   "description": "Quick and easy way to collect and celebrate what God is doing on campus.",
