@@ -28,6 +28,7 @@ window.addEventListener('load', function() {
   window.addEventListener('offline', update);
 
   //let people install on their own schedule
+//ANDROID
   window.deferredPrompt;
   const addBtn = document.querySelector('.add-button');
   addBtn.style.display = 'none';
@@ -39,25 +40,44 @@ window.addEventListener('load', function() {
     window.deferredPrompt = e;
     // Update UI to notify the user they can add to home screen
     addBtn.style.display = 'block';
-
-    addBtn.addEventListener('click', () => {
-      // Show the prompt
-      window.deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      window.deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          addBtn.style.display = 'none';
-          window.deferredPrompt = null;
-          console.log('User accepted the A2HS prompt');
-        } else {
-          console.log('User dismissed the A2HS prompt');
-        }
-        //window.deferredPrompt = null;  //if you want to nullify after a cancel
-      });
-    });
   });
+//iOS - Detects if device is on iOS 
+  const isIos = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test( userAgent );
+  }
+  // Detects if device is in standalone mode
+  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  // Checks if should display install popup notification:
+  if (isIos() && !isInStandaloneMode()) {
+    document.addEventListener('click', (e) => {
+      document.getElementById('install-prompt').style.display = 'none';
+    });
+    document.querySelector('.add-button').style.display = 'block';
+  }
 });
 updateOnlineStatus();
+
+function installPWA(){
+  if(window.deferredPrompt){ //we've got a deferred prompt!
+    // Show the prompt
+    window.deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    window.deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        addBtn.style.display = 'none';
+        window.deferredPrompt = null;
+        console.log('User accepted the A2HS prompt');
+      } else {
+        console.log('User dismissed the A2HS prompt');
+      }
+      //window.deferredPrompt = null;  //if you want to nullify after a cancel
+    });
+  }
+  else { //we don't have a deferred - let's show iOS or others.
+    document.getElementById('install-prompt').style.display = 'block';
+  }
+}
 
 function toggleRegister(){
   if($('#register')[0].checked){

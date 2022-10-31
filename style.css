@@ -351,6 +351,32 @@ h1 {
   margin: 0.4rem;
   height: 0;
 }
+#install-prompt {
+	 position: absolute;
+	 bottom: 1rem;
+	 left: 0;
+	 right: 0;
+	 margin-left: calc((100vw - var(--app-width))/2);
+	 margin-right: calc((100vw - var(--app-width))/2);
+	 background: var(--light-gray);
+	 border-radius: .5rem;
+	 padding: 1rem;
+	 padding-top: .5rem;
+	 z-index: 1000;
+}
+#install-prompt::after {
+  position: absolute;
+  content: "";
+  bottom: -1rem;
+  margin-left: auto;
+  margin-right: auto;
+  border-top: 1rem solid var(--light-gray);
+  border-left: 1rem solid transparent;
+  border-right: 1rem solid transparent;
+  left: 0;
+  right: 0;
+  width: 0;
+}
 
 button {
 	color: #fff;
