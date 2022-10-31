@@ -435,7 +435,7 @@ button:hover {
 	line-height: 2rem;
 	font-size: 18px;
 }
-#menu a {
+#menu li > * {
 	display: block;
 	background: white;
 	border-bottom: 1px var(--medium-gray) solid;
@@ -443,8 +443,8 @@ button:hover {
 	text-decoration: none;
 	color: var(--dark-gray);
 }
-#menu li:active,
-#menu li:hover {
+#menu li a:active,
+#menu li a:hover {
 	filter: brightness(0.9);
 }
 #menu li:first-child {
