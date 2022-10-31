@@ -337,6 +337,20 @@ h1 {
   border-bottom: 2px solid var(--main-color) !important;
   cursor: pointer;
 }
+.arrow-left {
+	border-top: 0.6rem solid transparent;
+  border-right: 1.2rem solid var(--main-color);
+  border-bottom: 0.6rem solid transparent;
+  margin: 0.4rem;
+  height: 0;
+}
+.arrow-right {
+	border-top: 0.6rem solid transparent;
+  border-left: 1.2rem solid var(--main-color);
+  border-bottom: 0.6rem solid transparent;
+  margin: 0.4rem;
+  height: 0;
+}
 
 button {
 	color: #fff;
