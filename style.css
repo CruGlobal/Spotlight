@@ -2,6 +2,11 @@
   box-sizing: border-box;
 	font-family: 'Source Sans Pro', sans-serif;
 	touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+*:focus {
+  outline: none !important;
 }
 :root {
   --main-color: #FFCF07;
@@ -325,6 +330,12 @@ h1 {
 	text-align: center;
 	color: gray;
 	margin-bottom: 1rem;
+}
+.add-button {
+  background: var(--light-gray) !important;
+  border-bottom-left-radius: 1rem;
+  border-bottom: 2px solid var(--main-color) !important;
+  cursor: pointer;
 }
 
 button {

@@ -26,6 +26,36 @@ window.addEventListener('load', function() {
   }
   window.addEventListener('online',  update);
   window.addEventListener('offline', update);
+
+  //let people install on their own schedule
+  window.deferredPrompt;
+  const addBtn = document.querySelector('.add-button');
+  addBtn.style.display = 'none';
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    window.deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    addBtn.style.display = 'block';
+
+    addBtn.addEventListener('click', () => {
+      // Show the prompt
+      window.deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      window.deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          addBtn.style.display = 'none';
+          window.deferredPrompt = null;
+          console.log('User accepted the A2HS prompt');
+        } else {
+          console.log('User dismissed the A2HS prompt');
+        }
+        //window.deferredPrompt = null;  //if you want to nullify after a cancel
+      });
+    });
+  });
 });
 updateOnlineStatus();
 
