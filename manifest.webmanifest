@@ -16,5 +16,13 @@
   "theme_color": "white",
   "start_url": "/Spotlight/",
   "background_color": "white",
-  "display": "standalone"
+  "display": "standalone",
+  "screenshots": [
+    {
+      "src": "/Screenshot1.jpg",
+      "sizes": "375x667",
+      "type": "image/jpg"
+    }
+  ],
+  "description": "Quick and easy way to collect and celebrate what God is doing on campus."
 }
