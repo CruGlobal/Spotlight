@@ -24,5 +24,12 @@
       "type": "image/jpg"
     }
   ],
-  "description": "Quick and easy way to collect and celebrate what God is doing on campus."
+  "description": "Quick and easy way to collect and celebrate what God is doing on campus.",
+  "shortcuts" : [
+    {
+      "name": "Summary Celebration",
+      "url": "/#summary",
+      "description": "A celebration of God's work"
+    }
+  ]
 }

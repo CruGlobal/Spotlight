@@ -216,32 +216,6 @@ async function requestPin(){
   stopSpin();
   return jqxhr;
 }
-async function requestSummary(){
-  let phone = user.phone;
-  console.log(phone);
-  if(phone.length != 10){
-    alert('user not set up properly...');
-    return
-  }
-  startSpin()
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
-    method: "GET",
-    dataType: "json",
-    data: `requestSummary=true&phone=${phone}`
-  }).then(function(data){
-    console.log(data);
-    window.statSummary = data.summary;
-    location.hash = "#summary";
-    setUser(data.user);
-    window.user = data.user;
-  }).catch(function(error){
-    catchError(error);
-  }).then(function(data){
-    stopSpin();
-  });
-  return jqxhr;
-}
 
 //ADD EVENT LISTENERS HASHCHANGE, AND setup variables
 document.addEventListener("DOMContentLoaded", function(){
@@ -569,47 +543,67 @@ async function hashchanged(){
   }
 //SUMMARY!-----------------------------------------------------------------
   else if(hash.startsWith('#summary')) {
+    if(!window.statSummary){
+      let phone = user.phone;
+      console.log(phone);
+      if(phone.length != 10){
+        alert('user not set up properly...');
+        return
+      }
+      startSpin()
+      var jqxhr = await $.ajax({
+        url: window.indicatorAppURL,
+        method: "GET",
+        dataType: "json",
+        data: `requestSummary=true&phone=${phone}`
+      }).then(function(data){
+        console.log(data);
+        window.statSummary = data.summary;
+        setUser(data.user);
+        window.user = data.user;
+      }).catch(function(error){
+        catchError(error);
+      }).then(function(data){
+        stopSpin();
+      });
+    }
+
     console.log(window.statSummary)
-    if(window.statSummary){
-      $('.cards').html('');
+    $('.cards').html('');
 
-      for(question of Object.keys(window.statSummary.groupNum)){
-        let num = window.statSummary.groupNum[question];
-        //let text = window.user.strategies[]
-        let card = `<div class="card">
-          <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
-            <img src="genericQ.png" width="80px" height="80px">
-          </object>
-          <p>Your group had</p>
-          <h1 id="${question+'Sum'}">${num}</h1>
-          <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
-        </div>`;
+    for(question of Object.keys(window.statSummary.groupNum)){
+      let num = window.statSummary.groupNum[question];
+      //let text = window.user.strategies[]
+      let card = `<div class="card">
+        <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
+          <img src="genericQ.png" width="80px" height="80px">
+        </object>
+        <p>Your group had</p>
+        <h1 id="${question+'Sum'}">${num}</h1>
+        <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
+      </div>`;
 
-        $('.cards').append(card);
-      }
-      projector.classList = 'summary';
-      window.document.title = "Stats Summary";
-      let time = 500;
-
-      function doSetTimeout(stat,time) {
-        setTimeout(function(){
-          party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
-            count: party.variation.range(40, 80)
-          })
-        }, time);
-      }
-
-      for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
-        if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
-          doSetTimeout(stat,time);
-          time += 2000;
-        }
-      }
-      //window.statSummary.groupNum = null;
+      $('.cards').append(card);
     }
-    else {
-      location.hash = '#';
+    projector.classList = 'summary';
+    window.document.title = "Stats Summary";
+    let time = 500;
+
+    function doSetTimeout(stat,time) {
+      setTimeout(function(){
+        party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
+          count: party.variation.range(40, 80)
+        })
+      }, time);
     }
+
+    for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
+      if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
+        doSetTimeout(stat,time);
+        time += 2000;
+      }
+    }
+    window.statSummary = null;
   }
   else {
     location.hash = '#';
