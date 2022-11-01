@@ -65,7 +65,8 @@ function installPWA(){
     // Wait for the user to respond to the prompt
     window.deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
-        addBtn.style.display = 'none';
+        document.querySelector('.add-button').style.display = 'none';
+        document.getElementById('projector').classList.remove('menu');
         window.deferredPrompt = null;
         console.log('User accepted the A2HS prompt');
       } else {
