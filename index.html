@@ -11,11 +11,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#FFCF07">
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" async rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="style.css">
 
-    <script src="jquery-3.4.0.min.js"></script>
     <script src="lib.js"></script>
     <script src="party.min.js" defer></script>
 
@@ -107,7 +106,7 @@
             <div>
               <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
               <label for="register">Register as new user</label>
-              <div class="userToggle">
+              <div id="userToggle">
                 <label for="regUserName">First name</label><br>
                 <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
                 <label for="regUserEmail">Email for account recovery</label><br>
@@ -117,7 +116,7 @@
             <div>
               <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
               <label for="regUserStaff">I'm on staff with Cru</label>
-              <div class="staffToggle">
+              <div id="staffToggle">
                 <label for="staffAcct">Staff Acct. #</label><br>
                 <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
               </div>
@@ -190,8 +189,8 @@
         <h1></h1>
 
         <div id="reminder">
-          <div onclick="$('#hiddenReminder').hide(); $('#blurBackground').hide();" id="blurBackground"></div>
-          <button onclick="$('#hiddenReminder').toggle(); $('#blurBackground').toggle();"><span>&#128197;<!-- 💬--></span> Set a reminder</button>
+          <div onclick="document.getElementById('hiddenReminder').classList.remove('visible'); document.getElementById('blurBackground').classList.remove('visible');" id="blurBackground"></div>
+          <button onclick="document.getElementById('hiddenReminder').classList.toggle('visible'); document.getElementById('blurBackground').classList.toggle('visible');"><span>&#128197;<!-- 💬--></span> Set a reminder</button>
           <div id="hiddenReminder">
             <p>What day/time?</p>
             <div class="day-of-week">
@@ -211,7 +210,7 @@
 
         <p style="text-align: center;">Thanks for celebrating with us all that God is doing on Campus! Below is just a small snapshot of what God is doing on your campus in the last 3 weeks.</p>
         
-        <div class="cards">
+        <div id="cards">
         </div>
         
         <div>
@@ -230,6 +229,6 @@
       </div>
     </div>
     <div id="install-prompt" style="display: none;"><img src="a2hs.png" style="height:3rem; padding-top:.3rem; padding-right:1rem; float:left"><span>Install Spotlight[beta] on your device: tap <img src="share-apple.svg" style="height: 1.5rem; vertical-align: text-bottom;"> and then Add to homescreen.</span></div>
-    <script src="masking-input.js" data-autoinit="true"></script>
+    <script src="masking-input.js" async defer data-autoinit="true"></script>
   </body>
 </html>

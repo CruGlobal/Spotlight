@@ -287,7 +287,7 @@ h1 {
   margin: 0;
   padding: 0;
 }
-.cards {
+#cards {
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -561,6 +561,7 @@ button:hover {
   border: 1px gray solid;
   border-radius: 2rem;
   border-bottom-right-radius: 0;
+  pointer-events: none;
 }
 .tooLow:hover:after {
   opacity: 0.2;
@@ -586,6 +587,9 @@ button {
 }
 .menu #menu {
   transform: translate3d(0, 0, 0);
+}
+.visible {
+  display: initial !important;
 }
 #reminder {
   position: relative;
@@ -689,8 +693,6 @@ span[rel="tooltip"] {
   height: 1.6rem;
   padding-top: .2rem;
   filter: brightness(0.8);
-}
-span[rel="tooltip"] {
   cursor: help;
 }
 #statsList span.button {
@@ -708,6 +710,11 @@ span[rel="tooltip"] {
   position: absolute;
   z-index: 100;
   padding: 15px;
+  transition: opacity .1s, transform .1s;
+}
+.inAndDown {
+  opacity: 1 !important;
+  transform: translateY(10px);
 }
  
 #tooltip:after { /* triangle decoration */
@@ -765,7 +772,7 @@ span[rel="tooltip"] {
   text-decoration: underline;
 }
 
-.staffToggle, .userToggle, .accountToggle {
+#staffToggle, #userToggle, .accountToggle {
   background-color: rgba(0, 0, 0, 0.15);
   padding: 1rem;
   border-bottom-left-radius: 1rem;
@@ -778,22 +785,26 @@ span[rel="tooltip"] {
 /* optional */
 .shell {
   position: relative;
-  line-height: 1; }
-  .shell span {
-    position: absolute;
-    left: 12px;
-    top: 2px;
-    color: #ccc;
-    pointer-events: none;
-    z-index: -1; }
-    .shell span i {
-      font-style: normal;
-      /* any of these 3 will work */
-      color: transparent;
-      opacity: 0;
-      visibility: hidden; }
+  line-height: 1; 
+}
+.shell span {
+  position: absolute;
+  left: 12px;
+  top: 2px;
+  color: #ccc;
+  pointer-events: none;
+  z-index: -1; 
+}
+.shell span i {
+  font-style: normal;
+  /* any of these 3 will work */
+  color: transparent;
+  opacity: 0;
+  visibility: hidden; 
+}
 
 input.masked,
 .shell span {
   background-color: transparent;
-  text-transform: uppercase; }
+  text-transform: uppercase; 
+}
