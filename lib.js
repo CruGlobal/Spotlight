@@ -933,8 +933,9 @@ function setToolTips() {
       var init_tooltip = function() {
         tooltip.style.maxWidth= `min(${window.innerWidth / 1.2}px, 340px)`;
 
+        var targetOffset = target.getBoundingClientRect();
         var pos_left = target.offsetLeft + ( target.offsetWidth / 2 ) - ( tooltip.offsetWidth / 2 );
-        var pos_top  = target.offsetTop - tooltip.offsetHeight - 20;
+        var pos_top  = targetOffset.top - tooltip.offsetHeight - 20;
 
         if( pos_left < 0 )
         {
@@ -954,7 +955,7 @@ function setToolTips() {
         }*/
 
         if( pos_top < 0 ) {
-          var pos_top  = target.offsetTop + target.offsetHeight;
+          var pos_top  = targetOffset.top + target.offsetHeight;
           tooltip.classList.add('top');
         }
         else {
