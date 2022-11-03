@@ -615,7 +615,6 @@ async function hashchanged(){
         })
       }, time);
     }
-
     for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
       if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
         doSetTimeout(stat,time);
