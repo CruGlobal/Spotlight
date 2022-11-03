@@ -380,7 +380,7 @@ async function hashchanged(){
     document.querySelectorAll('.pin').forEach(el => el.style.display = 'none');
     if(window.user){
       let notifyEl = document.getElementById('notification');
-      if(notifyEl){console.log('s');notifyEl.remove()}
+      if(notifyEl){notifyEl.remove()}
       let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
         document.getElementById('notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
         onclick="document.getElementById('notification').remove();">X</button></div>`
@@ -565,7 +565,6 @@ async function hashchanged(){
   else if(hash.startsWith('#summary')) {
     if(!window.statSummary){
       let phone = user.phone;
-      console.log(phone);
       if(phone.length != 10){
         alert('user not set up properly...');
         return
@@ -758,7 +757,6 @@ function processLocationForm(submitMovementId) {
   //clear notification
   let notification = document.getElementById('notification');
   if(notification) {
-    console.log('y')
     notification.remove();
   }
 }
@@ -782,7 +780,6 @@ async function submitLocationForm(){
                   .reduce((total, amount) => Number(total) + Number(amount));
     if(sum != 0 || key == movementId){
       let currentMvmnt = window.user.movements.map(mvmnt => mvmnt.id).indexOf(key);
-      console.log(key)
       message += `* ${currentMvmnt + 1}: ${window.user.movements.filter(itm => itm.id == key)[0].name}\n`
       if(startingMvmnt != currentMvmnt){ //Only need to prompt the user if they can't see all the data they are submitting
         prompt = true;
