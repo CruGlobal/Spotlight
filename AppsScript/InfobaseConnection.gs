@@ -115,48 +115,71 @@ function submitMovementData() {
       },
       {
         "activity_id": 5962,
-        "period_begin": "2022-06-26",
-        "period_end": "2022-07-02",
+        "period_begin": "2022-10-30",
+        "period_end": "2022-11-02",
         "students_involved": 10,
         "faculty_involved": 11,
         "students_engaged": 12,
         "faculty_engaged": 13,
         "student_leaders": 14,
         "faculty_leaders": 15,
-        "spiritual_conversations": 2,
-        "holy_spirit_presentations": 5,
-        "personal_evangelism": 3,
-        "personal_decisions": 4,
-        "graduating_on_mission": 0,
-        "group_evangelism": 3,
-        "group_decisions": 5,
-        "media_exposures": 4,
-        "media_decisions": 3
+        "spiritual_conversations": 16,
+        "holy_spirit_presentations": 17,
+        "personal_evangelism": 18,
+        "personal_decisions": 19,
+        "graduating_on_mission": 20,
+        "group_evangelism": 21,
+        "group_decisions": 22,
+        "media_exposures": 23,
+        "media_decisions": 24
       }
     ]
   });*/
 
-  let allMovements = getAllMovements()
-  let listOfPossibleMovements = allMovements.activities.map(min => min.id); //get movements from Infobase
+  try {
+    let timeZone = Session.getScriptTimeZone();
+    let date = Utilities.formatDate(new Date(SCRIPT_PROP.getProperty('date')),timeZone,"MM/dd/yyyy");
+    let today = new Date().toLocaleDateString();
 
-  let statistics = JSON.stringify({'statistics': getStatsForPeriod(listOfPossibleMovements)});
-  Logger.log(JSON.parse(statistics).statistics.length);
+    //first time today!
+    if(date != today){
+      SCRIPT_PROP.setProperty('tries', 1);
+    }
+    else if(parseInt(SCRIPT_PROP.getProperty('tries')) > 3){  //we're done trying!
+      return;
+    }
+    else {
+      SCRIPT_PROP.setProperty('tries', parseInt(SCRIPT_PROP.getProperty('tries')) + 1);
+      SCRIPT_PROP.setProperty('date', today);
+    }
 
-  var requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    payload: statistics,
-    contentLength: statistics.length,
-    contentType: "application/json",
-    redirect: 'follow'
-  };
+    let allMovements = getAllMovements()
+    let listOfPossibleMovements = allMovements.activities.map(min => min.id); //get movements from Infobase
 
-  let url = 'https://infobase-stage.cru.org/api/v1/statistics';
+    let statistics = JSON.stringify({'statistics': getStatsForPeriod(listOfPossibleMovements)});
+    Logger.log(JSON.parse(statistics).statistics.length);
+    Logger.log(JSON.parse(statistics).statistics.map(el => el.activity_id));
 
-  var response = UrlFetchApp.fetch(url, requestOptions);
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      payload: statistics,
+      contentLength: statistics.length,
+      contentType: "application/json",
+      redirect: 'follow'
+    };
 
-  Logger.log(response);
+    let url = 'https://infobase-stage.cru.org/api/v1/statistics';
 
+    var response = UrlFetchApp.fetch(url, requestOptions);
+
+    Logger.log(response);
+  }
+  catch(error) {
+    Logger.log(JSON.stringify(error));
+    GmailApp.sendEmail('carl.hempel@cru.org','Error in submit movement data',JSON.stringify(error));
+    submitMovementData();
+  }
 }
 
 function getAllMovements() {
