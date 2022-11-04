@@ -409,7 +409,7 @@ button:hover {
   position: absolute;
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 12.5rem;
   height: 100%;
   top: 0;
   bottom: 0;
@@ -493,7 +493,8 @@ button:hover {
 #hamburger-tab {
   position: absolute;
   transform: translate3d(-76px,30px,0); 
-  background:white; width:77px;
+  background:white; 
+  width:77px;
   border-top-left-radius: 2rem;
   border-bottom-left-radius: 2rem;
   transition: filter .2s;
