@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
+  <head>
     <meta charset="utf-8"/>
     <meta name="Description" content="Spotlight[Beta]">
     <meta name="theme-color" content="#FFCF07">
@@ -9,58 +9,58 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#FFCF07">
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="style.css" >
 
-  	<script src="jquery-3.4.0.min.js"></script>
-  	<script src="lib.js"></script>
-  	<script src="party.min.js" defer></script>
+    <script src="jquery-3.4.0.min.js"></script>
+    <script src="lib.js"></script>
+    <script src="party.min.js" defer></script>
 
     <title>Spotlight[Beta]</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	</head>
-	<body>
-		<div id="projector"  class="initial">
-			<div id="menu" class="sidebar">
-				<div id="hamburger-tab">
-					<button style="background:unset;" class="hamburger" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
-				</div>
-				<div style="height: 100%; overflow: auto;">
-					<h3 style="margin-top: 3rem;">Options</h3>
-					<ul>
-						<li>
-							<a href="#locations">Enter Daily</a>
-						</li>
-						<!--li>
-							<a href="#locations">Enter Semester / Quarter</a>
-						</li-->
-						<li>
-							<a href="#summary" onclick="requestSummary(); return false;">Celebration Summary</a>
-						</li>
-						<li>
-							<a href="#reset">Logout</a>
-						</li>
-					</ul>
-				  <h3>Help</h3>
-					<ul>
-						<!--li>
-							<a href="#" target="_blank">Spotlight</a>
-						</li-->
-						<li>
-							<a href="https://sites.google.com/cru.org/infobasehelp" target="_blank">Infobase</a>
-						</li>
-						<li><a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: ">Contact Us</a>
-						</li>
-					</ul>
-					<h3>Settings</h3>
-					<ul>
-						<li>
-							<label>
+  </head>
+  <body>
+    <div id="projector"  class="initial">
+      <div id="menu" class="sidebar">
+        <div id="hamburger-tab">
+          <button style="background:unset;" class="hamburger" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
+        </div>
+        <div style="height: 100%; overflow: auto;">
+          <h3 style="margin-top: 3rem;">Options</h3>
+          <ul>
+            <li>
+              <a href="#locations">Enter Daily</a>
+            </li>
+            <!--li>
+              <a href="#locations">Enter Semester / Quarter</a>
+            </li-->
+            <li>
+              <a href="#summary" onclick="requestSummary(); return false;">Celebration Summary</a>
+            </li>
+            <li>
+              <a href="#reset">Logout</a>
+            </li>
+          </ul>
+          <h3>Help</h3>
+          <ul>
+            <!--li>
+              <a href="#" target="_blank">Spotlight</a>
+            </li-->
+            <li>
+              <a href="https://sites.google.com/cru.org/infobasehelp" target="_blank">Infobase</a>
+            </li>
+            <li><a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: ">Contact Us</a>
+            </li>
+          </ul>
+          <h3>Settings</h3>
+          <ul>
+            <li>
+              <label>
                   Font Size: <output id="fontSizeOutput">16px</output><br>
                   <input id="fontSize" type="range" min="16" max="20" value="16" id="fontSize" name="fontSize" list="tickmarks" onchange="document.getElementById('fontSizeOutput').value=this.value+'px'; document.documentElement.style.fontSize = this.value+'px'; localStorage.setItem('fontSize', this.value);" style="width: 130px">
                   <datalist id="tickmarks">
@@ -68,154 +68,154 @@
                     <option value="20" label="20px"></option>
                   </datalist>
                 </label>
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div id="onboarding" class="screen last-el-bottom">
-				<h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-				<h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
-				
-				<form class="last-el-bottom" id="onboard-form">
-	        <div class="movementInfo">
-						<p>Select the movements below that you would like to add OR click <a href="#onboarding">here</a> to login.  </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div id="onboarding" class="screen last-el-bottom">
+        <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
+        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        
+        <form class="last-el-bottom" id="onboard-form">
+          <div class="movementInfo">
+            <p>Select the movements below that you would like to add OR click <a href="#onboarding">here</a> to login.  </p>
 
-						<h2>Movements</h2>
+            <h2>Movements</h2>
 
-						<div id="movements">
-						</div>
-					<br>
-					<br>
-					<b>Account Login</b>
-					</div>
-					<div class="loginInfo">
-						<b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
-					</div>
-					<div class="accountToggle">
-						<label for="regUserPhone">Phone Number</label><br>
-			  		<input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
-						<label for="regUserPin">Password/Pin Number</label><br>
-						<input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>	
-						<small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
-					</div>
-		  		<div class="movementInfo accountInfo">
-		  			<div>
-				  		<input name="register" id="register" type="checkbox" onchange="toggleRegister();">
-				  		<label for="register">Register as new user</label>
-				  		<div class="userToggle">
-					  		<label for="regUserName">First name</label><br>
-								<input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
-								<label for="regUserEmail">Email for account recovery</label><br>
-								<input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
-							</div>
-						</div><br>
-						<div>
-							<input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
-				  		<label for="regUserStaff">I'm on staff with Cru</label>
-				  		<div class="staffToggle">
-					  		<label for="staffAcct">Staff Acct. #</label><br>
-								<input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
-							</div>
-						</div>
-					</div>
-					<div>
-						<input id="ua" name="ua" required type="checkbox" >
-						<label for="ua" >I agree to the <a href="https://www.cru.org/us/en/about/privacy.html" target="_blank">Cru Privacy Statement</a></label>
-					</div>
-					<div>
-		      	<span class="bottom-button">
-							<button id="formSubmit"><span style="display:none">Register and </span>Setup Device</button>
-						</span>
-						<span class="questions">
-							Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
-						email</a>
-						</span>
-					</div>
-				</form>
-			</div>
+            <div id="movements">
+            </div>
+          <br>
+          <br>
+          <b>Account Login</b>
+          </div>
+          <div class="loginInfo">
+            <b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+          </div>
+          <div class="accountToggle">
+            <label for="regUserPhone">Phone Number</label><br>
+            <input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
+            <label for="regUserPin">Password/Pin Number</label><br>
+            <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>  
+            <small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
+          </div>
+          <div class="movementInfo accountInfo">
+            <div>
+              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
+              <label for="register">Register as new user</label>
+              <div class="userToggle">
+                <label for="regUserName">First name</label><br>
+                <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
+                <label for="regUserEmail">Email for account recovery</label><br>
+                <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
+              </div>
+            </div><br>
+            <div>
+              <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
+              <label for="regUserStaff">I'm on staff with Cru</label>
+              <div class="staffToggle">
+                <label for="staffAcct">Staff Acct. #</label><br>
+                <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
+              </div>
+            </div>
+          </div>
+          <div>
+            <input id="ua" name="ua" required type="checkbox" >
+            <label for="ua" >I agree to the <a href="https://www.cru.org/us/en/about/privacy.html" target="_blank">Cru Privacy Statement</a></label>
+          </div>
+          <div>
+            <span class="bottom-button">
+              <button id="formSubmit"><span style="display:none">Register and </span>Setup Device</button>
+            </span>
+            <span class="questions">
+              Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
+            email</a>
+            </span>
+          </div>
+        </form>
+      </div>
 
-			<div id="locations" class="screen last-el-bottom">
-				<h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-				<h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
-				<small class="todayDate" style="color: var(--main-color);"></small>
-				<p id="strategyWelcomeText"></p>
+      <div id="locations" class="screen last-el-bottom">
+        <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
+        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        <small class="todayDate" style="color: var(--main-color);"></small>
+        <p id="strategyWelcomeText"></p>
 
-				<form class="last-el-bottom" id="location-form">
-					<span class="lastUpdate"></span>
-					<h2 style="width: 100%; display: flex;	justify-content: space-between;">
-						<a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
-						<span id="movementName">University of Central Florida Cru</span>
-						<a class="mvBtn clicky" onclick="goToNextMovement();"> ▶</a>
-					</h2>
+        <form class="last-el-bottom" id="location-form">
+          <span class="lastUpdate"></span>
+          <h2 style="width: 100%; display: flex;  justify-content: space-between;">
+            <a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
+            <span id="movementName">University of Central Florida Cru</span>
+            <a class="mvBtn clicky" onclick="goToNextMovement();"> ▶</a>
+          </h2>
 
-					<div id="slideable">
-						<input type="hidden" id="movementId" name="movementId">
-						<input type="hidden" id="userName" name="userName">
-						<input type="hidden" id="userPhone" name="userPhone">
+          <div id="slideable">
+            <input type="hidden" id="movementId" name="movementId">
+            <input type="hidden" id="userName" name="userName">
+            <input type="hidden" id="userPhone" name="userPhone">
 
-						<h4 style="margin-top: 0;">My daily activity</h4>
+            <h4 style="margin-top: 0;">My daily activity</h4>
 
-					  <div id="statsList"></div>
-					  <div id="storyBoxContainer"></div>
-					  
-					</div>
-					<div>
-						<span class="bottom-button">
-							<button type="button" onclick="goToPrevMovement();" class="white mvBtn">Previous</button>
-							<button type="button" style="width: 40%;" onclick="submitLocationForm();">Submit</button>
-							<button type="button" onclick="goToNextMovement();" class="white mvBtn">Next</button>
-						</span>
-						<span class="questions">
-							Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
-						email</a>
-						</span>
-					</div>
-				</form>
-			</div>
+            <div id="statsList"></div>
+            <div id="storyBoxContainer"></div>
+            
+          </div>
+          <div>
+            <span class="bottom-button">
+              <button type="button" onclick="goToPrevMovement();" class="white mvBtn">Previous</button>
+              <button type="button" style="width: 40%;" onclick="submitLocationForm();">Submit</button>
+              <button type="button" onclick="goToNextMovement();" class="white mvBtn">Next</button>
+            </span>
+            <span class="questions">
+              Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
+            email</a>
+            </span>
+          </div>
+        </form>
+      </div>
 
-			<div id="summary" class="screen last-el-bottom">
-				<h1></h1>
+      <div id="summary" class="screen last-el-bottom">
+        <h1></h1>
 
-				<div id="reminder">
-					<div onclick="$('#hiddenReminder').hide(); $('#blurBackground').hide();" id="blurBackground"></div>
-					<button onclick="$('#hiddenReminder').toggle(); $('#blurBackground').toggle();"><span>&#128197;<!-- 💬--></span> Set a reminder</button>
-					<div id="hiddenReminder">
-						<p>What day/time?</p>
-						<div class="day-of-week">
-							<input id="DOW_0-0" type="radio" name="weekday" value="0"><label for="DOW_0-0">S</label>
-							<input id="DOW_0-1" type="radio" name="weekday" value="1"><label for="DOW_0-1">M</label>
-							<input id="DOW_0-2" type="radio" name="weekday" value="2"><label for="DOW_0-2">T</label>
-							<input id="DOW_0-3" type="radio" name="weekday" value="3"><label for="DOW_0-3">W</label>
-							<input id="DOW_0-4" type="radio" name="weekday" value="4"><label for="DOW_0-4">T</label>
-							<input id="DOW_0-5" type="radio" name="weekday" value="5" checked><label for="DOW_0-5">F</label>
-							<input id="DOW_0-6" type="radio" name="weekday" value="6"><label for="DOW_0-6">S</label>
-						</div>
-						<input type="time" id="reminderTime" name="reminderTime" value="12:00"><br><br>
-						<button onclick="setCalendarReminder();">&#128197; Set Google Calendar reminder</button>
-						<!--button onclick="setTextReminder();">💬 Set text reminder</button-->
-					</div>
-				</div>
+        <div id="reminder">
+          <div onclick="$('#hiddenReminder').hide(); $('#blurBackground').hide();" id="blurBackground"></div>
+          <button onclick="$('#hiddenReminder').toggle(); $('#blurBackground').toggle();"><span>&#128197;<!-- 💬--></span> Set a reminder</button>
+          <div id="hiddenReminder">
+            <p>What day/time?</p>
+            <div class="day-of-week">
+              <input id="DOW_0-0" type="radio" name="weekday" value="0"><label for="DOW_0-0">S</label>
+              <input id="DOW_0-1" type="radio" name="weekday" value="1"><label for="DOW_0-1">M</label>
+              <input id="DOW_0-2" type="radio" name="weekday" value="2"><label for="DOW_0-2">T</label>
+              <input id="DOW_0-3" type="radio" name="weekday" value="3"><label for="DOW_0-3">W</label>
+              <input id="DOW_0-4" type="radio" name="weekday" value="4"><label for="DOW_0-4">T</label>
+              <input id="DOW_0-5" type="radio" name="weekday" value="5" checked><label for="DOW_0-5">F</label>
+              <input id="DOW_0-6" type="radio" name="weekday" value="6"><label for="DOW_0-6">S</label>
+            </div>
+            <input type="time" id="reminderTime" name="reminderTime" value="12:00"><br><br>
+            <button onclick="setCalendarReminder();">&#128197; Set Google Calendar reminder</button>
+            <!--button onclick="setTextReminder();">💬 Set text reminder</button-->
+          </div>
+        </div>
 
-				<p style="text-align: center;">Thanks for celebrating with us all that God is doing on Campus! Below is just a small snapshot of what God is doing on your campus in the last 3 weeks.</p>
-	      
-	      <div class="cards">
-		    </div>
-	      
-	      <div>
-	      	<span class="bottom-button">
-						<button onclick="location.hash='';">Enter More</button>
-					</span>
-					<span class="questions">
-						Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
-						email</a>
-					</span>
-				</div>
-			</div>
-	  </div>
-		<div id="spin-container">
-			<div id="spinner">
-			</div>
-		</div>
-  	<script src="masking-input.js" data-autoinit="true"></script>
-	</body>
+        <p style="text-align: center;">Thanks for celebrating with us all that God is doing on Campus! Below is just a small snapshot of what God is doing on your campus in the last 3 weeks.</p>
+        
+        <div class="cards">
+        </div>
+        
+        <div>
+          <span class="bottom-button">
+            <button onclick="location.hash='';">Enter More</button>
+          </span>
+          <span class="questions">
+            Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
+            email</a>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div id="spin-container">
+      <div id="spinner">
+      </div>
+    </div>
+    <script src="masking-input.js" data-autoinit="true"></script>
+  </body>
 </html>
