@@ -2,6 +2,11 @@
   box-sizing: border-box;
   font-family: 'Source Sans Pro', sans-serif;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+*:focus {
+  outline: none !important;
 }
 :root {
   --main-color: #FFCF07;
@@ -275,7 +280,7 @@ h1 {
   margin: 0;
   padding: 0;
 }
-.cards {
+#cards {
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -318,6 +323,52 @@ h1 {
   text-align: center;
   color: gray;
   margin-bottom: 1rem;
+}
+.add-button {
+  background: var(--light-gray) !important;
+  border-bottom-left-radius: 1rem;
+  border-bottom: 2px solid var(--main-color) !important;
+  cursor: pointer;
+}
+.arrow-left {
+  border-top: 0.6rem solid transparent;
+  border-right: 1.2rem solid var(--main-color);
+  border-bottom: 0.6rem solid transparent;
+  margin: 0.4rem;
+  height: 0;
+}
+.arrow-right {
+  border-top: 0.6rem solid transparent;
+  border-left: 1.2rem solid var(--main-color);
+  border-bottom: 0.6rem solid transparent;
+  margin: 0.4rem;
+  height: 0;
+}
+#install-prompt {
+   position: absolute;
+   bottom: 1rem;
+   left: 0;
+   right: 0;
+   margin-left: calc((100vw - var(--app-width))/2);
+   margin-right: calc((100vw - var(--app-width))/2);
+   background: var(--light-gray);
+   border-radius: .5rem;
+   padding: 1rem;
+   padding-top: .5rem;
+   z-index: 1000;
+}
+#install-prompt::after {
+  position: absolute;
+  content: "";
+  bottom: -1rem;
+  margin-left: auto;
+  margin-right: auto;
+  border-top: 1rem solid var(--light-gray);
+  border-left: 1rem solid transparent;
+  border-right: 1rem solid transparent;
+  left: 0;
+  right: 0;
+  width: 0;
 }
 
 .punch,
@@ -509,6 +560,7 @@ button:hover {
   border: 1px gray solid;
   border-radius: 2rem;
   border-bottom-right-radius: 0;
+  pointer-events: none;
 }
 .tooLow:hover:after {
   opacity: 0.2;
@@ -534,6 +586,9 @@ button {
 }
 .menu #menu {
   transform: translate3d(0, 0, 0);
+}
+.visible {
+  display: initial !important;
 }
 #reminder {
   position: relative;
@@ -656,6 +711,11 @@ span[rel="tooltip"] {
   position: absolute;
   z-index: 100;
   padding: 15px;
+  transition: opacity .1s, transform .1s;
+}
+.inAndDown {
+  opacity: 1 !important;
+  transform: translateY(10px);
 }
  
 #tooltip:after { /* triangle decoration */
@@ -713,7 +773,7 @@ span[rel="tooltip"] {
   text-decoration: underline;
 }
 
-.staffToggle, .userToggle, .accountToggle {
+#staffToggle, #userToggle, .accountToggle {
   background-color: rgba(0, 0, 0, 0.15);
   padding: 1rem;
   border-bottom-left-radius: 1rem;
@@ -726,22 +786,26 @@ span[rel="tooltip"] {
 /* optional */
 .shell {
   position: relative;
-  line-height: 1; }
-  .shell span {
-    position: absolute;
-    left: 12px;
-    top: 2px;
-    color: #ccc;
-    pointer-events: none;
-    z-index: -1; }
-    .shell span i {
-      font-style: normal;
-      /* any of these 3 will work */
-      color: transparent;
-      opacity: 0;
-      visibility: hidden; }
+  line-height: 1; 
+}
+.shell span {
+  position: absolute;
+  left: 12px;
+  top: 2px;
+  color: #ccc;
+  pointer-events: none;
+  z-index: -1; 
+}
+.shell span i {
+  font-style: normal;
+  /* any of these 3 will work */
+  color: transparent;
+  opacity: 0;
+  visibility: hidden; 
+}
 
 input.masked,
 .shell span {
   background-color: transparent;
-  text-transform: uppercase; }
+  text-transform: uppercase; 
+}

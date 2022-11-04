@@ -39,33 +39,82 @@ window.addEventListener('load', function() {
   }
   window.addEventListener('online',  update);
   window.addEventListener('offline', update);
+
+  //let people install on their own schedule
+//ANDROID
+  window.deferredPrompt;
+  const addBtn = document.querySelector('.add-button');
+  addBtn.style.display = 'none';
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    window.deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    addBtn.style.display = 'block';
+  });
+//iOS - Detects if device is on iOS 
+  const isIos = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test( userAgent );
+  }
+  // Detects if device is in standalone mode
+  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  // Checks if should display install popup notification:
+  if (isIos() && !isInStandaloneMode()) {
+    document.addEventListener('click', (e) => {
+      document.getElementById('install-prompt').style.display = 'none';
+    });
+    document.querySelector('.add-button').style.display = 'block';
+  }
 });
 updateOnlineStatus();
 
+function installPWA(){
+  if(window.deferredPrompt){ //we've got a deferred prompt!
+    // Show the prompt
+    window.deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    window.deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        document.querySelector('.add-button').style.display = 'none';
+        document.getElementById('projector').classList.remove('menu');
+        window.deferredPrompt = null;
+        console.log('User accepted the A2HS prompt');
+      } else {
+        console.log('User dismissed the A2HS prompt');
+      }
+      //window.deferredPrompt = null;  //if you want to nullify after a cancel
+    });
+  }
+  else { //we don't have a deferred - let's show iOS or others.
+    document.getElementById('install-prompt').style.display = 'block';
+  }
+}
+
 function toggleRegister(){
-  if($('#register')[0].checked){
-    $('.pin').show();
-    $('#regUserName').prop('required',true);
-    $('#regUserEmail').prop('required',true);
-    $('.userToggle').show();
-    $('#formSubmit span').show();
+  if(document.getElementById('register').checked){
+    document.getElementById('regUserName').setAttribute('required', true);
+    document.getElementById('regUserEmail').setAttribute('required', true);
+    document.getElementById('userToggle').style.display = '';
+    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
   }
   else{
-    $('.pin').hide();
-    $('#regUserName').removeAttr('required');
-    $('#regUserEmail').removeAttr('required');
-    $('.userToggle').hide();
-    $('#formSubmit span').hide();
+    document.getElementById('regUserName').removeAttribute('required');
+    document.getElementById('regUserEmail').removeAttribute('required');
+    document.getElementById('userToggle').style.display = 'none';
+    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
   }
 }
 function toggleStaff(){
-  if($('#regUserStaff')[0].checked){
-    $('#staffAcct').prop('required',true);
-    $('.staffToggle').show();
+  if(document.getElementById('regUserStaff').checked){
+    document.getElementById('staffAcct').setAttribute('required', true);
+    document.getElementById('staffToggle').style.display = '';
   }
   else{
-    $('#staffAcct').removeAttr('required');
-    $('.staffToggle').hide();
+    document.getElementById('staffAcct').removeAttribute('required');
+    document.getElementById('staffToggle').style.display = "none";
   }
 }
 //SERVICE WORKER
@@ -103,12 +152,13 @@ function setUser(user){
 async function loadMovements(listOfMovementIDs){
   startSpin();
   let success = false;
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+
+  await fetch(window.indicatorAppURL+`?movements=${listOfMovementIDs.join(',')}`, {
     method: "GET",
-    dataType: "json",
-    data: "movements="+listOfMovementIDs.join(',')
-  }).then(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data) {
     if(data.result == 'error'){
       alert(data.error);
     }
@@ -125,12 +175,12 @@ async function registerUser(name, phone, mvmnts, cat, pin, email){
   startSpin();
   phone = phone.replace(/\D/g,'');
   let success = false;
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+  await fetch(window.indicatorAppURL+`?registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`, {
     method: "GET",
-    dataType: "json",
-    data: `registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`
-  }).then(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data){
     //console.log(data);
     setUser(data.user);
     success = data;
@@ -145,12 +195,12 @@ async function updateUser(phone, mvmnts, cat, pin){
   startSpin();
   phone = phone.replace(/\D/g,'');
   let success = false;
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+  await fetch(window.indicatorAppURL+`?updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`, {
     method: "GET",
-    dataType: "json",
-    data: `updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`
-  }).then(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data){
     //console.log(data);
     setUser(data.user);
     success = data;
@@ -164,12 +214,12 @@ async function updateUser(phone, mvmnts, cat, pin){
 async function requestUser(phone, pin, spin=true){
   if(spin) {startSpin();}
   let success = false;
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+  await fetch(window.indicatorAppURL+`?requestUser=true&phone=${phone}&pin=${pin}`, {
     method: "GET",
-    dataType: "json",
-    data: `requestUser=true&phone=${phone}&pin=${pin}`
-  }).then(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data){
     success = data;
     let user = data.user;
     setUser(user);
@@ -187,42 +237,16 @@ async function requestPin(){
     return
   }
   startSpin()
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+  await fetch(window.indicatorAppURL+`?requestPin=true&phone=${phone}`, {
     method: "GET",
-    dataType: "json",
-    data: `requestPin=true&phone=${phone}`
-  }).done(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .done(function(data){
     //console.log(data);
     alert(data.text);
   });
   stopSpin();
-  return jqxhr;
-}
-async function requestSummary(){
-  let phone = user.phone;
-  console.log(phone);
-  if(phone.length != 10){
-    alert('user not set up properly...');
-    return
-  }
-  startSpin()
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
-    method: "GET",
-    dataType: "json",
-    data: `requestSummary=true&phone=${phone}`
-  }).then(function(data){
-    console.log(data);
-    window.statSummary = data.summary;
-    location.hash = "#summary";
-    setUser(data.user);
-    window.user = data.user;
-  }).catch(function(error){
-    catchError(error);
-  }).then(function(data){
-    stopSpin();
-  });
   return jqxhr;
 }
 
@@ -263,50 +287,50 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   //add +/- buttons to input[type="number"]
-  $("#statsList").on("click", function(e) {
-    if(e.target && (e.target.classList.contains('inc') || e.target.classList.contains('dec'))) {
-      let $button = $(e.target);
-      let oldValue = $button.parent().find("input").val();
+  document.getElementById('statsList').addEventListener('click', function(e) {
+    if(e.target && (e.target.classList.contains('inc') || e.target.classList.contains('dec'))){
+      let button = e.target;
+      let inputEl = button.parentElement.querySelectorAll('input')[0];
+      let oldValue = inputEl.value;
       let newVal = parseInt(oldValue) || 0;
-      if ($button.text() == "+") {
+      if (button.textContent == "+") {
         newVal += 1;
       } else {
         newVal -= 1;
       }
-      $button.parent().find("input").val(newVal).trigger("change");
+      inputEl.value = newVal;
+      document.getElementById('statsList').dispatchEvent(new Event("change"));
     }
   });
-  $('#statsList').on("change", function(e) {
-    if(e.target && e.target.nodeName == "INPUT") {
-      //get all question values
-      let varVals = {};
-      for(question of $('#statsList input')){ //compile object for tooLow calcs.
-        varVals[question.id] = question.value;
-      }
-
-      for(question of Object.keys(user.questionRels)){
-        let tooLow = 0;
-        //checking if any are greater than the question
-        if(user.questionRels[question].lessThan) {
-          for(relVar of user.questionRels[question].lessThan){
-            tooLow += (parseInt(varVals[question]) < parseInt(varVals[relVar]));
-          }
-        }
-        if(document.getElementById(question)){
-          if(tooLow){ //Add Too Low bubble
-            document.getElementById(question).parentElement.classList.add('tooLow');
-          } else {
-            document.getElementById(question).parentElement.classList.remove('tooLow');
-          }
-          if(parseInt(varVals[question]) < 0){  //Add red highlight to negative numbers
-            document.getElementById(question).classList.add('negative');
-          } else {
-            document.getElementById(question).classList.remove('negative');
-          }
-        }
-      }
-      processLocationForm();
+  document.getElementById('statsList').addEventListener('change', function(e) {
+    //get all question values
+    let varVals = {};
+    for(question of document.querySelectorAll('#statsList input')) { //compile object for tooLow calcs.
+      varVals[question.id] = question.value;
     }
+
+    for(question of Object.keys(user.questionRels)){
+      let tooLow = 0;
+      //checking if any are greater than the question
+      if(user.questionRels[question].lessThan) {
+        for(relVar of user.questionRels[question].lessThan){
+          tooLow += (parseInt(varVals[question]) < parseInt(varVals[relVar]));
+        }
+      }
+      if(document.getElementById(question)){
+        if(tooLow){ //Add Too Low bubble
+          document.getElementById(question).parentElement.classList.add('tooLow');
+        } else {
+          document.getElementById(question).parentElement.classList.remove('tooLow');
+        }
+        if(parseInt(varVals[question]) < 0){  //Add red highlight to negative numbers
+          document.getElementById(question).classList.add('negative');
+        } else {
+          document.getElementById(question).classList.remove('negative');
+        }
+      }
+    }
+    processLocationForm();
   });
 });
 
@@ -366,21 +390,22 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
-    $('.pin').hide();
+    document.querySelectorAll('.pin').forEach(el => el.style.display = 'none');
     if(window.user){
-      $('#notification').remove();
+      let notifyEl = document.getElementById('notification');
+      if(notifyEl){notifyEl.remove()}
       let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
-        $('#notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
-        onclick="$('#notification').remove();">X</button></div>`
-      $('#locations').prepend(notification);
+        document.getElementById('notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
+        onclick="document.getElementById('notification').remove();">X</button></div>`
+      document.getElementById('locations').insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
     }
-    $('#movements').empty();
-    $('input[type="checkbox"]').prop('checked', false);
-    $('.userToggle').hide();
-    $('.staffToggle').hide();
-    $('#formSubmit span').hide();
+    document.getElementById('movements').innerHTML = '';
+    document.querySelectorAll('input[type="checkbox"]').forEach(el => el.removeAttribute('checked'));
+    document.getElementById('userToggle').style.display = 'none';
+    document.getElementById('staffToggle').style.display = 'none';
+    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = 'none');
 
     let movements = [];
     try {
@@ -394,19 +419,19 @@ async function hashchanged(){
       let movementsList = await loadMovements(movements);
       if(!movementsList){
         location.hash = '#onboarding';
-        $('#onboarding').prepend('<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); $(\'#notification\').remove();" href="'+hash+'">here</a> to set up!</div>');
+        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', '<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); document.getElementById(\'notification\').remove();" href="'+hash+'">here</a> to set up!</div>')
         return;
       }
       for(movement of movementsList) {
-        $('#movements').append('<input id="n'+movement.id+'" name="'+movement.id+'" type="checkbox" ><label for="n'+movement.id+'" >'+movement.name+'</label>');
+        document.getElementById('movements').insertAdjacentHTML('beforeend', '<input id="n'+movement.id+'" name="'+movement.id+'" type="checkbox" ><label for="n'+movement.id+'" >'+movement.name+'</label>');
       }
-      $('.movementInfo').show();
-      $('.loginInfo').hide();
+      document.querySelectorAll('.movementInfo').forEach(el => el.style.display = '');
+      document.querySelectorAll('.loginInfo').forEach(el => el.style.display = 'none');
     }
     //otherwise, lets login or add movements from a dropdown if/when that's added.
     else {
-      $('.movementInfo').hide();
-      $('.loginInfo').show();
+      document.querySelectorAll('.movementInfo').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.loginInfo').forEach(el => el.style.display = '');
       toggleRegister();
       toggleStaff();
     }
@@ -419,7 +444,7 @@ async function hashchanged(){
     // #locations - start with current location
     let user = window.user;
     let movement_num = parseInt(hash.split('/')[1]);
-    (user.movements.length == 1 ? $('.mvBtn').hide() : $('.mvBtn').show());
+    (user.movements.length == 1 ? document.querySelectorAll('.mvBtn').forEach(el => el.style.display = 'none') : document.querySelectorAll('.mvBtn').forEach(el => el.style.display = ''));
 
     //if we fail, redirect to first location
     try {
@@ -505,10 +530,10 @@ async function hashchanged(){
       if(user.movements.length > 1){
         prefix = (movement_num + 1)+"/"+user.movements.length+" ";
       }
-      $('#movementName').text(prefix + movement.name);
-      $('#movementId').val(movement.id); //hidden field
-      $('#userName').val(user.name); //hidden field
-      $('#userPhone').val(user.phone); //hidden field
+      document.getElementById('movementName').textContent = prefix + movement.name;
+      document.getElementById('movementId').value = movement.id; //hidden field
+      document.getElementById('userName').value = user.name; //hidden field
+      document.getElementById('userPhone').value = user.phone; //hidden field
 
       // set dates for the movement
       let todayDate = new Date().toLocaleString().split(',')[0];
@@ -520,8 +545,8 @@ async function hashchanged(){
         lastUpdate = `You last entered data on <b>${lastUpdate}</b>`;
       }
 
-      $('.lastUpdate').html(lastUpdate);
-      $('.todayDate').text(todayDate);
+      document.getElementById('lastUpdate').innerHTML = lastUpdate;
+      document.getElementById('todayDate').textContent = todayDate;
 
       //let's load the data from formSubs
       let formSub = window.formSubs[movement.id];
@@ -531,9 +556,8 @@ async function hashchanged(){
           let questionId = item[0];
           let value = item[1];
           if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
-            let element = $('#'+questionId);
-            element.trigger("change");
-            element = element[0];
+            let element = document.getElementById(questionId);
+            document.getElementById('statsList').dispatchEvent(new Event('change'));
             if(!element){
               continue;
             }
@@ -564,49 +588,65 @@ async function hashchanged(){
   }
 //SUMMARY!-----------------------------------------------------------------
   else if(hash.startsWith('#summary')) {
-    //console.log(window.statSummary)
-    if(window.statSummary){
-      $('.cards').html('');
-
-      for(question of Object.keys(window.statSummary.groupNum)){
-        let num = window.statSummary.groupNum[question];
-        //let text = window.user.strategies[]
-        let card = `<div class="card">
-          <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
-            <img src="genericQ.png" width="80px" height="80px">
-          </object>
-          <p>Your group had</p>
-          <h1 id="${question+'Sum'}">${num}</h1>
-          <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
-        </div>`;
-
-        $('.cards').append(card);
+    if(!window.statSummary){
+      let phone = user.phone;
+      if(phone.length != 10){
+        alert('user not set up properly...');
+        return
       }
-      projector.classList = 'summary';
-      window.document.title = "Stats Summary";
-      let time = 500;
-
-      function doSetTimeout(stat,time) {
-        setTimeout(function(){
-          party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
-            count: party.variation.range(40, 80)
-          })
-        }, time);
-      }
-
-      for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
-        if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
-          doSetTimeout(stat,time);
-          time += 2000;
-        }
-      }
-      // Update scroll position for first time
-      storeScrollSummary();
-      //window.statSummary.groupNum = null;
+      startSpin()
+      await fetch(window.indicatorAppURL+`?requestSummary=true&phone=${phone}`, {
+        method: "GET",
+        dataType: "json"
+      }).then(handleErrors)
+      .then(json)
+      .then(function(data) {
+        console.log(data);
+        window.statSummary = data.summary;
+        setUser(data.user);
+        window.user = data.user;
+      }).catch(function(error){
+        catchError(error);
+      }).then(function(data){
+        stopSpin();
+      });
     }
-    else {
-      location.hash = '#';
+
+    console.log(window.statSummary)
+    document.getElementById('cards').innerHTML = '';
+
+    for(question of Object.keys(window.statSummary.groupNum)){
+      let num = window.statSummary.groupNum[question];
+      //let text = window.user.strategies[]
+      let card = `<div class="card">
+        <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
+          <img src="genericQ.png" width="80px" height="80px">
+        </object>
+        <p>Your group had</p>
+        <h1 id="${question+'Sum'}">${num}</h1>
+        <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
+      </div>`;
+
+      document.getElementById('cards').insertAdjacentHTML('beforeend', card);
     }
+    projector.classList = 'summary';
+    window.document.title = "Stats Summary";
+    let time = 500;
+
+    function doSetTimeout(stat,time) {
+      setTimeout(function(){
+        party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
+          count: party.variation.range(40, 80)
+        })
+      }, time);
+    }
+    for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
+      if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
+        doSetTimeout(stat,time);
+        time += 2000;
+      }
+    }
+    window.statSummary = null;
   }
   else {
     location.hash = '#';
@@ -643,9 +683,9 @@ async function processOnboardForm(e) {
   }
   //we are overwriting existing movements or adding a user.
   if(defaultMovements){
-    $('#movements input').each(function(){
-      if(this.checked) {
-        user.mvmnts[this.name] = false;
+    document.querySelectorAll('#movements input').forEach(function(el){
+      if(el.checked) {
+        user.mvmnts[el.name] = false;
       }
     });
 
@@ -714,11 +754,11 @@ async function processOnboardForm(e) {
 function processLocationForm(submitMovementId) {
   let user = window.user;
   //save the data from the form for submittal later
-  var form = $('#location-form');
+  var form = document.getElementById('location-form');
 
-  var disabled = form.find(':input:disabled').removeAttr('disabled');
+  var serializedForm = new URLSearchParams(new FormData(form)).toString();
 
-  let serializedForm = form.serialize();
+
   let data = unserialize(serializedForm);
   let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
                                .indexOf(itm[0]) === -1)
@@ -732,15 +772,17 @@ function processLocationForm(submitMovementId) {
     delete window.formSubs[movementId];
   }  
   localStorage.setItem('formSubs', JSON.stringify(window.formSubs));
-  disabled.attr('disabled','disabled');
 
   let movement_num = parseInt(location.hash.split('/')[1]);
 
   //clear form
-  $('input[type="checkbox"]').prop('checked', false);
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
 
   //clear notification
-  $('#notification').remove();
+  let notification = document.getElementById('notification');
+  if(notification) {
+    notification.remove();
+  }
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
@@ -762,7 +804,6 @@ async function submitLocationForm(){
                   .reduce((total, amount) => Number(total) + Number(amount));
     if(sum != 0 || key == movementId){
       let currentMvmnt = window.user.movements.map(mvmnt => mvmnt.id).indexOf(key);
-      console.log(key)
       message += `* ${currentMvmnt + 1}: ${window.user.movements.filter(itm => itm.id == key)[0].name}\n`
       if(startingMvmnt != currentMvmnt){ //Only need to prompt the user if they can't see all the data they are submitting
         prompt = true;
@@ -782,12 +823,12 @@ async function submitLocationForm(){
   var url  =  window.indicatorAppURL;
 
   //submit everything - we can do this in one go.
-  var jqxhr = await $.ajax({
-    url: url,
+  await fetch(window.indicatorAppURL+`?${Object.values(window.formSubs).join('+')}`, {
     method: "GET",
     dataType: "json",
-    data: Object.values(window.formSubs).join('+')
-  }).then(function(data){
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data){
     console.log(data);
     window.statSummary = data.summary;
     location.hash = "#summary";
@@ -803,9 +844,9 @@ async function submitLocationForm(){
 }
 
 function goToNextMovement() {
-  $('#slideable').addClass('transition');
+  document.getElementById('slideable').classList.add('transition');
   setTimeout(function(){
-    $('#slideable').removeClass("transition");
+    document.getElementById('slideable').classList.remove('transition');
   }, 250);
   let movement_num = parseInt(location.hash.split('/')[1]);
   if(window.user.movements.length == movement_num + 1){
@@ -818,9 +859,9 @@ function goToNextMovement() {
   }
 }
 function goToPrevMovement() {
-  $('#slideable').addClass('transition-l');
+  document.getElementById('slideable').classList.add('transition-l');
   setTimeout(function(){
-    $('#slideable').removeClass("transition-l");
+    document.getElementById('slideable').classList.remove('transition-l');
   }, 250);
   let movement_num = parseInt(location.hash.split('/')[1]);
   if(movement_num == 0){
@@ -843,9 +884,9 @@ function setCalendarReminder(){
   let details = encodeURI("Time to celebrate what God is doing on your campus with your team!\n\nhttps://cruglobal.github.io/Spotlight/");
   //get's the next selected date
   var d = new Date();
-  d.setDate(d.getDate() + (parseInt($('input[name="weekday"]:checked').val()) + 7 - d.getDay()) % 7);
+  d.setDate(d.getDate() + (parseInt(document.querySelector('input[name="weekday"]:checked').value) + 7 - d.getDay()) % 7);
 
-  let date = (new Date(d.getMonth()+1+'/'+d.getDate()+'/'+d.getFullYear()+' '+$('#reminderTime').val())).toISOString().replace(/-|:|\.\d\d\d/g,"");
+  let date = (new Date(d.getMonth()+1+'/'+d.getDate()+'/'+d.getFullYear()+' '+document.getElementById('reminderTime').value)).toISOString().replace(/-|:|\.\d\d\d/g,"");
   let title = encodeURI("Time to celebrate what God is doing on your campus with your team!");
 
   let url = 'https://www.google.com/calendar/render?action=TEMPLATE&text='+
@@ -853,20 +894,20 @@ function setCalendarReminder(){
   '&details='+details+'&recur=RRULE:FREQ=WEEKLY&location=&sf=true&output=xml'
   window.open(url);
 
-  $('#hiddenReminder').hide();
-  $('#blurBackground').hide();
+  document.getElementById('hiddenReminder').style.display = 'none';
+  document.getElementById('blurBackground').style.display = 'none';
 }
 async function setTextReminder(){
   startSpin();
   let weekMap = {0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday'};
-  let time = weekMap[parseInt($('input[name="weekday"]:checked').val())]+' '+$('#reminderTime').val();
+  let time = weekMap[parseInt(document.querySelector('input[name="weekday"]:checked').value)]+' '+document.getElementById('reminderTime').value;
 
-  var jqxhr = await $.ajax({
-    url: window.indicatorAppURL,
+  await fetch(window.indicatorAppURL+"?updateUser=true&phone="+window.user.phone+"&txtReminderTime="+encodeURI(time+' '+Intl.DateTimeFormat().resolvedOptions().timeZone), {
     method: "GET",
-    dataType: "json",
-    data: "updateUser=true&phone="+window.user.phone+"&txtReminderTime="+encodeURI(time+' '+Intl.DateTimeFormat().resolvedOptions().timeZone)
-  }).then(function(data){
+    dataType: "json"
+  }).then(handleErrors)
+  .then(json)
+  .then(function(data){
     console.log(data);
     if(data.result=="success"){
       alert('Text Reminders are set for: '+time+ '\n\nRespond to a text with "STOP" to stop at any time');
@@ -874,7 +915,7 @@ async function setTextReminder(){
     else{
       alert('Could not complete your request');
     }
-    $('#blurBackground').click();
+    document.getElementById('blurBackground').dispatchEvent(new Event('click'));
   }).catch(function(error){
     catchError(error);
   }).then(function(data){
@@ -896,77 +937,78 @@ function toggleMore(el) {
 }
 
 //TOOLTIP CODE
-$( setToolTips());
-
 function setToolTips() {
-  var targets = $( '[rel~=tooltip]' ),
-    target  = false,
-    tooltip = false,
-    title   = false;
+  var targets = document.querySelectorAll('[rel~=tooltip]');
 
-  targets.bind( 'mouseenter', function() {
-    target  = $( this );
-    tip     = target.attr( 'title' );
-    tooltip = $( '<div id="tooltip"></div>' );
+  targets.forEach(function(el) {
+    el.addEventListener('mouseenter', function() {
+      let target  = el;
+      let tip     = target.getAttribute('title');
+      let tooltip = document.createElement('div');
+      tooltip.setAttribute('id','tooltip');
 
-    if( !tip || tip == '' ) {
-      return false;
-    }
-
-    target.removeAttr( 'title' );
-    tooltip.css( 'opacity', 0 )
-           .html( tip )
-           .appendTo( 'body' );
-
-    var init_tooltip = function() {
-      tooltip[0].style.maxWidth= `min(${$( window ).width() / 1.2}px, 340px)`;
-
-      var pos_left = target.offset().left + ( target.outerWidth() / 2 ) - ( tooltip.outerWidth() / 2 );
-      var pos_top  = target.offset().top - tooltip.outerHeight() - 20;
-
-      if( pos_left < 0 )
-      {
-        pos_left = target.offset().left + target.outerWidth() / 2 - 20;
-        tooltip.addClass( 'left' );
-      }
-      else {
-        tooltip.removeClass( 'left' );
-      }
-/*
-      if( pos_left + tooltip.outerWidth() > $( window ).width() ) {
-        pos_left = target.offset().left - tooltip.outerWidth() + target.outerWidth() / 2 + 20;
-        tooltip.addClass( 'right' );
-      }
-      else {
-        tooltip.removeClass( 'right' );
-      }*/
-
-      if( pos_top < 0 ) {
-        var pos_top  = target.offset().top + target.outerHeight();
-        tooltip.addClass( 'top' );
-      }
-      else {
-        tooltip.removeClass( 'top' );
+      if( !tip || tip == '' ) {
+        return false;
       }
 
-      tooltip.css( { left: pos_left, top: pos_top } ).animate( { top: '+=10', opacity: 1 }, 50 );
-    };
+      target.removeAttribute('title');
+      tooltip.style.opacity = 0;
+      tooltip.innerHTML = tip;
+      document.body.appendChild(tooltip);
 
-    init_tooltip();
-    $( window ).resize( init_tooltip );
+      var init_tooltip = function() {
+        tooltip.style.maxWidth= `min(${window.innerWidth / 1.2}px, 340px)`;
 
-    var remove_tooltip = function() {
-      tooltip.animate( { top: '-=10', opacity: 0 }, 50, function() {
-        $( this ).remove();
-      });
+        var targetOffset = target.getBoundingClientRect();
+        var pos_left = target.offsetLeft + ( target.offsetWidth / 2 ) - ( tooltip.offsetWidth / 2 );
+        var pos_top  = targetOffset.top - tooltip.offsetHeight - 20;
 
-      target.attr( 'title', tip );
-    };
-  
-    $( '#locations' ).scroll( remove_tooltip );
+        if( pos_left < 0 )
+        {
+          pos_left = target.offsetLeft + target.offsetWidth / 2 - 20;
+          tooltip.classList.add('left');
+        }
+        else {
+          tooltip.classList.remove('left');
+        }
+  /*
+        if( pos_left + tooltip.offsetWidth > window.innerWidth ) {
+          pos_left = target.offsetLeft - tooltip.offsetWidth + target.offsetWidth / 2 + 20;
+          tooltip.classList.add('right');
+        }
+        else {
+          tooltip.classList.remove('right');
+        }*/
 
-    target.bind( 'mouseleave', remove_tooltip );
-    tooltip.bind( 'click', remove_tooltip );
+        if( pos_top < 0 ) {
+          var pos_top  = targetOffset.top + target.offsetHeight;
+          tooltip.classList.add('top');
+        }
+        else {
+          tooltip.classList.remove('top');
+        }
+        tooltip.style.left = pos_left + 'px';
+        tooltip.style.top = pos_top + 'px';
+        tooltip.classList.add('inAndDown');
+      }
+
+      init_tooltip();
+      window.addEventListener('resize', init_tooltip);
+
+      var remove_tooltip = function() {
+        tooltip.classList.remove('inAndDown');
+        setTimeout(function(){
+          tooltip.remove();
+        }, 50);
+
+        target.setAttribute('title', tip);
+      };
+    
+      document.getElementById('locations').addEventListener('scroll', remove_tooltip);
+
+      target.addEventListener('mouseleave', remove_tooltip);
+      tooltip.addEventListener('click', remove_tooltip);
+    });
   });
 };
 
@@ -1012,4 +1054,15 @@ const storeScrollLocations = () => {
 }
 const storeScrollSummary = () => {
   document.documentElement.dataset.scroll = document.getElementById('summary').scrollTop;
+}
+
+function json(response) {
+  return response.json();
+}
+
+function handleErrors(response) {
+  if(!response.ok) {
+    throw new Error("Request failed " + response.statusText);
+  }
+  return response;
 }
