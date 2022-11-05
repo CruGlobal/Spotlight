@@ -635,10 +635,13 @@ async function hashchanged(){
 
     function doSetTimeout(stat,time) {
       setTimeout(function(){
-        party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
-          count: party.variation.range(40, 80)
-        })
-      }, time);
+        document.getElementById(stat+'Sum').previousElementSibling.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+        setTimeout(function(){
+          party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
+            count: party.variation.range(40, 80)
+          })
+        }, 250)
+      }, time - 250);
     }
     for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
       if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){

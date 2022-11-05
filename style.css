@@ -370,12 +370,10 @@ h1 {
   right: 0;
   width: 0;
 }
-
 .punch,
 button {
   color: #fff;
   background-color: var(--main-color);
-  border-color: var(--main-color);
   display: inline-block;
   font-weight: 600;
   text-align: center;
@@ -388,6 +386,13 @@ button {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+.punch {
+  background-color: white;
+  color: var(--main-color);
+  border: 1px solid var(--main-color);
+  border-bottom: none;
+  border-radius: 1rem;
 }
 button.white {
   background-color: white;
@@ -445,10 +450,12 @@ button:hover {
   top: 0;
   left: 0;
   bottom: 0;
-  transform: translate3d(max(100vw - 100%, 100vw),0,0);
-  transition:  transform .25s;
   padding: 0 1rem;
   overflow-y: auto;
+  transform: translate3d(0,-20px,0) scale3d(.7, .7, 1.0);
+  opacity: 0;
+  pointer-events: none;
+  transition:  transform .25s, opacity .25s;
 }
 .last-el-bottom {
   display: flex;
@@ -584,6 +591,8 @@ button {
 .locations #locations,
 .summary #summary {
   transform: translate3d(0,0,0);
+  opacity: 1;
+  pointer-events: unset;
 }
 .menu #menu {
   transform: translate3d(0, 0, 0);
