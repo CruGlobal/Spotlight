@@ -11,7 +11,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#FFCF07">
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" async rel="stylesheet" type="text/css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
 
@@ -39,7 +42,7 @@
     <div id="projector"  class="initial">
       <div id="menu" class="sidebar">
         <div id="hamburger-tab">
-          <button style="background:unset;" class="hamburger" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
+          <button style="background:unset;" id="hamburger" aria-label="Menu" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
         </div>
         <div style="height: 100%; overflow: auto;">
           <h3 style="margin-top: 3rem;">Shortcuts</h3>
@@ -88,7 +91,7 @@
       </div>
       <div id="onboarding" class="screen last-el-bottom">
         <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        <small>A snapshot of your ministry</small>
         
         <form class="last-el-bottom" id="onboard-form">
           <div class="movementInfo">
@@ -151,7 +154,7 @@
 
       <div id="locations" class="screen last-el-bottom">
         <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        <small>A snapshot of your ministry</small>
         <b id="todayDate" style="color: var(--main-color);"></b>
         <p id="strategyWelcomeText"></p>
 
@@ -168,7 +171,7 @@
             <input type="hidden" id="userName" name="userName">
             <input type="hidden" id="userPhone" name="userPhone">
 
-            <h4 style="margin-top: 0;">My daily activity</h4>
+            <b class="activity">My daily activity</b>
 
             <div id="statsList"></div>
             <div id="storyBoxContainer"></div>
@@ -232,7 +235,7 @@
       </div>
     </div>
     <div id="install-prompt" style="display: none;"><img src="a2hs.png" style="height:3rem; padding-top:.3rem; padding-right:1rem; float:left"><span>Install Spotlight[beta] on your device: tap <img src="share-apple.svg" style="height: 1.5rem; vertical-align: text-bottom;"> and then Add to homescreen.</span></div>
-    <script src="masking-input.js" async defer data-autoinit="true"></script>
-    <script src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js" async defer data-autoinit="true"></script>
+    <script src="masking-input.js" async data-autoinit="true"></script>
+    <script rel="preconnect" src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js" async></script>
   </body>
 </html>

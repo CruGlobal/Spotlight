@@ -271,6 +271,10 @@ document.addEventListener("DOMContentLoaded", function(){
   window.formSubs = JSON.parse(localStorage.getItem('formSubs')) || {};
 
   document.body.addEventListener("click", function (e) {
+    if(document.getElementById('projector').classList.contains('menu') && !e.target.closest('#menu')){
+      document.getElementById('hamburger').classList.toggle('active');
+      projector.classList.toggle('menu');
+    }
     if(document.getElementById('projector').classList.contains('summary')){
       party.confetti(e, {
           count: party.variation.range(20, 20)
@@ -346,7 +350,7 @@ async function hashchanged(){
   let projector = document.getElementById('projector');
 
   //Set sidebar menu icon
-  document.getElementsByClassName('hamburger')[0].classList.remove('active');
+  document.getElementById('hamburger').classList.remove('active');
 
   //RESET CODE
   if(hash.startsWith('#reset')) {

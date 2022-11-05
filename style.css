@@ -510,16 +510,16 @@ button:hover {
   width: 40px;
   transform: translate3d(-56px, 30px, 0px);
 }
-.hamburger {
+#hamburger {
   width: 2.5rem;
   cursor: pointer;
   height: 2.5rem;
   padding: 0 10px;
   cursor:pointer;
 }
-.hamburger:after,
-.hamburger:before,
-.hamburger div {
+#hamburger:after,
+#hamburger:before,
+#hamburger div {
   background-color: #000;
   border-radius: 3px;
   content: "";
@@ -528,17 +528,17 @@ button:hover {
   margin: 5px 0;
   transition: all 0.2s ease-in-out;
 }
-.hamburger.active:before {
+#hamburger.active:before {
   background-color: #000;
   transform: translateY(8px) rotate(135deg);
   
 }
-.hamburger.active:after {
+#hamburger.active:after {
   background-color: #000;
   transform: translateY(-8px) rotate(-135deg);
   
 }
-.hamburger.active div {
+#hamburger.active div {
   background-color: #000;
   transform: scale(0);
 }
@@ -578,9 +578,10 @@ h2 {
   color: var(--main-color);
   font-weight: 600;
 }
-h4 {
+.activity {
+  display: block;
+  margin-bottom: 1rem;
   color: var(--medium-gray);
-  font-weight: normal;
   text-align: end;
 }
 button {
