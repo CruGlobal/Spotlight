@@ -394,13 +394,12 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
-    document.querySelectorAll('.pin').forEach(el => el.style.display = 'none');
     if(window.user){
       let notifyEl = document.getElementById('notification');
       if(notifyEl){notifyEl.remove()}
       let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
-        document.getElementById('notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
-        onclick="document.getElementById('notification').remove();">X</button></div>`
+        removeNotification();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
+        onclick="removeNotification();">X</button></div>`
       document.getElementById('locations').insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
@@ -421,9 +420,10 @@ async function hashchanged(){
     //then lets show our movements page
     if(movements){
       let movementsList = await loadMovements(movements);
-      if(!movementsList){
+      if(movementsList.length == 0){
         location.hash = '#onboarding';
-        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', '<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); document.getElementById(\'notification\').remove();" href="'+hash+'">here</a> to set up!</div>')
+        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', `<div id="notification">You visited an invalid onboarding link. You can login below, or try again with a corrected onboarding link.<button style="float:right; background: unset; height: unset;" 
+        onclick="removeNotification();">X</button></div>`)
         return;
       }
       for(movement of movementsList) {
@@ -785,11 +785,6 @@ function processLocationForm(submitMovementId) {
   //clear form
   document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
 
-  //clear notification
-  let notification = document.getElementById('notification');
-  if(notification) {
-    notification.remove();
-  }
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
@@ -942,6 +937,13 @@ function toggleMore(el) {
   el.nextElementSibling.classList.toggle('hide'); 
   el.textContent = (el.textContent == 'More' ? 'Less' : 'More');
   el.classList.toggle('upArrow');
+}
+function removeNotification() {
+  document.getElementById('notification').classList.add('swingUp');
+  setTimeout(function(){
+    document.getElementById('notification').remove();
+  }, 300);
+
 }
 
 //TOOLTIP CODE

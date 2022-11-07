@@ -16,6 +16,7 @@
   --tooltip-color: var(--dark-gray);
   --projector-width: min(850px, 100vw);
   --app-width: min(450px, 100vw);
+  --drop-shadow: .25rem .5rem 0.5rem var(--medium-gray);
 }
 html:after{
   display: block;
@@ -31,7 +32,7 @@ html:after{
   transition: background-color 1s;
   border-top-left-radius: 2000px 200px;
   border-top-right-radius: 2000px 200px;
-  filter: drop-shadow(.25rem .5rem 0.5rem var(--medium-gray));
+  filter: drop-shadow(var(--drop-shadow));
 }
 html.offline:after {
   bottom: 0;
@@ -238,6 +239,18 @@ h1 {
   background-color: var(--medium-gray);
   color: white;
   padding: 1rem 2rem;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  filter: drop-shadow(var(--drop-shadow));
+  transition: transform .25s, max-height .15s ease-out .1s, padding .25s;
+  max-height: 4rem;
+  overflow: hidden;
+}
+.swingUp {
+  transform: rotate3d(1, 0, 0, -90deg);
+  transform-origin: top;
+  max-height: 0 !important;
+  padding: 0 2rem !important;
 }
 /*  SPINNER  */
 @keyframes spin {
@@ -292,7 +305,7 @@ h1 {
   flex-shrink: 0;
   width: clamp(9.75rem, 42vw, var(--app-width) * 0.4);
   padding: 0 0.5rem;
-  filter: drop-shadow(.25rem .5rem 0.5rem var(--medium-gray));
+  filter: drop-shadow(var(--drop-shadow));
   background-color: white;
   text-align: center;
   vertical-align: bottom;
@@ -444,11 +457,11 @@ button:hover {
 }
 .sidebar:hover,
 .menu .sidebar {
-  filter: drop-shadow(2px 4px 6px var(--medium-gray));
+  filter: drop-shadow(var(--drop-shadow));
 }
 @media only screen and (max-device-width: 850px){
   html:not([data-scroll='0']) #projector:not(.menu) #hamburger-tab {
-    filter: drop-shadow(2px 4px 6px var(--medium-gray));
+    filter: drop-shadow(var(--drop-shadow));
   }
 }
 #projector {
@@ -631,7 +644,7 @@ button {
   display: none;
   top: 2rem;
   background-color: white;
-  filter: drop-shadow(0 0.1rem 0.25rem var(--medium-gray));
+  filter: drop-shadow(var(--drop-shadow));
   z-index: 10;
   padding: 1rem;
   border-radius: 4px;
