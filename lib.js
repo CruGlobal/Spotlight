@@ -508,7 +508,6 @@ async function hashchanged(){
       }
       document.getElementById('movementName').textContent = prefix + movement.name;
       document.getElementById('movementId').value = movement.id; //hidden field
-      document.getElementById('userName').value = user.name; //hidden field
       document.getElementById('userPhone').value = user.phone; //hidden field
 
       // set dates for the movement
@@ -731,8 +730,7 @@ function processLocationForm(submitMovementId) {
   //save the data from the form for submittal later
   var form = document.getElementById('location-form');
 
-  var serializedForm = new URLSearchParams(new FormData(form)).toString();
-
+  var serializedForm = new URLSearchParams(new FormData(form)).toString().replace(/\+/g,'%20');
 
   let data = unserialize(serializedForm);
   let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
@@ -773,7 +771,7 @@ async function submitLocationForm(){
 
   for(const [key, formSub] of Object.entries(window.formSubs)) {
     let data = unserialize(formSub);
-    let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
+    let sum = data.filter(itm => ['startDate','endDate','movementId','userPhone']
                                  .indexOf(itm[0]) === -1)
                   .map(itm => itm[1])
                   .reduce((total, amount) => Number(total) + Number(amount));
