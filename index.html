@@ -14,7 +14,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
 
@@ -157,10 +157,8 @@
         <small>A snapshot of your ministry</small>
         <b id="todayDate" style="color: var(--main-color);"></b>
         <p id="strategyWelcomeText"></p>
-
         <form class="last-el-bottom" id="location-form">
-          <span id="lastUpdate"></span>
-          <h2 style="width: 100%; display: flex;  justify-content: space-between;">
+          <h2 style="width: 100%; display: flex;  justify-content: space-between; margin-top: 0;">
             <a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
             <span id="movementName">University of Central Florida Cru</span>
             <a class="mvBtn clicky" onclick="goToNextMovement();"> ▶</a>
@@ -170,8 +168,8 @@
             <input type="hidden" id="movementId" name="movementId">
             <input type="hidden" id="userName" name="userName">
             <input type="hidden" id="userPhone" name="userPhone">
-
-            <b class="activity">My daily activity</b>
+            
+            <div class="activity"><div id="lastUpdate" style="float: left;"></div>My activity</div>
 
             <div id="statsList"></div>
             <div id="storyBoxContainer"></div>

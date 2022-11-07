@@ -543,10 +543,10 @@ async function hashchanged(){
       let todayDate = new Date().toLocaleString().split(',')[0];
       let lastUpdate = user.mvmnts[movement.id];
       if(!lastUpdate) {
-        lastUpdate = "";
+        lastUpdate = "Questions";
       }
       else {
-        lastUpdate = `You last entered data on <b>${lastUpdate}</b>`;
+        lastUpdate = `Last updated: <b>${lastUpdate}</b>`;
       }
 
       document.getElementById('lastUpdate').innerHTML = lastUpdate;

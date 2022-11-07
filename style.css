@@ -199,6 +199,9 @@ h1 {
   display: inline-block;
   vertical-align: middle;
 }
+#lastUpdate:empty {
+  display: none;
+}
 #storyBoxContainer {
   margin: 1rem 0;
 }
@@ -607,13 +610,13 @@ button:hover {
 }
 h2 {
   color: var(--main-color);
-  font-weight: 600;
 }
 .activity {
-  display: block;
   margin-bottom: 1rem;
   color: var(--medium-gray);
   text-align: end;
+  border-bottom: 3px solid var(--light-gray);
+  padding-right: 1.7rem;
 }
 button {
   height: 2rem;
@@ -702,9 +705,8 @@ button {
 .negative {
   color: red;
 }
-.statsListRight input {
-  padding: 4px 0px;
-  text-align: center;
+.statsListRight {
+  text-align: end;
 }
 .statsListRight input {
   padding: 4px 0px;
