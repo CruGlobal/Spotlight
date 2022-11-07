@@ -189,7 +189,8 @@ function submitMovementData() {
     let url = getURL()+'statistics';
 
     var response = UrlFetchApp.fetch(url, requestOptions);
-
+  
+    GmailApp.sendEmail('carl.hempel@cru.org','Successful Update!', `Num of Movements: ${JSON.parse(statistics).statistics.length} \n\nMovement IDs: \n - ${JSON.parse(statistics).statistics.map(el => 'https://infobase.cru.org/locations/0/movements/'+el.activity_id+'/stats').join('\n - ')}`);
     Logger.log(response);
   }
   catch(error) {
