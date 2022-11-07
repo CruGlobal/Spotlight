@@ -941,6 +941,7 @@ function catchError(error, notify=true){
 function toggleMore(el) {
   el.nextElementSibling.classList.toggle('hide'); 
   el.textContent = (el.textContent == 'More' ? 'Less' : 'More');
+  el.classList.toggle('upArrow');
 }
 
 //TOOLTIP CODE

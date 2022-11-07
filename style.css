@@ -393,6 +393,24 @@ button {
   border: 1px solid var(--main-color);
   border-bottom: none;
   border-radius: 1rem;
+  width: 5rem;
+}
+.punch:after {
+  position: relative;
+  top: 1rem;
+  left: 0.2rem;
+  width: 0;
+  height: 0;
+  content: "";
+  border-left: 0.5rem solid transparent;
+  border-right: 0.5rem solid transparent;
+  border-top: 0.5rem solid var(--main-color);
+  transition: border .2s;
+}
+.punch.upArrow:after {
+  border-top: unset;
+  top: -0.8rem;
+  border-bottom: 0.5rem solid var(--main-color);
 }
 button.white {
   background-color: white;
