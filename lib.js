@@ -289,37 +289,38 @@ document.addEventListener("DOMContentLoaded", function(){
       document.getElementById('statsList').dispatchEvent(new Event("change"));
     }
   });
-  document.getElementById('statsList').addEventListener('change', function(e) {
-    //get all question values
-    let varVals = {};
-    for(question of document.querySelectorAll('#statsList input')) { //compile object for tooLow calcs.
-      varVals[question.id] = question.value;
-    }
-
-    for(question of Object.keys(user.questionRels)){
-      let tooLow = 0;
-      //checking if any are greater than the question
-      if(user.questionRels[question].lessThan) {
-        for(relVar of user.questionRels[question].lessThan){
-          tooLow += (parseInt(varVals[question]) < parseInt(varVals[relVar]));
-        }
-      }
-      if(document.getElementById(question)){
-        if(tooLow){ //Add Too Low bubble
-          document.getElementById(question).parentElement.classList.add('tooLow');
-        } else {
-          document.getElementById(question).parentElement.classList.remove('tooLow');
-        }
-        if(parseInt(varVals[question]) < 0){  //Add red highlight to negative numbers
-          document.getElementById(question).classList.add('negative');
-        } else {
-          document.getElementById(question).classList.remove('negative');
-        }
-      }
-    }
-    processLocationForm();
-  });
+  document.getElementById('statsList').addEventListener('change', saveFormToFormSubs);
 });
+function saveFormToFormSubs(e) {
+  //get all question values
+  let varVals = {};
+  for(question of document.querySelectorAll('#statsList input')) { //compile object for tooLow calcs.
+    varVals[question.id] = question.value;
+  }
+
+  for(question of Object.keys(user.questionRels)){
+    let tooLow = 0;
+    //checking if any are greater than the question
+    if(user.questionRels[question].lessThan) {
+      for(relVar of user.questionRels[question].lessThan){
+        tooLow += (parseInt(varVals[question]) < parseInt(varVals[relVar]));
+      }
+    }
+    if(document.getElementById(question)){
+      if(tooLow){ //Add Too Low bubble
+        document.getElementById(question).parentElement.classList.add('tooLow');
+      } else {
+        document.getElementById(question).parentElement.classList.remove('tooLow');
+      }
+      if(parseInt(varVals[question]) < 0){  //Add red highlight to negative numbers
+        document.getElementById(question).classList.add('negative');
+      } else {
+        document.getElementById(question).classList.remove('negative');
+      }
+    }
+  }
+  processLocationForm();
+}
 
 function resetUser(){
   removeLocalStorage();
@@ -496,7 +497,7 @@ async function hashchanged(){
       if(storyBox) {
         storyBoxContent += `<label for="storyBox">${storyBox}</label><br>
         <div class="grow-wrap">
-          <textarea id="storyBox" style="width: 100%" name="storyBox" onInput="this.parentNode.dataset.replicatedValue = this.value"></textarea>
+          <textarea id="storyBox" style="width: 100%" name="storyBox" onInput="this.parentNode.dataset.replicatedValue = this.value; saveFormToFormSubs()"></textarea>
         </div>`
         
       }
@@ -535,7 +536,6 @@ async function hashchanged(){
           let value = item[1];
           if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
             let element = document.getElementById(questionId);
-            document.getElementById('statsList').dispatchEvent(new Event('change'));
             if(!element){
               continue;
             }
@@ -551,6 +551,7 @@ async function hashchanged(){
           }
         }
       }
+      document.getElementById('statsList').dispatchEvent(new Event('change'));
 
       projector.classList = 'locations';
       window.document.title = "Enter Stats for "+movement.name;
@@ -733,12 +734,14 @@ function processLocationForm(submitMovementId) {
   var serializedForm = new URLSearchParams(new FormData(form)).toString().replace(/\+/g,'%20');
 
   let data = unserialize(serializedForm);
-  let sum = data.filter(itm => ['startDate','endDate','movementId','userName','userPhone']
+  let sum = data.filter(itm => ['startDate','endDate','movementId','userPhone']
                                .indexOf(itm[0]) === -1)
                 .map(itm => itm[1])
                 .reduce((total, amount) => Number(total) + Number(amount));
   let movementId = document.getElementById('movementId').value;
-  if(sum != 0 || submitMovementId == movementId){
+  let storyContents = data.filter(itm => itm[0] == 'storyBox')[0];
+  if(storyContents) {storyContents = (storyContents[1] != '')}
+  if(sum != 0 || submitMovementId == movementId || storyContents){
     window.formSubs[document.getElementById('movementId').value] = `userPin=${user.pin}&`+serializedForm;
   }
   else {
