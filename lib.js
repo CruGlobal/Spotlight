@@ -43,7 +43,7 @@ window.addEventListener('load', function() {
   //let people install on their own schedule
 //ANDROID
   window.deferredPrompt;
-  const addBtn = document.querySelector('.add-button');
+  const addBtn = document.getElementById('add-button');
   addBtn.style.display = 'none';
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -53,20 +53,31 @@ window.addEventListener('load', function() {
     window.deferredPrompt = e;
     // Update UI to notify the user they can add to home screen
     addBtn.style.display = 'block';
-  });
+  }); 
 //iOS - Detects if device is on iOS 
   const isIos = () => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    return /iphone|ipad|ipod/.test( userAgent );
+    if(/iPad|iPhone|iPod/.test(navigator.platform)) {
+      return 'iOS'
+    }
+    else if (navigator.platform === 'MacIntel') {
+      return 'MacOs'
+    }
+    else {
+      return false;
+    }
   }
   // Detects if device is in standalone mode
-  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  var isInStandaloneMode = false;
+  if (matchMedia('(display-mode: standalone)').matches) { // replace standalone with fullscreen or minimal-ui according to your manifest
+    isInStandaloneMode = true; // Android and iOS 11.3+
+  } else if ('standalone' in navigator) {
+    isInStandaloneMode = navigator.standalone; // useful for iOS < 11.3
+  }
   // Checks if should display install popup notification:
-  if (isIos() && !isInStandaloneMode()) {
-    document.addEventListener('click', (e) => {
-      document.getElementById('install-prompt').style.display = 'none';
-    });
-    document.querySelector('.add-button').style.display = 'block';
+  let iOs = isIos();
+  if (iOs && !isInStandaloneMode) {
+    addBtn.style.display = 'block';
+    document.getElementById('install-prompt').classList.add('mac');
   }
 });
 updateOnlineStatus();
@@ -78,7 +89,7 @@ function installPWA(){
     // Wait for the user to respond to the prompt
     window.deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
-        document.querySelector('.add-button').style.display = 'none';
+        document.getElementById('add-button').style.display = 'none';
         document.getElementById('projector').classList.remove('menu');
         window.deferredPrompt = null;
         console.log('User accepted the A2HS prompt');
@@ -90,6 +101,11 @@ function installPWA(){
   }
   else { //we don't have a deferred - let's show iOS or others.
     document.getElementById('install-prompt').style.display = 'block';
+    document.addEventListener('click', (e) => {
+      if(!e.target.closest('#menu')){
+        document.getElementById('install-prompt').style.display = 'none';
+      }
+    });
   }
 }
 
