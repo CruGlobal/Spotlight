@@ -43,9 +43,8 @@ window.addEventListener('load', function() {
   }); 
 //iOS - Detects if device is on iOS 
   const isIos = () => {
-    const userAgent = window.navigator.platform.toLowerCase();
-    document.getElementById('add-button').insertAdjacentHTML('afterend',userAgent);
-    return /iphone|ipad|ipod/.test( userAgent );
+    return /iPad|iPhone|iPod/.test(navigator.platform) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   }
   // Detects if device is in standalone mode
   var isInStandaloneMode = false;
