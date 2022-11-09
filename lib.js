@@ -43,8 +43,15 @@ window.addEventListener('load', function() {
   }); 
 //iOS - Detects if device is on iOS 
   const isIos = () => {
-    return /iPad|iPhone|iPod/.test(navigator.platform) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    if(/iPad|iPhone|iPod/.test(navigator.platform)) {
+      return 'iOS'
+    }
+    else if (navigator.platform === 'MacIntel') {
+      return 'MacOs'
+    }
+    else {
+      return false;
+    }
   }
   // Detects if device is in standalone mode
   var isInStandaloneMode = false;
@@ -54,8 +61,10 @@ window.addEventListener('load', function() {
     isInStandaloneMode = navigator.standalone; // useful for iOS < 11.3
   }
   // Checks if should display install popup notification:
-  if (isIos() && !isInStandaloneMode) {
+  let iOs = isIos();
+  if (iOs && !isInStandaloneMode) {
     addBtn.style.display = 'block';
+    document.getElementById('install-prompt').classList.add('mac');
   }
 });
 updateOnlineStatus();
