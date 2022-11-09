@@ -40,19 +40,21 @@ window.addEventListener('load', function() {
     window.deferredPrompt = e;
     // Update UI to notify the user they can add to home screen
     addBtn.style.display = 'block';
-  });
+  }); 
 //iOS - Detects if device is on iOS 
   const isIos = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     return /iphone|ipad|ipod/.test( userAgent );
   }
   // Detects if device is in standalone mode
-  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+  var isInStandaloneMode = false;
+  if (matchMedia('(display-mode: standalone)').matches) { // replace standalone with fullscreen or minimal-ui according to your manifest
+    isInStandaloneMode = true; // Android and iOS 11.3+
+  } else if ('standalone' in navigator) {
+    isInStandaloneMode = navigator.standalone; // useful for iOS < 11.3
+  }
   // Checks if should display install popup notification:
-  if (isIos() && !isInStandaloneMode()) {
-    document.addEventListener('click', (e) => {
-      document.getElementById('install-prompt').style.display = 'none';
-    });
+  if (isIos() && !isInStandaloneMode) {
     document.querySelector('.add-button').style.display = 'block';
   }
 });
@@ -77,6 +79,11 @@ function installPWA(){
   }
   else { //we don't have a deferred - let's show iOS or others.
     document.getElementById('install-prompt').style.display = 'block';
+    document.addEventListener('click', (e) => {
+      if(!e.target.closest('#menu')){
+        document.getElementById('install-prompt').style.display = 'none';
+      }
+    });
   }
 }
 
