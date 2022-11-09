@@ -30,7 +30,7 @@ window.addEventListener('load', function() {
   //let people install on their own schedule
 //ANDROID
   window.deferredPrompt;
-  const addBtn = document.querySelector('.add-button');
+  const addBtn = document.getElementById('add-button');
   addBtn.style.display = 'none';
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -55,7 +55,7 @@ window.addEventListener('load', function() {
   }
   // Checks if should display install popup notification:
   if (isIos() && !isInStandaloneMode) {
-    document.querySelector('.add-button').style.display = 'block';
+    addBtn.style.display = 'block';
   }
 });
 updateOnlineStatus();
@@ -67,7 +67,7 @@ function installPWA(){
     // Wait for the user to respond to the prompt
     window.deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
-        document.querySelector('.add-button').style.display = 'none';
+        document.getElementById('add-button').style.display = 'none';
         document.getElementById('projector').classList.remove('menu');
         window.deferredPrompt = null;
         console.log('User accepted the A2HS prompt');

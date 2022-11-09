@@ -331,7 +331,7 @@ h1 {
   color: gray;
   margin-bottom: 1rem;
 }
-.add-button {
+#add-button {
   background: var(--light-gray) !important;
   border-bottom-left-radius: 1rem;
   border-bottom: 2px solid var(--main-color) !important;
