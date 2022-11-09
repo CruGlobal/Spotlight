@@ -43,7 +43,7 @@ window.addEventListener('load', function() {
   }); 
 //iOS - Detects if device is on iOS 
   const isIos = () => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
+    const userAgent = window.navigator.platform.toLowerCase();
     document.getElementById('add-button').insertAdjacentHTML('afterend',userAgent);
     return /iphone|ipad|ipod/.test( userAgent );
   }
