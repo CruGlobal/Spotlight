@@ -53,6 +53,10 @@ window.addEventListener('load', function() {
       return false;
     }
   }
+  let isSafari = Boolean(navigator.vendor.match(/apple/i) &&
+             !navigator.userAgent.match(/crios/i) &&
+             !navigator.userAgent.match(/fxios/i) &&
+             !navigator.userAgent.match(/Opera|OPT\//));
   // Detects if device is in standalone mode
   var isInStandaloneMode = false;
   if (matchMedia('(display-mode: standalone)').matches) { // replace standalone with fullscreen or minimal-ui according to your manifest
@@ -62,9 +66,11 @@ window.addEventListener('load', function() {
   }
   // Checks if should display install popup notification:
   let iOs = isIos();
-  if (iOs && !isInStandaloneMode) {
+  if (iOs && !isInStandaloneMode && isSafari) {
     addBtn.style.display = 'block';
-    document.getElementById('install-prompt').classList.add('mac');
+    if(iOs == "MacOs"){
+      document.getElementById('install-prompt').classList.add('mac');
+    }
   }
 });
 updateOnlineStatus();
