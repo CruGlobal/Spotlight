@@ -775,12 +775,6 @@ function processLocationForm(submitMovementId) {
 
   //clear form
   document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
-
-  //clear notification
-  let notification = document.getElementById('notification');
-  if(notification) {
-    notification.remove();
-  }
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
