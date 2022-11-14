@@ -121,22 +121,26 @@ function toggleRegister(){
     document.getElementById('regUserEmail').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
+    document.getElementById('register').closest('span').classList.add('grayBg');
   }
   else{
     document.getElementById('regUserName').removeAttribute('required');
     document.getElementById('regUserEmail').removeAttribute('required');
     document.getElementById('userToggle').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
+    document.getElementById('register').closest('span').classList.remove('grayBg');
   }
 }
 function toggleStaff(){
   if(document.getElementById('regUserStaff').checked){
     document.getElementById('staffAcct').setAttribute('required', true);
     document.getElementById('staffToggle').style.display = '';
+    document.getElementById('regUserStaff').closest('span').classList.add('grayBg');
   }
   else{
     document.getElementById('staffAcct').removeAttribute('required');
     document.getElementById('staffToggle').style.display = "none";
+    document.getElementById('regUserStaff').closest('span').classList.remove('grayBg');
   }
 }
 //SERVICE WORKER
@@ -264,12 +268,14 @@ async function requestPin(){
     dataType: "json"
   }).then(handleErrors)
   .then(json)
-  .done(function(data){
-    //console.log(data);
+  .then(function(data){
+    console.log(data);
     alert(data.text);
+  }).catch(function(error){
+    catchError(error, false);
   });
   stopSpin();
-  return jqxhr;
+  return;
 }
 
 //ADD EVENT LISTENERS HASHCHANGE, AND setup variables
@@ -431,6 +437,7 @@ async function hashchanged(){
     document.querySelectorAll('input[type="checkbox"]').forEach(el => el.removeAttribute('checked'));
     document.getElementById('userToggle').style.display = 'none';
     document.getElementById('staffToggle').style.display = 'none';
+    document.querySelectorAll('.grayBg').forEach(el => el.classList.remove('grayBg'));
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = 'none');
 
     let movements = [];

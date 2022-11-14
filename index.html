@@ -102,17 +102,26 @@
         <form class="last-el-bottom" id="onboard-form">
           <div class="movementInfo">
             <p>Select the movements below that you would like to add OR click <a href="#onboarding">here</a> to login.  </p>
-
             <h2>Movements</h2>
-
             <div id="movements">
-            </div>
+          </div>
           <br>
-          <br>
-          <b>Account Login</b>
           </div>
           <div class="loginInfo">
             <b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+          </div>
+          <h2 style="margin-bottom: 0;">Account Login</h2>
+          <div class="movementInfo">
+            <span>
+              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
+              <label for="register">Register as new user</label>
+            </span>
+            <div id="userToggle">
+              <label for="regUserName">First name</label><br>
+              <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
+              <label for="regUserEmail">Email for account recovery</label><br>
+              <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
+            </div>
           </div>
           <div class="accountToggle">
             <label for="regUserPhone">Phone Number</label><br>
@@ -121,25 +130,14 @@
             <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>  
             <small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
           </div>
-          <div class="movementInfo accountInfo">
-            <div>
-              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
-              <label for="register">Register as new user</label>
-
-              <div id="userToggle">
-                <label for="regUserName">First name</label><br>
-                <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
-                <label for="regUserEmail">Email for account recovery</label><br>
-                <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
-              </div>
-            </div><br>
-            <div>
+          <div class="movementInfo">
+            <span>
               <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
               <label for="regUserStaff">I'm on staff with Cru</label>
-              <div id="staffToggle">
-                <label for="staffAcct">Staff Acct. #</label><br>
-                <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
-              </div>
+            </span>
+            <div id="staffToggle">
+              <label for="staffAcct">Staff Acct. #</label><br>
+              <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
             </div>
           </div>
           <div>
@@ -238,7 +236,7 @@
       </div>
     </div>
     <div id="install-prompt" style="display: none;"><img src="a2hs.png" style="height:3rem; padding-top:.3rem; padding-right:1rem; float:left"><span>Install Spotlight[beta] on your device: tap <img src="share-apple.svg" style="height: 1.5rem; vertical-align: text-bottom;"> and then Add to homescreen.</span></div>
-    <script src="masking-input.js" async data-autoinit="true"></script>
+    <script src="masking-input.js" data-autoinit="true"></script>
     <script rel="preconnect" src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js" async></script>
   </body>
 </html>

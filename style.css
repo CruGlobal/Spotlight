@@ -840,19 +840,23 @@ span[rel="tooltip"] {
 #staffAcct, #staffAcctMask {
   letter-spacing: 0.3em;
 }
-
-.accountInfo input[type="checkbox"]:checked + label  {  
-  text-decoration: underline;
-}
-
 #staffToggle, #userToggle, .accountToggle {
   background-color: rgba(0, 0, 0, 0.15);
   padding: 1rem;
   border-bottom-left-radius: 1rem;
   border-bottom-right-radius: 1rem;
   border-top-right-radius: 1rem;
-  margin-top: 0.5rem;
   width: fit-content;
+}
+.accountToggle {
+  border-radius: 1rem;
+}
+.grayBg {
+  display: inline-block;
+  padding: 0.5rem;
+  padding-right: 2rem;
+  background-color: rgba(0, 0, 0, 0.17);
+  border-top-right-radius: 1rem;
 }
 
 /* optional */
