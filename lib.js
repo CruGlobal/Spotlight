@@ -820,7 +820,6 @@ function processLocationForm(submitMovementId) {
 
   //clear form
   document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
-
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
