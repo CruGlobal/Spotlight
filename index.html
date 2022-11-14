@@ -44,13 +44,19 @@
         <div id="hamburger-tab">
           <button style="background:unset;" id="hamburger" aria-label="Menu" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
         </div>
-        <div style="height: 100%; overflow: auto;">
+        <div id="menuContents" style="height: 100%; overflow: auto;">
           <h3 style="margin-top: 3rem;">Shortcuts</h3>
           <ul>
-            <li>
+            <li id="weeklyData">
               <a href="#locations">Enter More</a>
             </li>
-            <li>
+            <li id="semesterData" style="display: none;">
+              <div style="vertical-align: middle;">
+                <a id="semesterInfobaseAnchor" target="_blank">Enter Semester / Quarterly Data</a>
+                <span rel="tooltip" title="Click here to enter Semester / Quarterly Data for the current movement on Infobase" style="line-height: initial; float:right;">i</span>
+              </div>
+            </li>
+            <li id="celebrationSummary">
               <a href="#summary">Celebration Summary</a>
             </li>
             <!--li>
@@ -76,7 +82,7 @@
             <li>
               <a id="add-button" onclick="installPWA();">Install Spotlight</a>
             </li>
-            <li>
+            <li noHover>
               <label>
                 Font Size: <output id="fontSizeOutput">16px</output><br>
                 <input id="fontSize" type="range" min="16" max="20" value="16" id="fontSize" name="fontSize" list="tickmarks" onchange="document.getElementById('fontSizeOutput').value=this.value+'px'; document.documentElement.style.fontSize = this.value+'px'; localStorage.setItem('fontSize', this.value);" style="width: 130px">

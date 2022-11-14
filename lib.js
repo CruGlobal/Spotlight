@@ -473,8 +473,7 @@ async function hashchanged(){
     let movement_num = parseInt(hash.split('/')[1]);
     (user.movements.length == 1 ? document.querySelectorAll('.mvBtn').forEach(el => el.style.display = 'none') : document.querySelectorAll('.mvBtn').forEach(el => el.style.display = ''));
 
-    //if we fail, redirect to first location
-    try {
+    try {  //if we fail, redirect to first location
       var movement = user.movements[movement_num];
       let strategy = user.strategies[movement.strat];
 
@@ -602,6 +601,13 @@ async function hashchanged(){
       }
       document.getElementById('statsList').dispatchEvent(new Event('change'));
 
+      if(movement.id.startsWith('c')){ //for now the infobase will only show for campus movements - may add SM movements in the future but needs more thought/work
+        document.getElementById('semesterData').style.display = '';
+        document.getElementById('semesterInfobaseAnchor').href= `https://infobase.cru.org/locations/0/movements/${movement.id.replace('c','')}/stats`;
+      }
+      else {
+        document.getElementById('semesterData').style.display = 'none';
+      }
       projector.classList = 'locations';
       window.document.title = "Enter Stats for "+movement.name;
       // Update scroll position for first time
@@ -980,7 +986,7 @@ function setToolTips() {
       let tooltip = document.createElement('div');
       tooltip.setAttribute('id','tooltip');
 
-      if( !tip || tip == '' ) {
+      if(!tip || tip == '') {
         return false;
       }
 
@@ -993,27 +999,31 @@ function setToolTips() {
         tooltip.style.maxWidth= `min(${window.innerWidth / 1.2}px, 340px)`;
 
         var targetOffset = target.getBoundingClientRect();
-        var pos_left = target.offsetLeft + ( target.offsetWidth / 2 ) - ( tooltip.offsetWidth / 2 );
+        var pos_left = targetOffset.left + ( targetOffset.width / 2 ) - ( tooltip.offsetWidth / 2 );
         var pos_top  = targetOffset.top - tooltip.offsetHeight - 20;
 
-        if( pos_left < 0 )
-        {
-          pos_left = target.offsetLeft + target.offsetWidth / 2 - 20;
+        if(pos_left < 0) {
+          console.log('s')
+          pos_left = targetOffset.left + targetOffset.width / 2 - 20;
           tooltip.classList.add('left');
         }
         else {
           tooltip.classList.remove('left');
         }
-  /*
-        if( pos_left + tooltip.offsetWidth > window.innerWidth ) {
-          pos_left = target.offsetLeft - tooltip.offsetWidth + target.offsetWidth / 2 + 20;
-          tooltip.classList.add('right');
+        if(pos_left + tooltip.offsetWidth > window.innerWidth) {
+          pos_left = targetOffset.left - tooltip.offsetWidth + targetOffset.width;
+          if(pos_left < 0) {
+            pos_left = 0
+            tooltip.classList.remove('left');
+          } else {
+            tooltip.classList.add('right');
+          }
         }
         else {
           tooltip.classList.remove('right');
-        }*/
+        }
 
-        if( pos_top < 0 ) {
+        if(pos_top < 0) {
           var pos_top  = targetOffset.top + target.offsetHeight;
           tooltip.classList.add('top');
         }
@@ -1038,6 +1048,7 @@ function setToolTips() {
       };
     
       document.getElementById('locations').addEventListener('scroll', remove_tooltip);
+      document.getElementById('menuContents').addEventListener('scroll', remove_tooltip);
 
       target.addEventListener('mouseleave', remove_tooltip);
       tooltip.addEventListener('click', remove_tooltip);

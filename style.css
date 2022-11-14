@@ -533,15 +533,30 @@ button:hover {
   background: white;
   border-bottom: 1px var(--medium-gray) solid;
   padding: 1rem;
+  color: var(--dark-gray);
+}
+#menu li a {
   text-decoration: none;
   color: var(--dark-gray);
 }
-#menu li a:active,
-#menu li a:hover {
+#menu li:not([noHover]) > *:active,
+#menu li:not([noHover]) > *:hover {
   filter: brightness(0.9);
 }
 #menu li:first-child {
   border-top: 1px var(--medium-gray) solid;
+}
+.locations #weeklyData {
+  display: none;
+}
+#semesterData {
+  display: none;
+}
+.locations #semesterData {
+  display: block;
+}
+.summary #celebrationSummary {
+  display: none;
 }
 
 #hamburger-tab {
@@ -726,7 +741,6 @@ button {
   text-align: center;
 }
 /*+/- Buttons*/
-/*TOOLTIP CSS*/
 .statsListRight span {
   line-height: 2;
   text-align: center;
@@ -737,6 +751,7 @@ button {
   width: 2rem;
   margin: 0 .3rem;
 }
+/*TOOLTIP CSS*/
 span[rel="tooltip"] {
   position: relative;
   top: .1rem;
