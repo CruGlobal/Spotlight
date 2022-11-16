@@ -17,6 +17,7 @@
   --projector-width: min(850px, 100vw);
   --app-width: min(450px, 100vw);
   --drop-shadow: .25rem .5rem 0.5rem var(--medium-gray);
+  --up-shadow: -.1rem -.1rem 0.5rem var(--medium-gray);
 }
 html:after{
   display: block;
@@ -33,17 +34,20 @@ html:after{
   border-top-left-radius: 2000px 200px;
   border-top-right-radius: 2000px 200px;
   filter: drop-shadow(var(--drop-shadow));
+  transition: filter .25s;
 }
 html.offline:after {
   bottom: 0;
   content: "You are offline";
   background-color: yellow;
   animation: slideIn 1s;
+  filter: drop-shadow(var(--drop-shadow));
 }
 html.online:after {
   content: "You are online";
   background-color: #00a846;
   animation: slideOut 4s;
+  filter: drop-shadow(var(--drop-shadow));
 }
 @keyframes slideIn {
     from { bottom: -2rem; }
@@ -51,10 +55,10 @@ html.online:after {
 }
 @keyframes slideOut {
     from { bottom: 0;}
-      10% { transform: scaleY(1.8) rotate(2deg); transform-origin: bottom left;  filter: brightness(115%);}
-      40% { transform: scaleY(1.4) rotate(1deg)}
-      80% {bottom:  0; filter: brightness(1.0);}
-      to { bottom: -2rem;  transform: scaleY(1) rotate(0);}
+      10% { transform: scaleY(1.8) rotate(2deg); transform-origin: bottom left;  filter: brightness(115%) drop-shadow(var(--up-shadow));}
+      40% { transform: scaleY(1.4) rotate(1deg); filter: brightness(110%) drop-shadow(var(--up-shadow))}
+      80% {bottom:  0; filter: brightness(1.0) drop-shadow(var(--up-shadow));}
+      to { bottom: -2rem;  transform: scaleY(1) rotate(0); filter: drop-shadow(var(--drop-shadow));}
 }
 body {
   overflow: hidden;
@@ -123,6 +127,18 @@ h1 {
   text-decoration: underline;
   color: blue;
   cursor: pointer;
+}
+.fadeUp {
+  transition: transform .25s, opacity .25s !important;
+  transform: translate3d(0,-5%,0) scale3d(1, .5, 1.0);
+  transform-origin: top;
+  opacity: 0;
+}
+.fadeDown {
+  transition: transform .25s, opacity .25s !important;
+  transform: translate3d(0,5%,0) scale3d(1, .5, 1.0);
+  transform-origin: bottom;
+  opacity: 0;
 }
 .transition {
   transition: transform .25s !important;
@@ -240,7 +256,7 @@ h1 {
   margin-right: -2rem;
   background-color: var(--medium-gray);
   color: white;
-  padding: 1rem 2rem;
+  padding: .5rem 2rem;
   border-bottom-left-radius: 1rem;
   border-bottom-right-radius: 1rem;
   filter: drop-shadow(var(--drop-shadow));
@@ -325,6 +341,18 @@ h1 {
   margin-left: auto; 
   margin-right:auto; 
   margin-bottom: 1rem;
+}
+.notifiButton {
+  font-weight: normal;
+  background: unset;
+  height: unset;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  border: 1px solid gray;
+  border-radius: 1rem;
+  margin-top: 0.25rem;
+  padding-bottom: .2rem;
 }
 .bottom-button {
   display: flex;
@@ -884,4 +912,45 @@ input.masked,
 .shell span {
   background-color: transparent;
   text-transform: uppercase; 
+}
+
+select {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  background-color: white;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 1;
+  outline: none;
+  white-space: pre-wrap;
+  text-overflow: ellipsis;
+  text-align: unset;
+  color: var(--main-color);
+  border-radius: .5rem;
+}
+select::-ms-expand {
+  display: none;
+}
+
+.select {position: relative;}
+.select::after {
+  position: absolute;
+  content: "";
+  border-top: .7rem solid var(--main-color);
+  border-left: .7rem solid transparent;
+  border-right: .7rem solid transparent;
+  top: 0.7rem;
+  right: .5rem;
+  pointer-events: none;
+  transition: transform .2s;
+}
+select:hover,
+select:focus-within {
+  filter: drop-shadow(var(--drop-shadow));
+}
+.select:has(select:focus-within)::after {
+  transform: scaleY(-1);
 }

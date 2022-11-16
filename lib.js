@@ -427,8 +427,7 @@ async function hashchanged(){
       let notifyEl = document.getElementById('notification');
       if(notifyEl){notifyEl.remove()}
       let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
-        removeNotification();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
-        onclick="removeNotification();">X</button></div>`
+        removeNotification();" href="${hash}">here</a> to set up!<button class="notifiButton" onclick="removeNotification();">x</button></div>`
       document.getElementById('locations').insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
@@ -559,11 +558,17 @@ async function hashchanged(){
       }
       document.getElementById('storyBoxContainer').innerHTML = storyBoxContent;
       
-      let prefix = '';
+      let prefix = '', select = '';
       if(user.movements.length > 1){
         prefix = (movement_num + 1)+"/"+user.movements.length+" ";
+        select = `<span class="select"><select style="width: calc(var(--app-width) - 8rem)" onchange="goToMovement(this.value);">`;
+        user.movements.forEach((el, i) => select += `<option value="${i}" ${(i == movement_num ? 'selected' : '')}>${el.name}</option>`)
+        select += '</select></span>';
       }
-      document.getElementById('movementName').textContent = prefix + movement.name;
+      else {
+        select = movement.name;
+      }
+      document.getElementById('movementName').innerHTML = prefix + select;
       document.getElementById('movementId').value = movement.id; //hidden field
       document.getElementById('userPhone').value = user.phone; //hidden field
 
@@ -878,6 +883,21 @@ async function submitLocationForm(){
   }).then(function(data){
     stopSpin();
   });
+}
+
+function goToMovement(num) {
+  if(num > parseInt(location.hash.split('/')[1])){
+    document.getElementById('slideable').classList.add('fadeUp');
+    setTimeout(function(){
+      document.getElementById('slideable').classList.remove('fadeUp');
+    }, 250);
+  } else {
+    document.getElementById('slideable').classList.add('fadeDown');
+    setTimeout(function(){
+      document.getElementById('slideable').classList.remove('fadeDown');
+    }, 250);
+  }
+  location.hash = 'locations/'+num+'/'+user.movements[num].id;
 }
 
 function goToNextMovement() {
