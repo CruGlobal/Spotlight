@@ -6,12 +6,11 @@ var prefetchedURLs = [
   'browserconfig.xml',
   'favicon-16x16.png',
   'favicon-32x32.png',
-  'favicon.png',
+  'favicon.ico',
   'icon.png',
   'icon512.png',
   'mstile-150x150.png',
   'safari-pinned-tab.svg',
-  'jquery-3.4.0.min.js',
   'party.min.js',
   'masking-input.js'
   /*'lib.js',

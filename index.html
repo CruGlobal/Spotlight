@@ -11,7 +11,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="mask-icon" href="safari-pinned-tab.svg" color="#FFCF07">
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700,900" async rel="stylesheet" type="text/css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
 
@@ -39,15 +42,21 @@
     <div id="projector"  class="initial">
       <div id="menu" class="sidebar">
         <div id="hamburger-tab">
-          <button style="background:unset;" class="hamburger" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
+          <button style="background:unset;" id="hamburger" aria-label="Menu" onClick="this.classList.toggle('active'); projector.classList.toggle('menu');"><div></div></button>
         </div>
-        <div style="height: 100%; overflow: auto;">
+        <div id="menuContents" style="height: 100%; overflow: auto;">
           <h3 style="margin-top: 3rem;">Shortcuts</h3>
           <ul>
-            <li>
+            <li id="weeklyData">
               <a href="#locations">Enter More</a>
             </li>
-            <li>
+            <li id="semesterData" style="display: none;">
+              <div style="vertical-align: middle;">
+                <a id="semesterInfobaseAnchor" target="_blank">Enter Semester / Quarterly Data</a>
+                <span rel="tooltip" title="Click here to enter Semester / Quarterly Data for the current movement on Infobase" style="line-height: initial; float:right;">i</span>
+              </div>
+            </li>
+            <li id="celebrationSummary">
               <a href="#summary">Celebration Summary</a>
             </li>
             <!--li>
@@ -73,27 +82,46 @@
             <li>
               <a id="add-button" onclick="installPWA();">Install Spotlight</a>
             </li>
+            <li noHover>
+              <label>
+                Font Size: <output id="fontSizeOutput">16px</output><br>
+                <input id="fontSize" type="range" min="16" max="20" value="16" id="fontSize" name="fontSize" list="tickmarks" onchange="document.getElementById('fontSizeOutput').value=this.value+'px'; document.documentElement.style.fontSize = this.value+'px'; localStorage.setItem('fontSize', this.value);" style="width: 130px">
+                <datalist id="tickmarks">
+                  <option value="16" label="16px"></option>
+                  <option value="20" label="20px"></option>
+                </datalist>
+              </label>
+            </li>
           </ul>
         </div>
       </div>
       <div id="onboarding" class="screen last-el-bottom">
         <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        <small>A snapshot of your ministry</small>
         
         <form class="last-el-bottom" id="onboard-form">
           <div class="movementInfo">
             <p>Select the movements below that you would like to add OR click <a href="#onboarding">here</a> to login.  </p>
-
             <h2>Movements</h2>
-
             <div id="movements">
-            </div>
+          </div>
           <br>
-          <br>
-          <b>Account Login</b>
           </div>
           <div class="loginInfo">
             <b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+          </div>
+          <h2 style="margin-bottom: 0;">Account Login</h2>
+          <div class="movementInfo">
+            <span>
+              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
+              <label for="register">Register as new user</label>
+            </span>
+            <div id="userToggle">
+              <label for="regUserName">First name</label><br>
+              <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
+              <label for="regUserEmail">Email for account recovery</label><br>
+              <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
+            </div>
           </div>
           <div class="accountToggle">
             <label for="regUserPhone">Phone Number</label><br>
@@ -102,24 +130,14 @@
             <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>  
             <small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
           </div>
-          <div class="movementInfo accountInfo">
-            <div>
-              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
-              <label for="register">Register as new user</label>
-              <div id="userToggle">
-                <label for="regUserName">First name</label><br>
-                <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
-                <label for="regUserEmail">Email for account recovery</label><br>
-                <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
-              </div>
-            </div><br>
-            <div>
+          <div class="movementInfo">
+            <span>
               <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
               <label for="regUserStaff">I'm on staff with Cru</label>
-              <div id="staffToggle">
-                <label for="staffAcct">Staff Acct. #</label><br>
-                <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
-              </div>
+            </span>
+            <div id="staffToggle">
+              <label for="staffAcct">Staff Acct. #</label><br>
+              <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
             </div>
           </div>
           <div>
@@ -140,31 +158,21 @@
 
       <div id="locations" class="screen last-el-bottom">
         <h1>Spotlight<sup style="font-weight: normal; color: var(--main-color)">[Beta]</sup></h1>
-        <h5 style="margin: 0; font-weight: normal">A snapshot of your ministry</h5>
+        <small>A snapshot of your ministry</small>
+        <b id="todayDate" style="color: var(--main-color);"></b>
         <p id="strategyWelcomeText"></p>
-
         <form class="last-el-bottom" id="location-form">
-          <div id="fiftypercent">
-            <div>
-              <input id="startDate" name="startDate" type="hidden" >
-              <span>From: <b class="startDate"></b></span>
-            </div>
-            <div>
-              <input id="endDate" name="endDate" type="hidden">
-              <span>To: <b class="endDate"></b></span>
-            </div>
-          </div>
-          <h2 style="width: 100%; display: flex;  justify-content: space-between;">
-            <a class="mvBtn clicky arrow-left" onclick="goToPrevMovement();"> </a>
+          <h2 style="width: 100%; display: flex;  justify-content: space-between; margin-top: 0;">
+            <a class="mvBtn clicky" onclick="goToPrevMovement();">◀ </a>
             <span id="movementName">University of Central Florida Cru</span>
-            <a class="mvBtn clicky arrow-right" onclick="goToNextMovement();"> </a>
+            <a class="mvBtn clicky" onclick="goToNextMovement();"> ▶</a>
           </h2>
 
           <div id="slideable">
             <input type="hidden" id="movementId" name="movementId">
             <input type="hidden" id="userPhone" name="userPhone">
-
-            <h4 style="margin-top: 0;">My activity (best estimate)</h4>
+            
+            <div class="activity"><div id="lastUpdate" style="float: left;"></div>My activity</div>
 
             <div id="statsList"></div>
             <div id="storyBoxContainer"></div>
@@ -228,6 +236,7 @@
       </div>
     </div>
     <div id="install-prompt" style="display: none;"><img src="a2hs.png" style="height:3rem; padding-top:.3rem; padding-right:1rem; float:left"><span>Install Spotlight[beta] on your device: tap <img src="share-apple.svg" style="height: 1.5rem; vertical-align: text-bottom;"> and then Add to homescreen.</span></div>
-    <script src="masking-input.js" async defer data-autoinit="true"></script>
+    <script src="masking-input.js" data-autoinit="true"></script>
+    <script rel="preconnect" src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js" async></script>
   </body>
 </html>

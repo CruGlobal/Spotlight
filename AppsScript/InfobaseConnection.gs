@@ -1,12 +1,15 @@
 //Infobase API documentation at https://campus-contacts-api.cru.org/docs/apis::v4::movementindicatorstats/submit_movement_indicator_stats
 
 const API_KEY = 'api.key';
+const API_URL = 'api.url';
 
 function onOpen(){
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Authentication')
     .addItem('Set Authorization Token', 'setKey')
     .addItem('Delete Authorization Token', 'deleteKey')
+    .addItem('Set API URL', 'setURL')
+    .addItem('Delete API URL', 'deleteURL')
   .addToUi();
 }
 function setKey(){
@@ -21,6 +24,19 @@ function deleteKey(){
 }
 function getKey() {
   return SCRIPT_PROP.getProperty(API_KEY);
+}
+function setURL(){
+  var ui = SpreadsheetApp.getUi();
+  var scriptValue = ui.prompt('Please provide the Infobase base URL(Ex: https://infobase-stage.cru.org/api/v1/ - must include the last "/").' , ui.ButtonSet.OK);
+  SCRIPT_PROP.setProperty(API_URL, scriptValue.getResponseText());
+  GmailApp.sendEmail('spotlight@cru.org','Server: API URL set', 'API URL was set', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+}
+function deleteURL(){
+  SCRIPT_PROP.deleteProperty(API_URL);
+  GmailApp.sendEmail('spotlight@cru.org','Server: API URL deleted', 'API URL was deleted', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+}
+function getURL() {
+  return SCRIPT_PROP.getProperty(API_URL);
 }
 function getStatsPeriodDates() {
   let beginDate = new Date();
@@ -66,7 +82,7 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
       continue;
     }
 
-    let submissionDate = new Date(Utilities.formatDate(new Date(row[2]), "UTC", "YYYY-MM-dd"));
+    let submissionDate = new Date(Utilities.formatDate(new Date(row[0]), "UTC", "YYYY-MM-dd"));
     
     //Check that data row falls in the right period and is a campus activity.  
     if(submissionDate >= new Date(period.begin) && submissionDate <= new Date(period.end)){
@@ -139,18 +155,19 @@ function submitMovementData() {
   try {
     let timeZone = Session.getScriptTimeZone();
     let date = Utilities.formatDate(new Date(SCRIPT_PROP.getProperty('date')),timeZone,"MM/dd/yyyy");
-    let today = new Date().toLocaleDateString();
+    let today = Utilities.formatDate(new Date(),timeZone,"MM/dd/yyyy");
 
     //first time today!
     if(date != today){
       SCRIPT_PROP.setProperty('tries', 1);
+      SCRIPT_PROP.setProperty('date', today);
     }
     else if(parseInt(SCRIPT_PROP.getProperty('tries')) > 3){  //we're done trying!
-      return;
+      Logger.log('more than 3 tries.')
+      //return;
     }
     else {
       SCRIPT_PROP.setProperty('tries', parseInt(SCRIPT_PROP.getProperty('tries')) + 1);
-      SCRIPT_PROP.setProperty('date', today);
     }
 
     let allMovements = getAllMovements()
@@ -169,10 +186,11 @@ function submitMovementData() {
       redirect: 'follow'
     };
 
-    let url = 'https://infobase-stage.cru.org/api/v1/statistics';
+    let url = getURL()+'statistics';
 
     var response = UrlFetchApp.fetch(url, requestOptions);
-
+  
+    GmailApp.sendEmail('carl.hempel@cru.org','Successful Update!', `Num of Movements: ${JSON.parse(statistics).statistics.length} \n\nMovement IDs: \n - ${JSON.parse(statistics).statistics.map(el => 'https://infobase.cru.org/locations/0/movements/'+el.activity_id+'/stats').join('\n - ')}`);
     Logger.log(response);
   }
   catch(error) {
@@ -193,7 +211,7 @@ function getAllMovements() {
     redirect: 'follow'
   };
 
-  let url = 'https://infobase-stage.cru.org/api/v1/activities?per_page=10000';
+  let url = getURL()+'activities?per_page=10000';
 
   return JSON.parse(UrlFetchApp.fetch(url, requestOptions));
 }

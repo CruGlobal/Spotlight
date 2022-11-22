@@ -21,6 +21,19 @@ function updateOnlineStatus(event) {
 }
 //Update Online status
 window.addEventListener('load', function() {
+  let fontSize = localStorage.getItem('fontSize') || 16;
+  document.documentElement.style.fontSize = fontSize+'px';
+  document.getElementById('fontSize').value = fontSize;
+  document.getElementById('fontSizeOutput').value = fontSize +'px'; 
+
+  let mainColor = localStorage.getItem('main-color') || '#FFCF07';
+  document.documentElement.style.setProperty('--main-color', mainColor);
+  document.querySelector("meta[name=theme-color]").setAttribute("content", mainColor);
+
+  // Listen for new scroll events, here we debounce our `storeScroll` function
+  document.getElementById('locations').addEventListener('scroll', debounce(storeScrollLocations), { passive: true });
+  document.getElementById('summary').addEventListener('scroll', debounce(storeScrollSummary), { passive: true });
+
   function update(event) {
     updateOnlineStatus(event);
   }
@@ -108,22 +121,26 @@ function toggleRegister(){
     document.getElementById('regUserEmail').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
+    document.getElementById('register').closest('span').classList.add('grayBg');
   }
   else{
     document.getElementById('regUserName').removeAttribute('required');
     document.getElementById('regUserEmail').removeAttribute('required');
     document.getElementById('userToggle').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
+    document.getElementById('register').closest('span').classList.remove('grayBg');
   }
 }
 function toggleStaff(){
   if(document.getElementById('regUserStaff').checked){
     document.getElementById('staffAcct').setAttribute('required', true);
     document.getElementById('staffToggle').style.display = '';
+    document.getElementById('regUserStaff').closest('span').classList.add('grayBg');
   }
   else{
     document.getElementById('staffAcct').removeAttribute('required');
     document.getElementById('staffToggle').style.display = "none";
+    document.getElementById('regUserStaff').closest('span').classList.remove('grayBg');
   }
 }
 //SERVICE WORKER
@@ -251,12 +268,14 @@ async function requestPin(){
     dataType: "json"
   }).then(handleErrors)
   .then(json)
-  .done(function(data){
-    //console.log(data);
+  .then(function(data){
+    console.log(data);
     alert(data.text);
+  }).catch(function(error){
+    catchError(error, false);
   });
   stopSpin();
-  return jqxhr;
+  return;
 }
 
 //ADD EVENT LISTENERS HASHCHANGE, AND setup variables
@@ -280,6 +299,10 @@ document.addEventListener("DOMContentLoaded", function(){
   window.formSubs = JSON.parse(localStorage.getItem('formSubs')) || {};
 
   document.body.addEventListener("click", function (e) {
+    if(document.getElementById('projector').classList.contains('menu') && !e.target.closest('#menu')){
+      document.getElementById('hamburger').classList.toggle('active');
+      projector.classList.toggle('menu');
+    }
     if(document.getElementById('projector').classList.contains('summary')){
       party.confetti(e, {
           count: party.variation.range(20, 20)
@@ -297,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   //add +/- buttons to input[type="number"]
   document.getElementById('statsList').addEventListener('click', function(e) {
-    if(e.target && e.target.classList.contains('button')){
+    if(e.target && (e.target.classList.contains('inc') || e.target.classList.contains('dec'))){
       let button = e.target;
       let inputEl = button.parentElement.querySelectorAll('input')[0];
       let oldValue = inputEl.value;
@@ -356,7 +379,7 @@ async function hashchanged(){
   let projector = document.getElementById('projector');
 
   //Set sidebar menu icon
-  document.getElementsByClassName('hamburger')[0].classList.remove('active');
+  document.getElementById('hamburger').classList.remove('active');
 
   //RESET CODE
   if(hash.startsWith('#reset')) {
@@ -400,13 +423,11 @@ async function hashchanged(){
   }
 //ONBOARDING!-----------------------------------------------------------------
   else if(hash.startsWith('#onboarding')){
-    document.querySelectorAll('.pin').forEach(el => el.style.display = 'none');
     if(window.user){
       let notifyEl = document.getElementById('notification');
       if(notifyEl){notifyEl.remove()}
       let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
-        document.getElementById('notification').remove();" href="${hash}">here</a> to set up!<button style="float:right; background: unset; height: unset;" 
-        onclick="document.getElementById('notification').remove();">X</button></div>`
+        removeNotification();" href="${hash}">here</a> to set up!<button class="notifiButton" onclick="removeNotification();">x</button></div>`
       document.getElementById('locations').insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
@@ -415,6 +436,7 @@ async function hashchanged(){
     document.querySelectorAll('input[type="checkbox"]').forEach(el => el.removeAttribute('checked'));
     document.getElementById('userToggle').style.display = 'none';
     document.getElementById('staffToggle').style.display = 'none';
+    document.querySelectorAll('.grayBg').forEach(el => el.classList.remove('grayBg'));
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = 'none');
 
     let movements = [];
@@ -427,9 +449,10 @@ async function hashchanged(){
     //then lets show our movements page
     if(movements){
       let movementsList = await loadMovements(movements);
-      if(!movementsList){
+      if(movementsList.length == 0){
         location.hash = '#onboarding';
-        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', '<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); document.getElementById(\'notification\').remove();" href="'+hash+'">here</a> to set up!</div>')
+        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', `<div id="notification">You visited an invalid onboarding link. You can login below, or try again with a corrected onboarding link.<button style="float:right; background: unset; height: unset;" 
+        onclick="removeNotification();">X</button></div>`)
         return;
       }
       for(movement of movementsList) {
@@ -456,29 +479,36 @@ async function hashchanged(){
     let movement_num = parseInt(hash.split('/')[1]);
     (user.movements.length == 1 ? document.querySelectorAll('.mvBtn').forEach(el => el.style.display = 'none') : document.querySelectorAll('.mvBtn').forEach(el => el.style.display = ''));
 
-    //if we fail, redirect to first location
-    try {
+    try {  //if we fail, redirect to first location
       var movement = user.movements[movement_num];
       let strategy = user.strategies[movement.strat];
 
       document.getElementById('strategyWelcomeText').innerHTML = user.name + ', ' +strategy.welcomeText.charAt(0).toLowerCase() + strategy.welcomeText.slice(1); 
       document.documentElement.style.setProperty('--main-color', strategy.primaryColor);
+      document.querySelector("meta[name=theme-color]").setAttribute("content", strategy.primaryColor);
+      localStorage.setItem('main-color', strategy.primaryColor);
 
-      let statsListContent='';
-      for(question of strategy.questions){
+      let statsListContent = '<div class="grid">';
+      for(i = 0; i < strategy.questions.length; i++){
+        let question = strategy.questions[i];
+       
+        if(i === strategy.beforeMore){
+          statsListContent += `</div><span class="button punch" onclick="toggleMore(this);">More</span><div class="grid hide collapsible">`;
+        }
+
         let helpText='';
         if(user.questionRels[question.id] && user.questionRels[question.id].lessThan){
           helpText = user.questionRels[question.id].lessThan;
           let newHelp = [];
-          for(i = 0; i < helpText.length; i++){
+          for(j = 0; j < helpText.length; j++){
             try {
-              newHelp.push(strategy.questions.filter(item => item.id == helpText[i])[0].name);
+              newHelp.push(strategy.questions.filter(item => item.id == helpText[j])[0].name);
             }
             catch {
             }
           }
           helpText = newHelp;
-          helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1');
+          helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1'); //combines the various indicators in a list.
         }
         statsListContent += `<div class="statsListLeft">
           <label for="${question.id}">${question.name}</label>
@@ -490,6 +520,7 @@ async function hashchanged(){
           <span class="inc button">+</span>
         </div>`;
       }
+      statsListContent += '</div><div class="grid">';
       //add Team Questions.  Will need to send team table, and what teamid in user.movements
       for(i = 1; i <= 3; i++){
         try {
@@ -511,6 +542,8 @@ async function hashchanged(){
         }
       }
 
+      statsListContent += '</div>'
+
       document.getElementById('statsList').innerHTML = statsListContent;
       setToolTips();
 
@@ -525,29 +558,32 @@ async function hashchanged(){
       }
       document.getElementById('storyBoxContainer').innerHTML = storyBoxContent;
       
-      let prefix = '';
+      let prefix = '', select = '';
       if(user.movements.length > 1){
         prefix = (movement_num + 1)+"/"+user.movements.length+" ";
+        select = `<span class="select"><select style="width: calc(var(--app-width) - 8rem)" onchange="goToMovement(this.value);">`;
+        user.movements.forEach((el, i) => select += `<option value="${i}" ${(i == movement_num ? 'selected' : '')}>${el.name}</option>`)
+        select += '</select></span>';
       }
-      document.getElementById('movementName').textContent = prefix + movement.name;
+      else {
+        select = movement.name;
+      }
+      document.getElementById('movementName').innerHTML = prefix + select;
       document.getElementById('movementId').value = movement.id; //hidden field
       document.getElementById('userPhone').value = user.phone; //hidden field
 
       // set dates for the movement
-      var fourteenDays = new Date(); //used if the date is older than 
-      fourteenDays.setTime(fourteenDays.getTime() - (24*60*60*1000) * 14);
-
-      let endDate = new Date().toLocaleString().split(',')[0];
-      let startDate = user.mvmnts[movement.id];
-
-      if(new Date(startDate).getTime() < fourteenDays.getTime()){
-        startDate = fourteenDays.toLocaleString().split(',')[0];
+      let todayDate = new Date().toLocaleString().split(',')[0];
+      let lastUpdate = user.mvmnts[movement.id];
+      if(!lastUpdate) {
+        lastUpdate = "Questions";
       }
-      
-      document.getElementById('startDate').value = startDate;
-      document.querySelectorAll('.startDate').forEach(el => el.textContent = startDate);
-      document.getElementById('endDate').value = startDate;
-      document.querySelectorAll('.endDate').forEach(el => el.textContent = endDate);
+      else {
+        lastUpdate = `Last updated: <b>${lastUpdate}</b>`;
+      }
+
+      document.getElementById('lastUpdate').innerHTML = lastUpdate;
+      document.getElementById('todayDate').textContent = todayDate;
 
       //let's load the data from formSubs
       let formSub = window.formSubs[movement.id];
@@ -561,8 +597,10 @@ async function hashchanged(){
             if(!element){
               continue;
             }
-            element.value = value;
+            element.value = value; //set value in the form
             if(value != 0){
+              let hidden = element.closest('.grid.hide');
+              if(hidden) { toggleMore(hidden.previousElementSibling)} //if in a hidden grid, let's reveal it.
               setTimeout(() => {
                 element.classList.add('highlightBg');
               },200);
@@ -575,8 +613,17 @@ async function hashchanged(){
       }
       document.getElementById('statsList').dispatchEvent(new Event('change'));
 
+      if(movement.id.startsWith('c')){ //for now the infobase will only show for campus movements - may add SM movements in the future but needs more thought/work
+        document.getElementById('semesterData').style.display = '';
+        document.getElementById('semesterInfobaseAnchor').href= `https://infobase.cru.org/locations/0/movements/${movement.id.replace('c','')}/stats`;
+      }
+      else {
+        document.getElementById('semesterData').style.display = 'none';
+      }
       projector.classList = 'locations';
       window.document.title = "Enter Stats for "+movement.name;
+      // Update scroll position for first time
+      storeScrollLocations();
     }
     catch(error){
       console.log(error);
@@ -632,10 +679,13 @@ async function hashchanged(){
 
     function doSetTimeout(stat,time) {
       setTimeout(function(){
-        party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
-          count: party.variation.range(40, 80)
-        })
-      }, time);
+        document.getElementById(stat+'Sum').previousElementSibling.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+        setTimeout(function(){
+          party.confetti(document.getElementById(stat+'Sum').previousElementSibling, {
+            count: party.variation.range(40, 80)
+          })
+        }, 250)
+      }, time - 250);
     }
     for(stat of  Object.keys(window.statSummary.groupNum).sort(function(a,b){return window.statSummary.groupNum[b]-window.statSummary.groupNum[a]})){
       if(document.getElementById(stat+'Sum') && window.statSummary.groupNum[stat] != 0){
@@ -775,12 +825,6 @@ function processLocationForm(submitMovementId) {
 
   //clear form
   document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
-
-  //clear notification
-  let notification = document.getElementById('notification');
-  if(notification) {
-    notification.remove();
-  }
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
@@ -839,6 +883,21 @@ async function submitLocationForm(){
   }).then(function(data){
     stopSpin();
   });
+}
+
+function goToMovement(num) {
+  if(num > parseInt(location.hash.split('/')[1])){
+    document.getElementById('slideable').classList.add('fadeUp');
+    setTimeout(function(){
+      document.getElementById('slideable').classList.remove('fadeUp');
+    }, 250);
+  } else {
+    document.getElementById('slideable').classList.add('fadeDown');
+    setTimeout(function(){
+      document.getElementById('slideable').classList.remove('fadeDown');
+    }, 250);
+  }
+  location.hash = 'locations/'+num+'/'+user.movements[num].id;
 }
 
 function goToNextMovement() {
@@ -929,6 +988,19 @@ function catchError(error, notify=true){
   return; 
 }
 
+function toggleMore(el) {
+  el.nextElementSibling.classList.toggle('hide'); 
+  el.textContent = (el.textContent == 'More' ? 'Less' : 'More');
+  el.classList.toggle('upArrow');
+}
+function removeNotification() {
+  document.getElementById('notification').classList.add('swingUp');
+  setTimeout(function(){
+    document.getElementById('notification').remove();
+  }, 300);
+
+}
+
 //TOOLTIP CODE
 function setToolTips() {
   var targets = document.querySelectorAll('[rel~=tooltip]');
@@ -940,7 +1012,7 @@ function setToolTips() {
       let tooltip = document.createElement('div');
       tooltip.setAttribute('id','tooltip');
 
-      if( !tip || tip == '' ) {
+      if(!tip || tip == '') {
         return false;
       }
 
@@ -953,27 +1025,31 @@ function setToolTips() {
         tooltip.style.maxWidth= `min(${window.innerWidth / 1.2}px, 340px)`;
 
         var targetOffset = target.getBoundingClientRect();
-        var pos_left = target.offsetLeft + ( target.offsetWidth / 2 ) - ( tooltip.offsetWidth / 2 );
+        var pos_left = targetOffset.left + ( targetOffset.width / 2 ) - ( tooltip.offsetWidth / 2 );
         var pos_top  = targetOffset.top - tooltip.offsetHeight - 20;
 
-        if( pos_left < 0 )
-        {
-          pos_left = target.offsetLeft + target.offsetWidth / 2 - 20;
+        if(pos_left < 0) {
+          console.log('s')
+          pos_left = targetOffset.left + targetOffset.width / 2 - 20;
           tooltip.classList.add('left');
         }
         else {
           tooltip.classList.remove('left');
         }
-  /*
-        if( pos_left + tooltip.offsetWidth > window.innerWidth ) {
-          pos_left = target.offsetLeft - tooltip.offsetWidth + target.offsetWidth / 2 + 20;
-          tooltip.classList.add('right');
+        if(pos_left + tooltip.offsetWidth > window.innerWidth) {
+          pos_left = targetOffset.left - tooltip.offsetWidth + targetOffset.width;
+          if(pos_left < 0) {
+            pos_left = 0
+            tooltip.classList.remove('left');
+          } else {
+            tooltip.classList.add('right');
+          }
         }
         else {
           tooltip.classList.remove('right');
-        }*/
+        }
 
-        if( pos_top < 0 ) {
+        if(pos_top < 0) {
           var pos_top  = targetOffset.top + target.offsetHeight;
           tooltip.classList.add('top');
         }
@@ -998,6 +1074,7 @@ function setToolTips() {
       };
     
       document.getElementById('locations').addEventListener('scroll', remove_tooltip);
+      document.getElementById('menuContents').addEventListener('scroll', remove_tooltip);
 
       target.addEventListener('mouseleave', remove_tooltip);
       tooltip.addEventListener('click', remove_tooltip);
@@ -1020,6 +1097,33 @@ function unserialize(data) {
     response.push([newData[0], decodeURI(newData[1])]);
   }
   return response;
+}
+
+// The debounce function receives our function as a parameter
+const debounce = (fn) => {
+  // This holds the requestAnimationFrame reference, so we can cancel it if we wish
+  let frame;
+  // The debounce function returns a new function that can receive a variable number of arguments
+  return (...params) => {
+    // If the frame variable has been defined, clear it now, and queue for next frame
+    if (frame) { 
+      cancelAnimationFrame(frame);
+    }
+    // Queue our function call for the next frame
+    frame = requestAnimationFrame(() => {
+      // Call our function and pass any params we received
+      fn(...params);
+    });
+  } 
+};
+
+// Reads out the scroll position and stores it in the data attribute
+// so we can use it in our stylesheets
+const storeScrollLocations = () => {
+  document.documentElement.dataset.scroll = document.getElementById('locations').scrollTop;
+}
+const storeScrollSummary = () => {
+  document.documentElement.dataset.scroll = document.getElementById('summary').scrollTop;
 }
 
 function json(response) {
