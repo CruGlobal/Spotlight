@@ -550,6 +550,7 @@ button:hover {
 }
 #menu ul {
   padding: 0;
+  border-top: 1px var(--medium-gray) solid;
 }
 #menu li {
   list-style: none;
@@ -570,9 +571,6 @@ button:hover {
 #menu li:not([noHover]) > *:active,
 #menu li:not([noHover]) > *:hover {
   filter: brightness(0.9);
-}
-#menu li:first-child {
-  border-top: 1px var(--medium-gray) solid;
 }
 .locations #weeklyData {
   display: none;
