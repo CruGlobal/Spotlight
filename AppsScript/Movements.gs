@@ -101,6 +101,7 @@ function getMovements(movementsList, purpose) {
 }
 
 function summarizeMovements(movements, strategies, teams, global){
+  //Logger.log(movements);
   let summaryMovements = getMovements(movements, 'summary');
   if(strategies === undefined){
     strategies = getStrategies();
@@ -175,11 +176,11 @@ function summarizeMovements(movements, strategies, teams, global){
 }
 
 function testSummarize() {
-  Logger.log(summarizeMovements(['c12860']))
+  Logger.log(summarizeMovements(['c15195','c3276']))
 }
 
 function myMovements() {
-  Logger.log(SCRIPT_PROP.getProperty("movements"));
+  Logger.log(getMovements(['c15195']));
 }
 
 function testUpdateMovementsInCache() {

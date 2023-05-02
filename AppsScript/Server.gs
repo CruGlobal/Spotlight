@@ -96,6 +96,7 @@ function registerUser(e){
 
 //SAVE over existing user - receives phone number, movements; returns success, name || error no user found
 function updateUser(e) {
+  //e.parameter.mvmnts needs to check our responses sheet for a last update in theses movements? or do we just remove last update message?
   let userInfo = updateUserInCache(e.parameter.phone, e.parameter.mvmnts, e.parameter.cat, e.parameter.pin);
   if(userInfo) {
     return ContentService
@@ -117,7 +118,8 @@ function requestPin(e) {
     let subject = `Spotlight: requested pin for ${user.phone}`;
     let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
     try {
-      GmailApp.sendEmail(user.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight','bcc': 'spotlight@cru.org'});
+      GmailApp.sendEmail(user.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+      GmailApp.sendEmail('spotlight@cru.org',subject, 'pin requested', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
     }
     catch(error){
       GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
@@ -236,7 +238,7 @@ function saveForm(e) {
     }
     else {
       return ContentService
-        .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not save response to cache'}))
+        .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not save response to cache','orig_e': e}))
         .setMimeType(ContentService.MimeType.JSON);
     }
   } catch(error){

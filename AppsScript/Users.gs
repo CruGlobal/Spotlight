@@ -65,12 +65,22 @@ function registerUserInCache(e){
 
   SCRIPT_PROP.setProperty("users", JSON.stringify(users));
   lock.releaseLock();
+
+  let subject = `Spotlight: registered ${e.parameter.phone}`;
+  let body = `Hi ${userOb.name}, \n\nYou have registered with Spotlight.\n\nYour pin is: ${userOb.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
+  try {
+    GmailApp.sendEmail(userOb.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    GmailApp.sendEmail('spotlight@cru.org',subject, 'user registered', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  }
+  catch(error){
+    GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  }
   
   return gatherUserInfo(e.parameter.phone);
 }
 
 function testmyPhone(){
-  Logger.log(gatherUserInfo(8453320550).movements)
+  Logger.log(gatherUserInfo(4145145566))
 }
 
 function updateUserInCache(phone, mvmnts, cat, pin){

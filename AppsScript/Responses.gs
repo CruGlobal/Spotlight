@@ -1,9 +1,10 @@
 function saveResponseToCache(e){
+  //Logger.log(e.queryString);
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
   let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
   let pin = e.queryString.match(/userPin=(\d*)&/)[1];
 
-  let formSubs = e.queryString.replace(pinRegex,'').split('+');
+  let formSubs = e.queryString.replace(pinRegex,'').split('|');
 
   var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
@@ -31,7 +32,7 @@ function saveResponseToCache(e){
   }
 
   let result = false;
-  
+  //Logger.log(JSON.stringify(formSubs));
   //locking to be sure that we don't overwrite the same variable twice.  
   let lock = LockService.getPublicLock();
   lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
@@ -74,7 +75,7 @@ function saveResponseToCache(e){
     result = {'summary': summary, 'userInfo': userInfo};
     
   } catch (error) {
-    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error));
+    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message));
     lock.releaseLock();
   }
   return result;
@@ -96,8 +97,8 @@ function emailTeamStories(){
       }
       teamStories[teamID].push(story);
     }
-    catch {
-
+    catch (error) {
+      MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message));
     }
   }
   //then send all the stories for each team.  We don't assume that all movements in a submission are associated with the same team.
@@ -151,73 +152,69 @@ function testStoryCache(){
 function testResponseCache(){
   Logger.log(SCRIPT_PROP.getProperty('responseCache'));
   let e = {
-    "parameter": {
-        "groupEvangDec": "0",
-        "groupEvang": "0",
-        "storyBox": "Jimmy, Bifor",
-        "userName": "Carl",
-        "endDate": "5/11/2022",
-        "holySpiritPres": "0",
-        "personalEvang": "0",
-        "personalEvangDec": "0",
-        "movementId": "sm453",
-        "mediaDec": "0",
-        "userPhone": "8453320550",
-        "media": "0",
-        "teamQ1": "0",
-        "startDate": "5/10/2022",
-        "spiritualConvo": "0"
-    },
-    "contextPath": "",
-    "parameters": {
-        "groupEvangDec": [
-            "0"
-        ],
-        "teamQ1": [
-            "1"
-        ],
-        "media": [
-            "0"
-        ],
-        "holySpiritPres": [
-            "0"
-        ],
-        "personalEvangDec": [
-            "0"
-        ],
-        "mediaDec": [
-            "0"
-        ],
-        "spiritualConvo": [
-            "0"
-        ],
-        "userPhone": [
-            "8453320550"
-        ],
-        "userName": [
-            "Carl"
-        ],
-        "endDate": [
-            "5/11/2022"
-        ],
-        "startDate": [
-            "5/10/2022"
-        ],
-        "groupEvang": [
-            "0"
-        ],
-        "movementId": [
-            "sm453"
-        ],
-        "storyBox": [
-            "Jimmy, Bifor"
-        ],
-        "personalEvang": [
-            "0"
-        ]
-    },
-    "queryString": "startDate=5%2F10%2F2022&endDate=5%2F11%2F2022&movementId=sm453&userName=Carl&userPhone=8453320550&spiritualConvo=0&personalEvang=0&personalEvangDec=0&holySpiritPres=0&groupEvang=0&groupEvangDec=0&media=0&mediaDec=0&teamQ1=1&storyBox=Jimmy%2C%20Bifor",
-    "contentLength": -1
+  "contextPath": "",
+  "parameters": {
+    "endDate": [
+      "11/7/2022"
+    ],
+    "spiritual_conversations": [
+      "1"
+    ],
+    "storyBox": [
+      ""
+    ],
+    "startDate": [
+      "11/7/2022"
+    ],
+    "userPin": [
+      "6729"
+    ],
+    "teamQ3": [
+      "1"
+    ],
+    "personal_decisions": [
+      "1"
+    ],
+    "teamQ2": [
+      "1"
+    ],
+    "teamQ1": [
+      "1"
+    ],
+    "userPhone": [
+      "4145145566"
+    ],
+    "movementId": [
+      "c10338"
+    ],
+    "userName": [
+      "Joshua Graham"
+    ],
+    "holy_spirit_presentations": [
+      "1"
+    ],
+    "personal_evangelism": [
+      "1"
+    ]
+  },
+  "contentLength": -1,
+  "parameter": {
+    "userPhone": "4145145566",
+    "personal_decisions": "1",
+    "movementId": "c10338",
+    "endDate": "11/7/2022",
+    "teamQ2": "1",
+    "startDate": "11/7/2022",
+    "userName": "Joshua Graham",
+    "personal_evangelism": "1",
+    "teamQ3": "1",
+    "spiritual_conversations": "1",
+    "storyBox": "",
+    "holy_spirit_presentations": "1",
+    "userPin": "6729",
+    "teamQ1": "1"
+  },
+  "queryString": "userPin=6729&startDate=11%2F7%2F2022&endDate=11%2F7%2F2022&movementId=c10338&userName=Joshua+Graham&userPhone=4145145566&spiritual_conversations=1&personal_evangelism=1&personal_decisions=1&holy_spirit_presentations=1&teamQ1=1&teamQ2=1&teamQ3=1&storyBox="
 }
   //Logger.log(saveResponseToCache(e))
 }
