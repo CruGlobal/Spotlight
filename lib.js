@@ -376,6 +376,7 @@ function resetUser(){
 //HASHCHANGE AND LOAD MOVEMENT LIST INTO MEMORY
 async function hashchanged(){
   var hash = location.hash;
+  logData('hashchanged', hash);
   let projector = document.getElementById('projector');
 
   //Set sidebar menu icon
@@ -633,6 +634,8 @@ async function hashchanged(){
 //SUMMARY!-----------------------------------------------------------------
   else if(hash.startsWith('#summary')) {
     if(!window.statSummary){
+      logData('timing','fetchSummary');
+
       let phone = user.phone;
       if(phone.length != 10){
         alert('user not set up properly...');
@@ -646,6 +649,11 @@ async function hashchanged(){
       .then(json)
       .then(function(data) {
         console.log(data);
+
+        logData('timing','summaryReceived');
+
+        submitLogData();
+
         window.statSummary = data.summary;
         setUser(data.user);
         window.user = data.user;
@@ -829,6 +837,8 @@ function processLocationForm(submitMovementId) {
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
 async function submitLocationForm(){
+  logData('timing','submitLocationForm');
+
   let movementId = document.getElementById('movementId').value;
   processLocationForm(movementId);
 
@@ -864,6 +874,8 @@ async function submitLocationForm(){
   startSpin();
   var url  =  window.indicatorAppURL;
 
+  logData('numMovements',Object.values(window.formSubs).length);
+  
   //submit everything - we can do this in one go.
   await fetch(window.indicatorAppURL+`?${Object.values(window.formSubs).join('+')}`, {
     method: "GET",
@@ -873,6 +885,9 @@ async function submitLocationForm(){
   .then(function(data){
     console.log(data);
     window.statSummary = data.summary;
+    
+    logData('timing','summaryReceived');
+
     location.hash = "#summary";
     setUser(data.user);
     window.user = data.user;
