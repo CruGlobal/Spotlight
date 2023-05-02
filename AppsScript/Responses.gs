@@ -4,7 +4,7 @@ function saveResponseToCache(e){
   let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
   let pin = e.queryString.match(/userPin=(\d*)&/)[1];
 
-  let formSubs = e.queryString.replace(pinRegex,'').split('|');
+  let formSubs = e.queryString.replace(pinRegex,'').split('+');
 
   var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
