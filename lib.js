@@ -376,7 +376,7 @@ function resetUser(){
 //HASHCHANGE AND LOAD MOVEMENT LIST INTO MEMORY
 async function hashchanged(){
   var hash = location.hash;
-  logData('hashchanged', hash);
+  logData('hashchanged', hash.replace('&','-'));
   let projector = document.getElementById('projector');
 
   //Set sidebar menu icon

@@ -33,6 +33,16 @@ function getScreenSize() {
 function isTouchCapable() {
   return window.matchMedia("(pointer: coarse)").matches;
 }
+function isInstalled() {
+  // Detects if device is in standalone mode
+  var isInStandaloneMode = false;
+  if (matchMedia('(display-mode: standalone)').matches) { // replace standalone with fullscreen or minimal-ui according to your manifest
+    isInStandaloneMode = true; // Android and iOS 11.3+
+  } else if ('standalone' in navigator) {
+    isInStandaloneMode = navigator.standalone; // useful for iOS < 11.3
+  }
+  return isInStandaloneMode;
+}
 
 //DeviceInfo(deviceID, os, screen dimensions, touch capable, )
 if(!localStorage.getItem('analyticID')){
@@ -47,6 +57,7 @@ else {
 
 window.addEventListener("load", (event) => {
   logData('loadTime', window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart);
+  logData('installed', isInstalled());
   submitLogData();
 });
 window.addEventListener("visibilitychange", (event)=> {
@@ -57,10 +68,10 @@ window.addEventListener("visibilitychange", (event)=> {
 //Capture function
 function logData(header, information, time = new Date().getTime()) {
   let id = localStorage.getItem('analyticID');
-  let dataLog = JSON.parse(localStorage.getItem('dataLog')) || [];
   if(typeof information == 'string'){
     information = information.replace('#','');
   }
+  let dataLog = JSON.parse(localStorage.getItem('dataLog')) || [];
   dataLog.push(encodeURI(`Timestamp=${time}&analyticId=${id}&${header}=${information}`));
   localStorage.setItem('dataLog', JSON.stringify(dataLog));
 }
