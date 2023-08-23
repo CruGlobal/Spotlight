@@ -194,8 +194,8 @@ function submitMovementData() {
     Logger.log(response);
   }
   catch(error) {
-    Logger.log(JSON.stringify(error));
-    GmailApp.sendEmail('carl.hempel@cru.org','Error in submit movement data',JSON.stringify(error));
+    Logger.log(JSON.stringify(error.message));
+    GmailApp.sendEmail('carl.hempel@cru.org','Error in submit movement data',JSON.stringify(error.message));
     submitMovementData();
   }
 }

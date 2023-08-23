@@ -53,6 +53,12 @@ function updateAutoScriptProperties() {
   writeCacheToSheets();
   writeUsersToSheets();
   setMovementsScriptProperty();
+  GmailApp.sendEmail('carl.hempel@cru.org','updateAutoScript ran','');
+}
+
+function updateTeamAndMovements() {
+  setTeamsScriptProperty();
+  setMovementsScriptProperty();
 }
 
 function cacheSize() {
@@ -74,8 +80,8 @@ function cacheSize() {
 }
 
 function clearResponseCacheIfTooBig() {
-  if(cacheSize() > 400000) {
-    writeCacheToSheets();
+  if(cacheSize() > 420000) {
+    updateAutoScriptProperties();
     GmailApp.sendEmail('carl.hempel@cru.org','Wrote Response Cache to sheets','New size is: '+cacheSize()+'\n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
   }
 }

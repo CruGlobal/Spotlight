@@ -75,7 +75,7 @@ function saveResponseToCache(e){
     result = {'summary': summary, 'userInfo': userInfo};
     
   } catch (error) {
-    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message));
+    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(e.queryString));
     lock.releaseLock();
   }
   return result;
@@ -98,7 +98,7 @@ function emailTeamStories(){
       teamStories[teamID].push(story);
     }
     catch (error) {
-      MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message));
+      MailApp.sendEmail('carl.hempel@cru.org', 'Script Error while trying to send stories', JSON.stringify(error.message));
     }
   }
   //then send all the stories for each team.  We don't assume that all movements in a submission are associated with the same team.

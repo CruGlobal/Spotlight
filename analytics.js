@@ -69,7 +69,7 @@ window.addEventListener("visibilitychange", (event)=> {
 function logData(header, information, time = new Date().getTime()) {
   let id = localStorage.getItem('analyticID');
   if(typeof information == 'string'){
-    information = information.replace('#','');
+    information = encodeURIComponent(information);
   }
   let dataLog = JSON.parse(localStorage.getItem('dataLog')) || [];
   dataLog.push(encodeURI(`Timestamp=${time}&analyticId=${id}&${header}=${information}`));
