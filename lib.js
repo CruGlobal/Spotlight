@@ -427,9 +427,15 @@ async function hashchanged(){
     if(window.user){
       let notifyEl = document.getElementById('notification');
       if(notifyEl){notifyEl.remove()}
-      let notification = `<div id="notification">You visited an onboarding link. Click <a onclick="removeLocalStorage(); 
-        removeNotification();" href="${hash}">here</a> to set up!<button class="notifiButton" onclick="removeNotification();">x</button></div>`
-      document.getElementById('locations').insertAdjacentHTML('afterbegin', notification);
+      let notification = `<div id="notification">
+    <div class="blurBackground" style="display:block" onclick="removeNotification();"></div>
+    <div style="margin: 0px max((100% - var(--app-width))/2, .5rem);
+    width: min(100% - 1rem, var(--app-width))">
+        <h3 style="margin: 0px">You visited an onboarding link</h3><br>Click below to setup your account with new movements<br><br>
+    <span style="text-align: center; display:block;">
+    <button class="white" style="margin-right: 3rem" onclick="removeNotification();">Cancel</button>
+    <button onclick="removeLocalStorage(); removeNotification();" href="#onboarding/c900">Setup</button></span></div></div>`
+      document.body.insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
     }

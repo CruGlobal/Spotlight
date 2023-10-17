@@ -252,17 +252,23 @@ h1 {
   grid-area: 1 / 1 / 2 / 2;
 }
 #notification {
-  margin-left: -2rem;
-  margin-right: -2rem;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+}
+#notification div:last-child {   
   background-color: var(--medium-gray);
-  color: white;
-  padding: .5rem 2rem;
-  border-bottom-left-radius: 1rem;
-  border-bottom-right-radius: 1rem;
+  padding: 1.5rem 1.5rem 2rem 1.5rem;
+  border-radius: 0.5rem;
   filter: drop-shadow(var(--up-shadow));
   transition: transform .25s, max-height .15s ease-out .1s, padding .25s;
-  max-height: 4rem;
   overflow: hidden;
+  position: absolute;
+  top: 40%;
+  z-index: 10;
 }
 .swingUp {
   transform: rotate3d(1, 0, 0, -90deg);
@@ -341,18 +347,6 @@ h1 {
   margin-left: auto; 
   margin-right:auto; 
   margin-bottom: 1rem;
-}
-.notifiButton {
-  font-weight: normal;
-  background: unset;
-  height: unset;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
-  border: 1px solid gray;
-  border-radius: 1rem;
-  margin-top: 0.25rem;
-  padding-bottom: .2rem;
 }
 .bottom-button {
   display: flex;
@@ -718,9 +712,9 @@ button {
   margin-bottom: 1rem;
   width: 100%;
 }
-#blurBackground {
+.blurBackground {
   position: fixed;
-  display:none;
+  display: none;
   z-index: 9;
   left: 0;
   right: 0;
