@@ -434,7 +434,7 @@ async function hashchanged(){
         <h3 style="margin: 0px">You visited an onboarding link</h3><br>Click below to setup your account with new movements<br><br>
     <span style="text-align: center; display:block;">
     <button class="white" style="margin-right: 3rem" onclick="removeNotification();">Cancel</button>
-    <button onclick="removeLocalStorage(); removeNotification();" href="#onboarding/c900">Setup</button></span></div></div>`
+    <button onclick="removeLocalStorage(); removeNotification(); location.hash = '${hash}'"">Setup</button></span></div></div>`
       document.body.insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
