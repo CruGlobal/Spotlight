@@ -868,6 +868,9 @@ span[rel="tooltip"] {
   border-top-right-radius: 1rem;
   width: fit-content;
 }
+.marginTop {
+  margin-top: 1rem;
+}
 .accountToggle {
   border-radius: 1rem;
 }
@@ -877,6 +880,19 @@ span[rel="tooltip"] {
   padding-right: 2rem;
   background-color: rgba(0, 0, 0, 0.17);
   border-top-right-radius: 1rem;
+}
+#userToggle #staffToggle {
+  background: transparent;
+  border: 1px solid gray;
+  top: -1px;
+  position: relative;
+}
+#userToggle .grayBg.marginTop {
+  background: transparent;
+  border: 1px solid gray;
+  border-bottom: 1px solid #d9d9d9;
+  z-index: 1;
+  position: relative;
 }
 
 /* optional */
@@ -888,7 +904,7 @@ span[rel="tooltip"] {
   position: absolute;
   left: 12px;
   top: 2px;
-  color: #ccc;
+  color: var(--medium-gray);
   pointer-events: none;
   z-index: -1; 
 }
@@ -904,6 +920,24 @@ input.masked,
 .shell span {
   background-color: transparent;
   text-transform: uppercase; 
+  z-index: 1;
+}
+.whiteBg {
+  position: relative;
+}
+.whiteBg:before {
+  background: white;
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  right: 4px;
+  content: ' ';
+  border: 2px solid var(--medium-gray);
+  border-radius: 2px;
+}
+.whiteBg input {
+  border: none;
 }
 
 select {

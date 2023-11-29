@@ -119,6 +119,7 @@ function toggleRegister(){
   if(document.getElementById('register').checked){
     document.getElementById('regUserName').setAttribute('required', true);
     document.getElementById('regUserEmail').setAttribute('required', true);
+    document.getElementById('ua').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
     document.getElementById('register').closest('span').classList.add('grayBg');
@@ -126,6 +127,7 @@ function toggleRegister(){
   else{
     document.getElementById('regUserName').removeAttribute('required');
     document.getElementById('regUserEmail').removeAttribute('required');
+    document.getElementById('ua').removeAttribute('required');
     document.getElementById('userToggle').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
     document.getElementById('register').closest('span').classList.remove('grayBg');
@@ -135,12 +137,12 @@ function toggleStaff(){
   if(document.getElementById('regUserStaff').checked){
     document.getElementById('staffAcct').setAttribute('required', true);
     document.getElementById('staffToggle').style.display = '';
-    document.getElementById('regUserStaff').closest('span').classList.add('grayBg');
+    document.getElementById('regUserStaff').closest('div').classList.add('grayBg');
   }
   else{
     document.getElementById('staffAcct').removeAttribute('required');
     document.getElementById('staffToggle').style.display = "none";
-    document.getElementById('regUserStaff').closest('span').classList.remove('grayBg');
+    document.getElementById('regUserStaff').closest('div').classList.remove('grayBg');
   }
 }
 //SERVICE WORKER

@@ -112,6 +112,17 @@
             <b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
           </div>
           <h2 style="margin-bottom: 0;">Account Login</h2>
+          <div class="accountToggle">
+            <label for="regUserPhone">Phone Number</label><br>
+            <span class="whiteBg">
+              <input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890">
+            </span><br>
+            <label for="regUserPin">Password/Pin Number</label><br>
+            <span class="whiteBg">
+              <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later">
+            </span><br><br>  
+            <small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
+          </div>
           <div class="movementInfo">
             <span>
               <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
@@ -122,28 +133,21 @@
               <input id="regUserName" name="regUserName" type="text" placeholder="What should we call you?" style="width: 100%;">
               <label for="regUserEmail">Email for account recovery</label><br>
               <input id="regUserEmail" name="regUserEmail" type="email" placeholder="Your recovery email address" style="width: 100%">
+              <div class="marginTop">
+                <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
+                <label for="regUserStaff">I'm on staff with Cru</label>
+              </div>
+              <div id="staffToggle">
+                <label for="staffAcct">Staff Acct. #</label><br>
+                <span class="whiteBg">
+                  <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
+                </span>
+              </div>
+              <div class="marginTop">
+                <input id="ua" name="ua" required type="checkbox" >
+                <label for="ua" >I agree to the <a href="https://www.cru.org/us/en/about/privacy.html" target="_blank">Cru Privacy Statement</a></label>
+              </div>
             </div>
-          </div>
-          <div class="accountToggle">
-            <label for="regUserPhone">Phone Number</label><br>
-            <input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890"><br>
-            <label for="regUserPin">Password/Pin Number</label><br>
-            <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later"><br><br>  
-            <small><i>Click <a class="link" onclick="requestPin()">here</a> to recover your pin</i></small>
-          </div>
-          <div class="movementInfo">
-            <span>
-              <input name="staff" id="regUserStaff" type="checkbox" onchange="toggleStaff();">
-              <label for="regUserStaff">I'm on staff with Cru</label>
-            </span>
-            <div id="staffToggle">
-              <label for="staffAcct">Staff Acct. #</label><br>
-              <input id="staffAcct" name="staffAcct" type="tel" class="masked" pattern="[0-9]{7}" placeholder="XXXXXXX" title="enter your staff account number">
-            </div>
-          </div>
-          <div>
-            <input id="ua" name="ua" required type="checkbox" >
-            <label for="ua" >I agree to the <a href="https://www.cru.org/us/en/about/privacy.html" target="_blank">Cru Privacy Statement</a></label>
           </div>
           <div>
             <span class="bottom-button">
