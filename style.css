@@ -185,6 +185,13 @@ h1 {
   grid-template-columns: 1fr 8.5rem;
   grid-gap: 1.2rem;
 }
+#statsList .grid.notCumulative {
+  margin-top: 0.6rem;
+  border: 1px lightgray solid;
+  background: lightgray;
+  border-radius: 1rem;
+  padding: 1rem 0 1rem 1rem;
+}
 #statsList .grid:nth-last-child(2) {
   margin-bottom: 1rem;
 }

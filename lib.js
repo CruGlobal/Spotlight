@@ -497,9 +497,13 @@ async function hashchanged(){
       document.querySelector("meta[name=theme-color]").setAttribute("content", strategy.primaryColor);
       localStorage.setItem('main-color', strategy.primaryColor);
 
+      //Adding strategy Questions that are cumulative
       let statsListContent = '<div class="grid">';
       for(i = 0; i < strategy.questions.length; i++){
         let question = strategy.questions[i];
+        if(user.questionRels[question.id].notCumulative) {
+          continue;
+        }
        
         if(i === strategy.beforeMore){
           statsListContent += `</div><span class="button punch" onclick="toggleMore(this);">More</span><div class="grid hide collapsible">`;
@@ -529,12 +533,11 @@ async function hashchanged(){
           <span class="inc button">+</span>
         </div>`;
       }
-      statsListContent += '</div><div class="grid">';
       //add Team Questions.  Will need to send team table, and what teamid in user.movements
       for(i = 1; i <= 3; i++){
         try {
           let teamQ = user.teams[movement.tID]['teamQ'+i].trim().replace(/^.*Ͱ/,'');
-          if(teamQ != ''){
+          if(teamQ != '' && user.teams[movement.tID]['teamQ'+i+'Cumulative'] == true){
             statsListContent += `<div class="statsListLeft">
               <label for="teamQ${i}">${teamQ}</label>
               <span rel="tooltip" title="${teamQ.replace(/"/g,"'")}">i</span>
@@ -550,9 +553,72 @@ async function hashchanged(){
           
         }
       }
+statsListContent += '</div>';
 
-      statsListContent += '</div>'
+      //Adding strategy Questions that are not cumulative
+      statsListContentNonCumulative = `<h4 style="margin-bottom: 0; margin-top:1rem">Update the following? <span rel="tooltip" title="Only enter updates for those that you are responsible for - not the whole movement.  Any number (including '0') will update your contribution.">i</span>          
+</h4><div class="grid notCumulative">`;
+      let nonCumulative = 0;
+      for(i = 0; i < strategy.questions.length; i++){
+        let question = strategy.questions[i];
+        if(!user.questionRels[question.id].notCumulative) {
+          continue;
+        }
+        nonCumulative += 1;
 
+        if(i === strategy.beforeMore){
+          statsListContentNonCumulative += `</div><span class="button punch" onclick="toggleMore(this);">More</span><div class="grid hide collapsible">`;
+        }
+
+        let helpText='';
+        if(user.questionRels[question.id] && user.questionRels[question.id].lessThan){
+          helpText = user.questionRels[question.id].lessThan;
+          let newHelp = [];
+          for(j = 0; j < helpText.length; j++){
+            try {
+              newHelp.push(strategy.questions.filter(item => item.id == helpText[j])[0].name);
+            }
+            catch {
+            }
+          }
+          helpText = newHelp;
+          helpText = helpText.join(', ').replace(/, ([^,]*)$/, ', and $1'); //combines the various indicators in a list.
+        }
+        statsListContentNonCumulative += `<div class="statsListLeft">
+          <label for="${question.id}">${question.name}</label>
+          <span rel="tooltip" title="${question.description.replace(/"/g,"'")}">i</span>          
+        </div>
+        <div class="statsListRight" data-over="should be as high as ${helpText}">
+          <span class="dec button">-</span>
+          <input id="${question.id}" name="${question.id}" type="number" inputmode="numeric" value="">
+          <span class="inc button">+</span>
+        </div>`;
+      }
+      //add Non Cumulative Team Questions.  Will need to send team table, and what teamid in user.movements
+      for(i = 1; i <= 3; i++){
+        try {
+          let teamQ = user.teams[movement.tID]['teamQ'+i].trim().replace(/^.*Ͱ/,'');
+          if(teamQ != '' && user.teams[movement.tID]['teamQ'+i+'Cumulative'] == false){
+            nonCumulative += 1;
+            statsListContentNonCumulative += `<div class="statsListLeft">
+              <label for="teamQ${i}">${teamQ}</label>
+              <span rel="tooltip" title="${teamQ.replace(/"/g,"'")}">i</span>
+            </div>
+            <div class="statsListRight">
+              <span class="dec button">-</span>
+              <input id="teamQ${i}" name="teamQ${i}" type="number" inputmode="numeric" value="">
+              <span class="inc button">+</span>
+            </div>`;
+          }
+        } 
+        catch {
+          
+        }
+      }
+      if(nonCumulative > 0) {
+        statsListContent += statsListContentNonCumulative + '</div>'
+      }
+      
       document.getElementById('statsList').innerHTML = statsListContent;
       setToolTips();
 
