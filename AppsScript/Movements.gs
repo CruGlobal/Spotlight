@@ -21,6 +21,41 @@ function setMovementsScriptProperty(){
   SCRIPT_PROP.setProperty("movements", JSON.stringify(moveObjs));
 }
 
+function updateMovementsScriptProperty(){
+  let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  let sheet = doc.getSheetByName(MOVEMENT_SHEET);
+  
+  let movements = sheet.getRange(2,1,getLastRow(sheet) - 1,sheet.getLastColumn()).getValues();
+  let currrentMovementsObs = JSON.parse(SCRIPT_PROP.getProperty('movements'));
+
+  //check for a change in id list of movements
+  if(JSON.stringify(movements.map(mov => mov[0]).sort()) != JSON.stringify(Object.keys(currrentMovementsObs).sort())) {
+    //we've got new movements to add
+   
+    let moveObjs = currrentMovementsObs;
+    //for each row in the 2d array from getValues();
+    for(movement of movements){
+      let moveOb = moveObjs[movement[0].toString()];
+      //Logger.log(moveOb)
+      if(moveOb == undefined) { //we've got a new movement and we need to add it to the object along with it's summary data.
+        moveOb = {};
+        moveOb.fb=parseInt(movement[4]);
+        moveOb.g1=parseInt(movement[5]);
+        moveOb.g2=parseInt(movement[6]);
+        moveOb.g3=parseInt(movement[7]);
+      }//else, we don't have a new movement, and we can just update the id/strat/name if needed
+      moveOb.tID=movement[1];
+      moveOb.strat=movement[2];
+      moveOb.name=movement[3];
+
+      moveObjs[movement.shift().toString()]=moveOb;
+    }  
+    
+    //put it back where it goes
+    SCRIPT_PROP.setProperty("movements", JSON.stringify(moveObjs));
+  }
+}
+
 function updateMovementsInCache(responses, strategies, teams, global){
   let movements = JSON.parse(SCRIPT_PROP.getProperty("movements"));
   if(strategies === undefined){
@@ -180,7 +215,7 @@ function testSummarize() {
 }
 
 function myMovements() {
-  Logger.log(getMovements(['c15195']));
+  Logger.log(getMovements(['c900','c901']));
 }
 
 function testUpdateMovementsInCache() {
