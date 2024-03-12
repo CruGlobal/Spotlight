@@ -122,7 +122,6 @@ function toggleRegister(){
     document.getElementById('ua').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
-    document.getElementById('register').closest('span').classList.add('grayBg');
   }
   else{
     document.getElementById('regUserName').removeAttribute('required');
@@ -130,19 +129,16 @@ function toggleRegister(){
     document.getElementById('ua').removeAttribute('required');
     document.getElementById('userToggle').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
-    document.getElementById('register').closest('span').classList.remove('grayBg');
   }
 }
 function toggleStaff(){
   if(document.getElementById('regUserStaff').checked){
     document.getElementById('staffAcct').setAttribute('required', true);
     document.getElementById('staffToggle').style.display = '';
-    document.getElementById('regUserStaff').closest('div').classList.add('grayBg');
   }
   else{
     document.getElementById('staffAcct').removeAttribute('required');
     document.getElementById('staffToggle').style.display = "none";
-    document.getElementById('regUserStaff').closest('div').classList.remove('grayBg');
   }
 }
 //SERVICE WORKER
@@ -435,8 +431,8 @@ async function hashchanged(){
     width: min(100% - 1rem, var(--app-width))">
         <h3 style="margin: 0px">You visited an onboarding link</h3><br>Click below to setup your account with new movements<br><br>
     <span style="text-align: center; display:block;">
-    <button class="white" style="margin-right: 3rem" onclick="removeNotification();">Cancel</button>
-    <button onclick="removeLocalStorage(); removeNotification(); location.hash = '${hash}'"">Setup</button></span></div></div>`
+    <button style="margin: 1rem auto" onclick="removeLocalStorage(); removeNotification(); location.hash = '${hash}'"">Setup</button>
+    <button class="white" style="margin-top: 1rem;" onclick="removeNotification();">Cancel</button></span></div></div>`
       document.body.insertAdjacentHTML('afterbegin', notification);
       location.hash = "#";
       return;
@@ -445,8 +441,18 @@ async function hashchanged(){
     document.querySelectorAll('input[type="checkbox"]').forEach(el => el.removeAttribute('checked'));
     document.getElementById('userToggle').style.display = 'none';
     document.getElementById('staffToggle').style.display = 'none';
-    document.querySelectorAll('.grayBg').forEach(el => el.classList.remove('grayBg'));
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = 'none');
+
+    //clear any previous dom manipulation
+    document.getElementById('register').checked = false;
+    document.getElementById('regUserName').removeAttribute('required');
+    document.getElementById('regUserEmail').removeAttribute('required');
+    document.getElementById('ua').removeAttribute('required');
+    document.getElementById('userToggle').style.display = 'none';
+    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
+    document.getElementById('regUserStaff').checked = false;
+    document.getElementById('staffAcct').removeAttribute('required');
+    document.getElementById('staffToggle').style.display = "none";
 
     let movements = [];
     try {
@@ -460,8 +466,14 @@ async function hashchanged(){
       let movementsList = await loadMovements(movements);
       if(movementsList.length == 0){
         location.hash = '#onboarding';
-        document.getElementById('onboarding').insertAdjacentHTML('afterbegin', `<div id="notification">You visited an invalid onboarding link. You can login below, or try again with a corrected onboarding link.<button style="float:right; background: unset; height: unset;" 
-        onclick="removeNotification();">X</button></div>`)
+        let notification = `<div id="notification">
+        <div class="blurBackground" style="display:block" onclick="removeNotification();"></div>
+        <div style="margin: 0px max((100% - var(--app-width))/2, .5rem);
+        width: min(100% - 1rem, var(--app-width))">
+            <h3 style="margin: 0px">You visited an invalid onboarding link</h3><br>You can login below, or try again with a corrected onboarding link.<br><br>
+        <span style="text-align: center; display:block;">
+        <button class="white" style="margin-top:1rem;" onclick="removeNotification();">Ok</button></span></div></div>`
+        document.body.insertAdjacentHTML('afterbegin', notification);
         return;
       }
       for(movement of movementsList) {
@@ -492,7 +504,7 @@ async function hashchanged(){
       var movement = user.movements[movement_num];
       let strategy = user.strategies[movement.strat];
 
-      document.getElementById('strategyWelcomeText').innerHTML = user.name + ', ' +strategy.welcomeText.charAt(0).toLowerCase() + strategy.welcomeText.slice(1); 
+      document.getElementById('strategyWelcomeText').innerHTML = '';//user.name + ', ' +strategy.welcomeText.charAt(0).toLowerCase() + strategy.welcomeText.slice(1); 
       document.documentElement.style.setProperty('--main-color', strategy.primaryColor);
       document.querySelector("meta[name=theme-color]").setAttribute("content", strategy.primaryColor);
       localStorage.setItem('main-color', strategy.primaryColor);
@@ -533,6 +545,7 @@ async function hashchanged(){
           <span class="inc button">+</span>
         </div>`;
       }
+      statsListContent += '</div><div class="grid">';
       //add Team Questions.  Will need to send team table, and what teamid in user.movements
       for(i = 1; i <= 3; i++){
         try {
@@ -553,7 +566,7 @@ async function hashchanged(){
           
         }
       }
-statsListContent += '</div>';
+      statsListContent += '</div>';
 
       //Adding strategy Questions that are not cumulative
       statsListContentNonCumulative = `<h4 style="margin-bottom: 0; margin-top:1rem">Update the following? <span rel="tooltip" title="Only enter updates for those that you are responsible for - not the whole movement.  Any number (including '0') will update your contribution.">i</span>          
@@ -618,7 +631,7 @@ statsListContent += '</div>';
       if(nonCumulative > 0) {
         statsListContent += statsListContentNonCumulative + '</div>'
       }
-      
+
       document.getElementById('statsList').innerHTML = statsListContent;
       setToolTips();
 
@@ -636,7 +649,7 @@ statsListContent += '</div>';
       let prefix = '', select = '';
       if(user.movements.length > 1){
         prefix = (movement_num + 1)+"/"+user.movements.length+" ";
-        select = `<span class="select"><select style="width: calc(var(--app-width) - 8rem)" onchange="goToMovement(this.value);">`;
+        select = `<span class="select"><select style="width: calc(var(--app-width) - 10rem)" onchange="goToMovement(this.value);">`;
         user.movements.forEach((el, i) => select += `<option value="${i}" ${(i == movement_num ? 'selected' : '')}>${el.name}</option>`)
         select += '</select></span>';
       }
@@ -648,7 +661,6 @@ statsListContent += '</div>';
       document.getElementById('userPhone').value = user.phone; //hidden field
 
       // set dates for the movement
-      let todayDate = new Date().toLocaleString().split(',')[0];
       let lastUpdate = user.mvmnts[movement.id];
       if(!lastUpdate) {
         lastUpdate = "Questions";
@@ -658,7 +670,6 @@ statsListContent += '</div>';
       }
 
       document.getElementById('lastUpdate').innerHTML = lastUpdate;
-      document.getElementById('todayDate').textContent = todayDate;
 
       //let's load the data from formSubs
       let formSub = window.formSubs[movement.id];
@@ -748,7 +759,6 @@ statsListContent += '</div>';
         <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
           <img src="genericQ.png" width="80px" height="80px">
         </object>
-        <p>Your group had</p>
         <h1 id="${question+'Sum'}">${num}</h1>
         <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
       </div>`;

@@ -4,6 +4,7 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  color: var(--dark-gray);
 }
 *:focus {
   outline: none !important;
@@ -68,6 +69,7 @@ object,
 img {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  image-rendering: smooth;
 }
 button,
 input { /* 1 */
@@ -103,7 +105,7 @@ input,
 select {
   padding: 4px 9px;
   display: inline-block;
-  border: 2px solid var(--medium-gray);
+  border: 2px solid var(--light-gray);
   border-radius: 2px;
   font: inherit;
 }
@@ -117,15 +119,32 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance:textfield; /* Firefox */
 }
+#onboarding .pb05 {
+  padding-bottom: .5rem;
+  display: block;
+}
+#onboarding .pb12 {
+  margin-bottom: 1.2rem;
+  display: block;
+}
+#onboarding label {
+  font-weight: bold;
+}
 p {
   line-height: 1.5;
 }
 h1 {
   margin-bottom: 0;
 }
+a, a:visited {
+  color: #2972b8;
+}
+small {
+  font-size: 1.15rem;
+}
 .link {
   text-decoration: underline;
-  color: blue;
+  color: #2972b8;
   cursor: pointer;
 }
 .fadeUp {
@@ -187,8 +206,8 @@ h1 {
 }
 #statsList .grid.notCumulative {
   margin-top: 0.6rem;
-  border: 1px lightgray solid;
-  background: lightgray;
+  border: 1px var(--light-gray) solid;
+  background: var(--light-gray);
   border-radius: 1rem;
   padding: 1rem 0 1rem 1rem;
 }
@@ -226,7 +245,7 @@ h1 {
   display: none;
 }
 #storyBoxContainer {
-  margin: 1rem 0;
+  margin: 2rem 0 1rem 0;
 }
 .grow-wrap {
   /* easy way to plop the elements on top of each other and have them both sized based on the tallest one's height */
@@ -267,7 +286,7 @@ h1 {
   z-index: 101;
 }
 #notification div:last-child {   
-  background-color: var(--medium-gray);
+  background-color: var(--light-gray);
   padding: 1.5rem 1.5rem 2rem 1.5rem;
   border-radius: 0.5rem;
   filter: drop-shadow(var(--up-shadow));
@@ -324,23 +343,18 @@ h1 {
   margin: 0;
   padding: 0;
 }
-#cards {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  row-gap: 3rem;
-  margin-bottom: 2rem;
-  margin-top: 1rem;
-}
 .card {
-  flex-shrink: 0;
-  width: clamp(9.75rem, 42vw, var(--app-width) * 0.4);
-  padding: 0 0.5rem;
+  width: 60%;
+  margin: 3rem auto;
+  padding: .1rem 1rem .5rem 1rem;
   filter: drop-shadow(var(--drop-shadow));
   background-color: white;
   text-align: center;
   vertical-align: bottom;
   border-radius:  1rem;
+}
+.card:not(:first-child) {
+  margin-top: 4rem;
 }
 .card > object { 
   position: relative;
@@ -354,6 +368,7 @@ h1 {
   margin-left: auto; 
   margin-right:auto; 
   margin-bottom: 1rem;
+  margin-top: -1rem;
 }
 .bottom-button {
   display: flex;
@@ -365,28 +380,14 @@ h1 {
   font-size: small;
   display: block;
   text-align: center;
-  color: gray;
-  margin-bottom: 1rem;
+  color: var(--dark-gray);
+  margin-bottom: 1.5rem;
 }
 #add-button {
   background: var(--light-gray) !important;
   border-bottom-left-radius: 1rem;
   border-bottom: 2px solid var(--main-color) !important;
   cursor: pointer;
-}
-.arrow-left {
-  border-top: 0.6rem solid transparent;
-  border-right: 1.2rem solid var(--main-color);
-  border-bottom: 0.6rem solid transparent;
-  margin: 0.4rem;
-  height: 0;
-}
-.arrow-right {
-  border-top: 0.6rem solid transparent;
-  border-left: 1.2rem solid var(--main-color);
-  border-bottom: 0.6rem solid transparent;
-  margin: 0.4rem;
-  height: 0;
 }
 #install-prompt {
   position: absolute;
@@ -430,16 +431,17 @@ h1 {
 }
 .punch,
 button {
-  color: #fff;
+  color: var(--dark-gray);
   background-color: var(--main-color);
   display: inline-block;
   font-weight: 600;
   text-align: center;
   touch-action: manipulation;
   border: 1px solid transparent;
+  border-radius: 2rem;
   white-space: nowrap;
-  padding: 0px 14px;
-  border-radius: 2px;
+  padding: .8rem;
+  width: 65%;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -447,11 +449,12 @@ button {
 }
 .punch {
   background-color: white;
-  color: var(--main-color);
+  color: var(--dark-gray);
   border: 1px solid var(--main-color);
   border-bottom: none;
-  border-radius: 1rem;
-  width: 5rem;
+  border-radius: 2rem;
+  width: 6rem;
+  padding: 0 0.8rem;
 }
 .punch:after {
   position: relative;
@@ -462,17 +465,17 @@ button {
   content: "";
   border-left: 0.5rem solid transparent;
   border-right: 0.5rem solid transparent;
-  border-top: 0.5rem solid var(--main-color);
+  border-top: 0.5rem solid var(--dark-gray);
   transition: border .2s;
 }
 .punch.upArrow:after {
   border-top: unset;
   top: -0.8rem;
-  border-bottom: 0.5rem solid var(--main-color);
+  border-bottom: 0.5rem solid var(--dark-gray);
 }
 button.white {
   background-color: white;
-  color: black;
+  color: var(--dark-gray);
 }
 span[rel="tooltip"]:active,
 span[rel="tooltip"]:hover,
@@ -526,7 +529,7 @@ button:hover {
   top: 0;
   left: 0;
   bottom: 0;
-  padding: 0 1rem;
+  padding: 0 2rem;
   overflow-y: auto;
   transform: translate3d(0,-20px,0) scale3d(.7, .7, 1.0);
   opacity: 0;
@@ -609,7 +612,7 @@ button:hover {
 #hamburger:after,
 #hamburger:before,
 #hamburger div {
-  background-color: #000;
+  background-color: var(--dark-gray);
   border-radius: 3px;
   content: "";
   display: block;
@@ -618,17 +621,17 @@ button:hover {
   transition: all 0.2s ease-in-out;
 }
 #hamburger.active:before {
-  background-color: #000;
+  background-color: var(--dark-gray);
   transform: translateY(8px) rotate(135deg);
   
 }
 #hamburger.active:after {
-  background-color: #000;
+  background-color: var(--dark-gray);
   transform: translateY(-8px) rotate(-135deg);
   
 }
 #hamburger.active div {
-  background-color: #000;
+  background-color: var(--dark-gray);
   transform: scale(0);
 }
 
@@ -664,17 +667,14 @@ button:hover {
   transition: opacity .2s;
 }
 h2 {
-  color: var(--main-color);
+  color: var(--dark-gray);
 }
 .activity {
-  margin-bottom: 1rem;
+  margin: 1rem 0;
   color: var(--medium-gray);
   text-align: end;
   border-bottom: 3px solid var(--light-gray);
   padding-right: 1.7rem;
-}
-button {
-  height: 2rem;
 }
 .homepage #homepage,
 .onboarding #onboarding,
@@ -696,6 +696,8 @@ button {
 #reminder > button {
   position:relative;
   z-index: 10;
+  padding:  .2rem .5rem;
+  width:  fit-content;
 }
 #hiddenReminder {
   position: absolute;
@@ -727,8 +729,8 @@ button {
   right: 0;
   top: 0;
   bottom: 0;
-  backdrop-filter: blur(3px);
-  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(7px);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 #strategyWelcomeText {
   white-space: pre-wrap;
@@ -743,13 +745,13 @@ button {
 }
 .day-of-week input:checked+label {
   color: #fff;
-  background: #000;
+  background: var(--dark-gray);
   border: 1px solid green;
 }
 .day-of-week input+label {
-  color: #000;
+  color: var(--dark-gray);
   background: #fff;
-  border: 1px solid #000;
+  border: 1px solid var(--dark-gray);
   border-radius: 3px;
   text-align: center;
   display: grid;
@@ -867,39 +869,21 @@ span[rel="tooltip"] {
 #staffAcct, #staffAcctMask {
   letter-spacing: 0.3em;
 }
-#staffToggle, #userToggle, .accountToggle {
-  background-color: rgba(0, 0, 0, 0.15);
-  padding: 1rem;
-  border-bottom-left-radius: 1rem;
-  border-bottom-right-radius: 1rem;
-  border-top-right-radius: 1rem;
+#registerUser, .accountToggle {
+  background-color: var(--light-gray);
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
   width: fit-content;
 }
 .marginTop {
   margin-top: 1rem;
+  margin-left: -1.35rem;
 }
 .accountToggle {
-  border-radius: 1rem;
+  border-radius: 0.5rem;
 }
-.grayBg {
-  display: inline-block;
-  padding: 0.5rem;
-  padding-right: 2rem;
-  background-color: rgba(0, 0, 0, 0.17);
-  border-top-right-radius: 1rem;
-}
-#userToggle #staffToggle {
-  background: transparent;
-  border: 1px solid gray;
-  top: -1px;
-  position: relative;
-}
-#userToggle .grayBg.marginTop {
-  background: transparent;
-  border: 1px solid gray;
-  border-bottom: 1px solid #d9d9d9;
-  z-index: 1;
-  position: relative;
+#registerUser #staffToggle {
+  padding-left: 0;
 }
 
 /* optional */
@@ -940,7 +924,7 @@ input.masked,
   left: 0;
   right: 4px;
   content: ' ';
-  border: 2px solid var(--medium-gray);
+  border: 2px solid var(--light-gray);
   border-radius: 2px;
 }
 .whiteBg input {
@@ -961,7 +945,7 @@ select {
   white-space: pre-wrap;
   text-overflow: ellipsis;
   text-align: unset;
-  color: var(--main-color);
+  color: var(--dark-gray);
   border-radius: .5rem;
 }
 select::-ms-expand {
@@ -972,7 +956,7 @@ select::-ms-expand {
 .select::after {
   position: absolute;
   content: "";
-  border-top: .7rem solid var(--main-color);
+  border-top: .7rem solid var(--dark-gray);
   border-left: .7rem solid transparent;
   border-right: .7rem solid transparent;
   top: 0.7rem;
@@ -986,4 +970,30 @@ select:focus-within {
 }
 .select:has(select:focus-within)::after {
   transform: scaleY(-1);
+}
+.mvBtnArrow {
+  position: relative;
+  color: transparent;
+  transition: scale .2s;
+  cursor: pointer;
+}
+.mvBtnArrow::after {
+  position: absolute;
+  content: "";
+  border-left: .7rem solid var(--dark-gray);
+  border-top: .7rem solid transparent;
+  border-bottom: .7rem solid transparent;
+  top: 0.4rem;
+  right: .5rem;
+  pointer-events: none;
+  transition: transform .2s;
+}
+.mvBtnArrow.left::after {
+  right: unset;
+  left: .5rem;
+  border-right: .7rem solid var(--dark-gray);
+  border-left: unset;
+}
+.mvBtnArrow:hover:after{
+  scale: 1.2;
 }
