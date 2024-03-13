@@ -20,6 +20,32 @@ function setTeamsScriptProperty(){
   SCRIPT_PROP.setProperty("teams", JSON.stringify(teamObjs));
 }
 
+function updateTeamsScriptProperty(){
+  let doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  let sheet = doc.getSheetByName(TEAM_SHEET);
+
+  let teams = sheet.getRange(2,1,getLastRow(sheet) - 1,sheet.getLastColumn()).getValues();
+  let teamObjs = {};
+  //for each row in the 2d array from getValues();
+  for(team of teams){
+    let teamOb = {};
+    teamOb.name=team[1];
+    teamOb.teamQ1=team[2];
+    teamOb.teamQ2=team[3];
+    teamOb.teamQ3=team[4];
+    teamOb.teamSum=team[5];
+    teamOb.storyBox=team[6];
+
+    teamObjs[team.shift()]=teamOb;
+  }
+  
+  let currrentTeamsObs = JSON.parse(SCRIPT_PROP.getProperty('teams'));
+  
+  if(!deepEqual(currrentTeamsObs, teamObjs)) {
+    SCRIPT_PROP.setProperty("teams", JSON.stringify(teamObjs));
+  }
+}
+
 function getTeams(teamsList, userCat) {
   let teams = JSON.parse(SCRIPT_PROP.getProperty('teams'));
   let object = {};
@@ -38,7 +64,10 @@ function getTeams(teamsList, userCat) {
             if(question == '' || (questionUser[0].indexOf(userCat) < 0 && questionUser[0].indexOf('B') < 0) ){ //make sure it applies to our user
               delete teamOb['teamQ'+i];
             }
-            else teamOb['teamQ'+i] = teamOb['teamQ'+i].replace(/^.*Ͱ/,'');
+            else {
+              teamOb['teamQ'+i+'Cumulative'] = teamOb['teamQ'+i].indexOf('Σ') > -1;
+              teamOb['teamQ'+i] = teamOb['teamQ'+i].replace(/^.*Ͱ/,'');
+            }
           }
         }
         //Storybox code
