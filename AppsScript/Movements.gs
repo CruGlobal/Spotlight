@@ -10,10 +10,10 @@ function setMovementsScriptProperty(){
     moveOb.tID=movement[1];
     moveOb.strat=movement[2];
     moveOb.name=movement[3];
-    moveOb.fb=parseInt(movement[4]);
-    moveOb.g1=parseInt(movement[5]);
-    moveOb.g2=parseInt(movement[6]);
-    moveOb.g3=parseInt(movement[7]);
+    moveOb.fb=JSON.parse(movement[4]);
+    moveOb.g1=JSON.parse(movement[5]);
+    moveOb.g2=JSON.parse(movement[6]);
+    moveOb.g3=JSON.parse(movement[7]);
 
     moveObjs[movement.shift().toString()]=moveOb;
   }
@@ -28,8 +28,8 @@ function updateMovementsScriptProperty(){
   let movements = sheet.getRange(2,1,getLastRow(sheet) - 1,sheet.getLastColumn()).getValues();
   let currrentMovementsObs = JSON.parse(SCRIPT_PROP.getProperty('movements'));
 
-  //check for a change in id list of movements
-  if(JSON.stringify(movements.map(mov => mov[0]).sort()) != JSON.stringify(Object.keys(currrentMovementsObs).sort())) {
+  //check for a change in id, team, strategy, or name in the list of movements
+  if(JSON.stringify(movements.map(mov => mov[0]+mov[1]+mov[2]+mov[3]).sort()) != JSON.stringify(Object.keys(currrentMovementsObs).map(key => key+currrentMovementsObs[key].tID+currrentMovementsObs[key].strat+currrentMovementsObs[key].name).sort())) {
     //we've got new movements to add
    
     let moveObjs = currrentMovementsObs;
@@ -39,10 +39,10 @@ function updateMovementsScriptProperty(){
       //Logger.log(moveOb)
       if(moveOb == undefined) { //we've got a new movement and we need to add it to the object along with it's summary data.
         moveOb = {};
-        moveOb.fb=parseInt(movement[4]);
-        moveOb.g1=parseInt(movement[5]);
-        moveOb.g2=parseInt(movement[6]);
-        moveOb.g3=parseInt(movement[7]);
+        moveOb.fb=JSON.parse(movement[4]);
+        moveOb.g1=JSON.parse(movement[5]);
+        moveOb.g2=JSON.parse(movement[6]);
+        moveOb.g3=JSON.parse(movement[7]);
       }//else, we don't have a new movement, and we can just update the id/strat/name if needed
       moveOb.tID=movement[1];
       moveOb.strat=movement[2];
@@ -76,8 +76,17 @@ function updateMovementsInCache(responses, strategies, teams, global){
 
     let movementId = param_ob.movementId;
 
-    movements[movementId].fb += parseInt(param_ob[global.fb] || 0);
-    movements[movementId].g1 += parseInt(param_ob[global.g1] || 0);
+    function addToMovementSummary(key,value){
+      if(typeof movements[movementId][key] === "object"){
+        movements[movementId][key][param_ob["userPhone"]] = parseInt(value || 0);
+      }
+      else {
+        movements[movementId][key] += parseInt(value || 0);
+      }
+    }
+
+    addToMovementSummary('fb', param_ob[global.fb]);
+    addToMovementSummary('g1', param_ob[global.g1]);
     
     //need to know which strategy for this movement
     let strategy = movements[param_ob.movementId].strat;
@@ -89,7 +98,8 @@ function updateMovementsInCache(responses, strategies, teams, global){
     if(strat_summary_id.trim() == ''){
       strat_summary_id = global.g2;
     }
-    movements[movementId].g2 += (parseInt(param_ob[strat_summary_id]) || 0); //summary from geography or AFC/EFC or Global if not set
+
+    addToMovementSummary('g2', param_ob[strat_summary_id]); //summary from geography or AFC/EFC or Global if not set
 
     //need to know which team for this movement
     let team = teams[movements[param_ob.movementId].tID];
@@ -100,7 +110,7 @@ function updateMovementsInCache(responses, strategies, teams, global){
     else {
       team_summary_id = global.g3;
     }
-    movements[movementId].g3 += (parseInt(param_ob[team_summary_id]) || 0);
+    addToMovementSummary('g3', param_ob[team_summary_id]);
   }
 
   //set changed movement values back to cache  
@@ -165,8 +175,16 @@ function summarizeMovements(movements, strategies, teams, global){
     }
   }
   for(movement of summaryMovements){
-    groupNum[fbID] = (groupNum[fbID] || 0) + parseInt(movement.fb || 0);
-    groupNum[g1ID] = (groupNum[g1ID] || 0) + parseInt(movement.g1 || 0);
+    function getMovementSummaryNumber(key){
+      if(typeof movement[key] === 'object'){
+        return Object.values(movement[key]).reduce((a, b) => parseInt(a) + parseInt(b), 0) || 0;
+      }
+      else {
+        return movement[key] || 0;
+      }
+    }
+    groupNum[fbID] = (groupNum[fbID] || 0) + getMovementSummaryNumber('fb');
+    groupNum[g1ID] = (groupNum[g1ID] || 0) + getMovementSummaryNumber('g1');
 
     //STRATEGY
     let strat_lookup = strategies[movement.strat];
@@ -177,16 +195,18 @@ function summarizeMovements(movements, strategies, teams, global){
     if(stratID.trim() == ''){
       stratID = global.g2;
     }
-    groupNum[stratID] = (groupNum[stratID] || 0) + parseInt(movement.g2);
+    groupNum[stratID] = (groupNum[stratID] || 0) + getMovementSummaryNumber('g2');
 
     //TEAM
     let teamID = teams[movement.tID].teamSum;
     if(teamID.trim() != ''){
-      questions[teamID] = teams[movement.tID][teamID].replace(/^.*Ͱ/,''); //want to have the team question too.
+      if(teams[movement.tID][teamID]){ //teamID may be a non-team question only if it is a team question do we process this.
+        questions[teamID] = teams[movement.tID][teamID].replace(/^.*Ͱ/,''); //want to have the team question too.
+      }
     } else {
       teamID = global.g3;
     }
-    groupNum[teamID]  = (groupNum[teamID] || 0) + parseInt(movement.g3);
+    groupNum[teamID]  = (groupNum[teamID] || 0) + getMovementSummaryNumber('g3');
   }
   
   if(groupNum[global.fb] == 0){
