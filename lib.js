@@ -756,9 +756,7 @@ async function hashchanged(){
       let num = window.statSummary.groupNum[question];
       //let text = window.user.strategies[]
       let card = `<div class="card">
-        <object data="${question.replace(/\d/g,'')}.png" type="image/png" width="80px" height="80px">
-          <img src="genericQ.png" width="80px" height="80px">
-        </object>
+        <img src="${question.replace(/\d/g,'')}.png" width="100px" height="100px" onerror='this.src = "genericQ.png"'>
         <h1 id="${question+'Sum'}">${num}</h1>
         <p>${window.statSummary.questions[question]}${(num >  0?'!':'')}</p>
       </div>`;

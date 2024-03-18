@@ -65,7 +65,6 @@ body {
   overflow: hidden;
   margin: 0;
 }
-object,
 img {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
@@ -356,9 +355,15 @@ small {
 .card:not(:first-child) {
   margin-top: 4rem;
 }
-.card > object { 
+.card > img { 
   position: relative;
-  top: -1.5rem;
+  top: -2rem;
+  height: 100%;
+}
+.card img { 
+  background: var(--main-color);
+  border-radius: 100%;
+  background-image: linear-gradient(#FFF, rgba(255, 255, 255, 0.5));
 }
 .card > p {
   margin-top: 0;
