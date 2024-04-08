@@ -539,7 +539,7 @@ async function hashchanged(){
           <label for="${question.id}">${question.name}</label>
           <span rel="tooltip" title="${question.description.replace(/"/g,"'")}">i</span>          
         </div>
-        <div class="statsListRight" data-over="should be as high as ${helpText}">
+        <div class="statsListRight" data-over="${question.name} should be as high as ${helpText}">
           <span class="dec button">-</span>
           <input id="${question.id}" name="${question.id}" type="number" inputmode="numeric" value="0">
           <span class="inc button">+</span>
