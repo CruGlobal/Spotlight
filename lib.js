@@ -869,8 +869,8 @@ async function processOnboardForm(e) {
     else if(result.result == "success"){
       console.log('got the user from db');
     }
-    else {
-      alert("Either your number and pin combo are not correct, or you need to register.  \n\nTo register please click on the custom link you were sent.")
+    else { //we have a failure
+      alert(result.text);
       return;
     }
   }
