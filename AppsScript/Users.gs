@@ -76,6 +76,7 @@ function registerUserInCache(e){
     GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
   }
   
+  writeUsersToSheets();
   return gatherUserInfo(e.parameter.phone);
 }
 
@@ -98,11 +99,11 @@ function updateUserInCache(phone, mvmnts, cat, pin){
     let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
     users[phone].tmstmp = GoogleDate(new Date());
     users[phone].mvmnts = mvmnts; //JS object with key as mvmntID, and value is last update.
-    users[phone].cat = cat;
+    //users[phone].cat = cat; changed server to no longer update cat every time you onboard 11/29/2023
 
     SCRIPT_PROP.setProperty("users", JSON.stringify(users));
     lock.releaseLock();
-    
+    writeUsersToSheets();
     return gatherUserInfo(phone);
   }
   else { //when we are saving our movement responses to cache, already have a waitlock
@@ -173,21 +174,38 @@ function writeUsersToSheets() {
     let users = sheet.getRange(2,1, getLastRow(sheet) - 1, 7).getValues();
 
     // cycle through our existing users
+    let numOldUsers = 0;
+    let newUsers = [];
     for(i in users){  
       let userPhone = users[i][1]; //Second column in a row is the phone number
       try { //let's see if it exists in our data.  If yes then place it there.
         let userOb = usersOb[userPhone];
-        users[i][0] = userOb.tmstmp;
-        users[i][2] = userOb.pin || '';
-        users[i][3] = userOb.email || '';
-        users[i][4] = userOb.name;
-        users[i][5] = userOb.cat;
-        users[i][6] = userOb.mvmnts;
+        //check if a user is over 1 year old.
+        if(((new Date() - ExcelDateToJSDate(parseInt(userOb.tmstmp))) / (1000 * 3600 * 24 * 365)) > 1) {
+          numOldUsers += 1;
+          //we delete them from the table here
+        }
+        else {
+          let userRow = [];
+          userRow.push(userOb.tmstmp);
+          userRow.push(userPhone);
+          userRow.push(userOb.pin || '');
+          userRow.push(userOb.email || '');
+          userRow.push(userOb.name);
+          userRow.push(userOb.cat);
+          userRow.push(userOb.mvmnts);
+          newUsers.push(userRow);
+        }
+        
         delete usersOb[userPhone];
       } catch {
         Logger.log('missing user: '+ userPhone + ' in cached data');
       }
     }
+    if(numOldUsers) {
+      GmailApp.sendEmail(MAINTAINER_EMAIL, `Removed ${numOldUsers} old users`);
+    }
+    Logger.log('number of old users removed: ' + numOldUsers);
     //cycle through remaining new users and add to the bottom of the users table
     for (const [userPhone, userOb] of Object.entries(usersOb)) {
       let userRow = [];
@@ -198,11 +216,12 @@ function writeUsersToSheets() {
       userRow.push(userOb.name);
       userRow.push(userOb.cat);
       userRow.push(userOb.mvmnts);
-      users.push(userRow);
+      newUsers.push(userRow);
     }
 
     //Write 2d Data store to sheet
-    sheet.getRange(2, 1, users.length, users[0].length).setValues(users);
+    sheet.getRange(2, 1, users.length, users[0].length).clearContent();
+    sheet.getRange(2, 1, newUsers.length, newUsers[0].length).setValues(newUsers);
     SpreadsheetApp.flush();
     setUserScriptProperty();
 

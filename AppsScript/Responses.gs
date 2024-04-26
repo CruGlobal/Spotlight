@@ -269,6 +269,7 @@ function writeCacheToSheets(){
       var row = [];
       // loop through the header columns
       for (i in headers){
+        Logger.log(i);
         let value = param_ob[headers[i]];
         if(value === undefined) { value = ''; }
         row.push(value);

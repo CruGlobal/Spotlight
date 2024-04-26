@@ -52,9 +52,14 @@ function sendMovements(e) {
 function requestUser(e) {
   //check to see if we are authenticated
   let user = getUser(e.parameter.phone);
-  if(!user || user.pin != e.parameter.pin){
+  if(!user) {
     return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct, please login again'}))
+      .createTextOutput(JSON.stringify({'result':'failure', 'text':'User is not registered.  \n\nTo register please click on the onboarding link you were sent.'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  else if(user.pin != e.parameter.pin){
+    return ContentService
+      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct, please try again'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
   //Now try to get information

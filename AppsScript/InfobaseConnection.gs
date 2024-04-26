@@ -3,15 +3,6 @@
 const API_KEY = 'api.key';
 const API_URL = 'api.url';
 
-function onOpen(){
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu('Authentication')
-    .addItem('Set Authorization Token', 'setKey')
-    .addItem('Delete Authorization Token', 'deleteKey')
-    .addItem('Set API URL', 'setURL')
-    .addItem('Delete API URL', 'deleteURL')
-  .addToUi();
-}
 function setKey(){
   var ui = SpreadsheetApp.getUi();
   var scriptValue = ui.prompt('Please provide your Infobase Authorization Token.' , ui.ButtonSet.OK);
@@ -77,7 +68,7 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
   let headers = data.shift();
 
   for(row of data){ //rows are response submissions
-    let movementId = String(row[5]);
+    let movementId = String(row[2]);
     if(movementId.toLowerCase().indexOf('c') != 0 || movementsList.indexOf(parseInt(movementId.replace('c', ''))) == -1){ //We don't want to include SM IDs or non-infobase movement ids
       continue;
     }
@@ -91,13 +82,13 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
                                        "period_begin": period.begin,
                                        "period_end": period.end};
       }
-      for(i=6; i < row.length; i++){
+      for(i=3; i < row.length; i++){
         let header = headers[i];
         if(INFOBASE_VALID.indexOf(header) > -1 && !isNaN(parseInt(row[i]))){ //make sure we've got a valid infobase id and there's a number recorded
           if(!movementsObject[movementId][header]){  //check to be sure that the property for this header exists.
             movementsObject[movementId][header] = 0;
           }
-          movementsObject[movementId][header] += parseInt(row[i]) || 0;      
+          movementsObject[movementId][header] += parseInt(row[i]) || 0;
         }
       }
     }
@@ -164,13 +155,13 @@ function submitMovementData() {
     }
     else if(parseInt(SCRIPT_PROP.getProperty('tries')) > 3){  //we're done trying!
       Logger.log('more than 3 tries.')
-      //return;
+    //  return;
     }
     else {
       SCRIPT_PROP.setProperty('tries', parseInt(SCRIPT_PROP.getProperty('tries')) + 1);
     }
 
-    let allMovements = getAllMovements()
+    let allMovements = getAllMovements();
     let listOfPossibleMovements = allMovements.activities.map(min => min.id); //get movements from Infobase
 
     let statistics = JSON.stringify({'statistics': getStatsForPeriod(listOfPossibleMovements)});
@@ -183,7 +174,8 @@ function submitMovementData() {
       payload: statistics,
       contentLength: statistics.length,
       contentType: "application/json",
-      redirect: 'follow'
+      redirect: 'follow',
+      muteHttpExceptions: true
     };
 
     let url = getURL()+'statistics';

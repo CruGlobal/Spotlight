@@ -14,24 +14,41 @@
         var QUESTION_RELS = "QuestionRels";
 
 var SCRIPT_PROP = PropertiesService.getScriptProperties(); // new property service
+var MAINTAINER_EMAIL = 'spotlight@cru.com'  //change where all maintainer and error emails should go.
 
 function setup() {
-    var doc = SpreadsheetApp.getActiveSpreadsheet();
-    SCRIPT_PROP.setProperty("key", doc.getId());
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  SCRIPT_PROP.setProperty("key", doc.getId());
 
-    //Install SM form
-    var form = FormApp.openById('1jV9A3_h4U2qvy4ohksEjwLmOp6HG0GICy1PnsuoZx7k');
-    ScriptApp.newTrigger('updateAutoScriptProperties')
-    .forForm(form)
-    .onFormSubmit()
-    .create();
+  //Install SM form
+  var form = FormApp.openById('1jV9A3_h4U2qvy4ohksEjwLmOp6HG0GICy1PnsuoZx7k');
+  ScriptApp.newTrigger('updateAutoScriptProperties')
+  .forForm(form)
+  .onFormSubmit()
+  .create();
 
-    //install Campus form
-    form = FormApp.openById('1lfG0JOC0Lr3rhQvprCiXy7EsPoV7ZY-EDrDt2qa235U');
-    ScriptApp.newTrigger('updateAutoScriptProperties')
-    .forForm(form)
-    .onFormSubmit()
-    .create();
+  //install Campus form
+  form = FormApp.openById('1lfG0JOC0Lr3rhQvprCiXy7EsPoV7ZY-EDrDt2qa235U');
+  ScriptApp.newTrigger('updateAutoScriptProperties')
+  .forForm(form)
+  .onFormSubmit()
+  .create();
+}
+
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  // Or DocumentApp, SlidesApp or FormApp.
+  ui.createMenu('Spotlight Server')
+      .addItem('Update Teams and Movements', 'updateTeamsAndMovements')
+      .addItem('Full Server Update', 'updateAutoScriptProperties')
+      .addItem('Reimport Users Table', 'setUserScriptProperty')
+      .addToUi();
+  ui.createMenu('Authentication')
+    .addItem('Set Authorization Token', 'setKey')
+    .addItem('Delete Authorization Token', 'deleteKey')
+    .addItem('Set API URL', 'setURL')
+    .addItem('Delete API URL', 'deleteURL')
+  .addToUi();
 }
 
 function updateScriptProperties(){
@@ -56,9 +73,12 @@ function updateAutoScriptProperties() {
   GmailApp.sendEmail('carl.hempel@cru.org','updateAutoScript ran','');
 }
 
-function updateTeamAndMovements() {
-  setTeamsScriptProperty();
-  setMovementsScriptProperty();
+function updateTeamAndMovements(e) {
+  if(e.changeType == 'OTHER') {
+    updateTeamsScriptProperty();
+    updateMovementsScriptProperty();
+    //GmailApp.sendEmail('carl.hempel@cru.org','updateTeamAndMovements ran','');
+  }
 }
 
 function cacheSize() {
@@ -130,4 +150,50 @@ function GoogleDate(jSdate) {
    var d = new Date(jSdate) ;
    var googleStart = new Date(Date.UTC(1899,11,30,0,0,0,0)) ; // the starting value for Google
    return ((d.getTime()  - googleStart.getTime())/60000 - d.getTimezoneOffset()) / 1440 ;
+}
+
+function deepEqual(object1, object2) {
+  const keys1 = Object.keys(object1);
+  const keys2 = Object.keys(object2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (const key of keys1) {
+    const val1 = object1[key];
+    const val2 = object2[key];
+    const areObjects = isObject(val1) && isObject(val2);
+    if (
+      areObjects && !deepEqual(val1, val2) ||
+      !areObjects && val1 !== val2
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isObject(object) {
+  return object != null && typeof object === 'object';
+}
+
+function ExcelDateToJSDate(serial) {
+  var utc_days  = Math.floor(serial - 25569);
+  var utc_value = utc_days * 86400;                                        
+  var date_info = new Date(utc_value * 1000);
+
+  var fractional_day = serial - Math.floor(serial) + 0.0000001;
+
+  var total_seconds = Math.floor(86400 * fractional_day);
+
+  var seconds = total_seconds % 60;
+
+  total_seconds -= seconds;
+
+  var hours = Math.floor(total_seconds / (60 * 60));
+  var minutes = Math.floor(total_seconds / 60) % 60;
+
+  return new Date(date_info.getFullYear(), date_info.getMonth(), date_info.getDate(), hours, minutes, seconds);
 }
