@@ -163,6 +163,7 @@ function submitMovementData() {
 
     let allMovements = getAllMovements();
     let listOfPossibleMovements = allMovements.activities.map(min => min.id); //get movements from Infobase
+    Logger.log(Boolean(listOfPossibleMovements.find(itm => itm == 7264)) )
 
     let statistics = JSON.stringify({'statistics': getStatsForPeriod(listOfPossibleMovements)});
     Logger.log(JSON.parse(statistics).statistics.length);

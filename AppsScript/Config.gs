@@ -39,7 +39,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   // Or DocumentApp, SlidesApp or FormApp.
   ui.createMenu('Spotlight Server')
-      .addItem('Update Teams and Movements', 'updateTeamsAndMovements')
+      .addItem('Update Teams and Movements', 'updateTeamAndMovements')
       .addItem('Full Server Update', 'updateAutoScriptProperties')
       .addItem('Reimport Users Table', 'setUserScriptProperty')
       .addToUi();
@@ -74,7 +74,7 @@ function updateAutoScriptProperties() {
 }
 
 function updateTeamAndMovements(e) {
-  if(e.changeType == 'OTHER') {
+  if(!e || e.changeType == 'OTHER') {
     updateTeamsScriptProperty();
     updateMovementsScriptProperty();
     //GmailApp.sendEmail('carl.hempel@cru.org','updateTeamAndMovements ran','');
