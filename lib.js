@@ -199,9 +199,17 @@ async function registerUser(name, phone, mvmnts, cat, pin, email){
   startSpin();
   phone = phone.replace(/\D/g,'');
   let success = false;
-  await fetch(window.indicatorAppURL+`?registerUser=true&phone=${phone}&name=${name}&cat=${cat}&mvmnts=${JSON.stringify(mvmnts)}&pin=${pin}&email=${email}`, {
-    method: "GET",
-    dataType: "json"
+  await fetch(window.indicatorAppURL, {
+    method: "POST",
+    body: new URLSearchParams({
+      registerUser: "true",
+      phone: phone,
+      name: name,
+      cat: cat,
+      mvmnts: JSON.stringify(mvmnts),
+      pin: pin,
+      email: email
+    })
   }).then(handleErrors)
   .then(json)
   .then(function(data){
@@ -219,9 +227,15 @@ async function updateUser(phone, mvmnts, cat, pin){
   startSpin();
   phone = phone.replace(/\D/g,'');
   let success = false;
-  await fetch(window.indicatorAppURL+`?updateUser=true&phone=${phone}&mvmnts=${JSON.stringify(mvmnts)}&cat=${cat}&pin=${pin}`, {
-    method: "GET",
-    dataType: "json"
+  await fetch(window.indicatorAppURL, {
+    method: "POST",
+    body: new URLSearchParams({
+      updateUser: "true",
+      phone: phone,
+      mvmnts: JSON.stringify(mvmnts),
+      cat: cat,
+      pin: pin
+    })
   }).then(handleErrors)
   .then(json)
   .then(function(data){
@@ -238,9 +252,13 @@ async function updateUser(phone, mvmnts, cat, pin){
 async function requestUser(phone, pin, spin=true){
   if(spin) {startSpin();}
   let success = false;
-  await fetch(window.indicatorAppURL+`?requestUser=true&phone=${phone}&pin=${pin}`, {
-    method: "GET",
-    dataType: "json"
+  await fetch(window.indicatorAppURL, {
+    method: "POST",
+    body: new URLSearchParams({
+      requestUser: "true",
+      phone: phone,
+      pin: pin
+    })
   }).then(handleErrors)
   .then(json)
   .then(function(data){
@@ -261,9 +279,12 @@ async function requestPin(){
     return
   }
   startSpin()
-  await fetch(window.indicatorAppURL+`?requestPin=true&phone=${phone}`, {
-    method: "GET",
-    dataType: "json"
+  await fetch(window.indicatorAppURL, {
+    method: "POST",
+    body: new URLSearchParams({
+      requestPin: "true",
+      phone: phone
+    })
   }).then(handleErrors)
   .then(json)
   .then(function(data){
@@ -294,7 +315,7 @@ document.addEventListener("DOMContentLoaded", function(){
     );
   }
 
-  window.formSubs = JSON.parse(localStorage.getItem('formSubs')) || {};
+  window.formSubs = migrateFormSubs(JSON.parse(localStorage.getItem('formSubs')) || {});
 
   document.body.addEventListener("click", function (e) {
     if(document.getElementById('projector').classList.contains('menu') && !e.target.closest('#menu')){
@@ -674,8 +695,7 @@ async function hashchanged(){
       //let's load the data from formSubs
       let formSub = window.formSubs[movement.id];
       if(formSub != undefined){
-        let data = unserialize(formSub);
-        for(const item of data){
+        for(const item of Object.entries(formSub)){
           let questionId = item[0];
           let value = item[1];
           if(questionId.toLowerCase().indexOf("date") === -1 && questionId.toLowerCase().indexOf('userpin') === -1){
@@ -727,9 +747,12 @@ async function hashchanged(){
         return
       }
       startSpin()
-      await fetch(window.indicatorAppURL+`?requestSummary=true&phone=${phone}`, {
-        method: "GET",
-        dataType: "json"
+      await fetch(window.indicatorAppURL, {
+        method: "POST",
+        body: new URLSearchParams({
+          requestSummary: "true",
+          phone: phone
+        })
       }).then(handleErrors)
       .then(json)
       .then(function(data) {
@@ -889,32 +912,30 @@ async function processOnboardForm(e) {
 
 //PROCESS LOCATION FORM
 function processLocationForm(submitMovementId) {
-  let user = window.user;
   //save the data from the form for submittal later
   var form = document.getElementById('location-form');
 
-  var serializedForm = new URLSearchParams(new FormData(form)).toString().replace(/\+/g,'%20');
+  //Keep each movement's answers as a plain object.  The old code serialized this to a query string
+  //and later joined movements together with '+' - the same character a query string uses for a
+  //space - which is what corrupted sheet columns when a story contained certain characters.
+  let formOb = {};
+  for(const [key, value] of new FormData(form).entries()) {
+    formOb[key] = value;
+  }
 
-  let data = unserialize(serializedForm);
-  let sum = data.filter(itm => ['startDate','endDate','movementId','userPhone']
+  let sum = Object.entries(formOb).filter(itm => ['startDate','endDate','movementId','userPhone']
                                .indexOf(itm[0]) === -1)
                 .map(itm => itm[1])
                 .reduce((total, amount) => Number(total) + Number(amount));
   let movementId = document.getElementById('movementId').value;
-  let storyContents = data.filter(itm => itm[0] == 'storyBox')[0];
-  if(storyContents) {storyContents = (storyContents[1] != '')}
+  let storyContents = ('storyBox' in formOb) ? (formOb.storyBox != '') : undefined;
   if(sum != 0 || submitMovementId == movementId || storyContents){
-    window.formSubs[document.getElementById('movementId').value] = `userPin=${user.pin}&`+serializedForm;
+    window.formSubs[movementId] = formOb; //the pin now travels once, in the submission envelope
   }
   else {
     delete window.formSubs[movementId];
-  }  
+  }
   localStorage.setItem('formSubs', JSON.stringify(window.formSubs));
-
-  let movement_num = parseInt(location.hash.split('/')[1]);
-
-  //clear form
-  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.setAttribute('checked', false));
 }
 
 //SUBMIT LOCATION FORM AFTER PROCESSING CURRENT PAGE
@@ -931,8 +952,7 @@ async function submitLocationForm(){
   let message = "You are about to submit data for the following locations:\n";
 
   for(const [key, formSub] of Object.entries(window.formSubs)) {
-    let data = unserialize(formSub);
-    let sum = data.filter(itm => ['startDate','endDate','movementId','userPhone']
+    let sum = Object.entries(formSub).filter(itm => ['startDate','endDate','movementId','userPhone']
                                  .indexOf(itm[0]) === -1)
                   .map(itm => itm[1])
                   .reduce((total, amount) => Number(total) + Number(amount));
@@ -954,14 +974,21 @@ async function submitLocationForm(){
   }
 
   startSpin();
-  var url  =  window.indicatorAppURL;
 
   logData('numMovements',Object.values(window.formSubs).length);
-  
-  //submit everything - we can do this in one go.
-  await fetch(window.indicatorAppURL+`?${Object.values(window.formSubs).join('+')}`, {
-    method: "GET",
-    dataType: "json",
+
+  //submit everything - we can do this in one go.  text/plain rather than application/json is
+  //deliberate: it is CORS-safelisted, so it avoids a preflight OPTIONS request that Apps Script
+  //cannot answer, while the server can still JSON.parse(e.postData.contents).
+  let payload = {
+    userPin: window.user.pin,
+    submissions: Object.values(window.formSubs)
+  };
+
+  await fetch(window.indicatorAppURL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
   }).then(handleErrors)
   .then(json)
   .then(function(data){
@@ -1186,14 +1213,19 @@ function removeLocalStorage(){
   window.user = null;
 }
 
-function unserialize(data) {
-  data = data.split('&');
-  var response = [];
-  for (var k in data){
-    var newData = data[k].split('=');
-    response.push([newData[0], decodeURI(newData[1])]);
+//formSubs used to be stored as one query string per movement.  Anyone who was mid-entry when the
+//app updated still has those strings in localStorage, so convert them to the object format rather
+//than letting Object.entries() shred them into character pairs.  Safe to delete once no old data
+//is left in the wild.
+function migrateFormSubs(formSubs) {
+  for(const [movementId, formSub] of Object.entries(formSubs)) {
+    if(typeof formSub === 'string') {
+      let formOb = Object.fromEntries(new URLSearchParams(formSub));
+      delete formOb.userPin; //the pin now travels once, in the submission envelope
+      formSubs[movementId] = formOb;
+    }
   }
-  return response;
+  return formSubs;
 }
 
 // The debounce function receives our function as a parameter

@@ -1,5 +1,5 @@
 /* global caches, fetch, self */
-const CACHE_NAME = 'spotlight-0.2'
+const CACHE_NAME = 'spotlight-0.3'
 const CACHED_URLS = [
   'browserconfig.xml',
   'favicon.ico',
@@ -32,6 +32,7 @@ const CACHED_URLS = [
 
 // Open cache on install.
 self.addEventListener('install', event => {
+  self.skipWaiting() // don't wait for every tab to close before the new version takes over
   event.waitUntil(async function () {
     const cache = await caches.open(CACHE_NAME)
 
@@ -76,6 +77,7 @@ self.addEventListener('fetch', event => {
 
 // Clean up caches other than current.
 self.addEventListener('activate', event => {
+  self.clients.claim() // take over already-open tabs straight away
   event.waitUntil(async function () {
     const cacheNames = await caches.keys()
 

@@ -75,7 +75,108 @@ function saveResponseToCache(e){
     result = {'summary': summary, 'userInfo': userInfo};
     
   } catch (error) {
-    MailApp.sendEmail('carl.hempel@cru.org', 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(e.queryString));
+    MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(e.queryString));
+    lock.releaseLock();
+  }
+  return result;
+}
+
+//JSON version of saveResponseToCache, used by doPost -> saveFormJSON.  Produces the exact same
+//formSubs shape (an array of [key,value] pairs per submission) and the same listOfStories shape that
+//the legacy function does, so nothing downstream - updateMovementsInCache, writeCacheToSheets,
+//emailTeamStories, InfobaseConnection - needs any changes.
+//
+//Deliberately matches the legacy function's quirks: userPin never becomes a recorded field (the
+//legacy pinRegex strips it, so it has never been a sheet column), the storyBox column only ever
+//records that a story was present, and the story text itself is percent-encoded into storyCache
+//because emailTeamStories() calls decodeURIComponent on every entry.
+function saveResponseToCacheFromJSON(payload){
+  let pin = payload.userPin;
+  let submissions = payload.submissions;
+  let phone = submissions[0].userPhone;
+
+  //Never let null/undefined or the literal string "undefined" reach the sheet.
+  function cleanValue(value){
+    return (value === null || value === undefined || value === 'undefined') ? '' : value;
+  }
+
+  let listOfStories = [];
+  let formSubs = [];
+
+  for(let sub of submissions){
+    let entries = [];
+
+    for(let key of Object.keys(sub)){
+      let value = cleanValue(sub[key]);
+
+      if(key === 'storyBox'){
+        if(value !== ''){
+          //Now we need to email the right person.
+          listOfStories.push([String(sub.movementId), encodeURIComponent(value), phone]);
+        }
+        entries.push(['storyBox', (value !== '') ? '1' : '']); //record that we had a story
+      }
+      else {
+        entries.push([key, value]);
+      }
+    }
+
+    entries.push(['Timestamp', GoogleDate(new Date())]);
+    formSubs.push(entries);
+  }
+
+  let result = false;
+  //locking to be sure that we don't overwrite the same variable twice.
+  let lock = LockService.getPublicLock();
+  lock.waitLock(30000);  // wait 30 seconds before conceding defeat.
+  let errorLocation = 0;
+  try {
+    //store story cache
+    let storyCache = (JSON.parse(SCRIPT_PROP.getProperty('storyCache')) || []);
+    storyCache.push(...listOfStories);
+    SCRIPT_PROP.setProperty('storyCache', JSON.stringify(storyCache));
+    errorLocation += 1;
+
+    //FIRST write Response Cache
+    let responseCache = (JSON.parse(SCRIPT_PROP.getProperty('responseCache')) || []);
+    responseCache.push(...formSubs);
+    SCRIPT_PROP.setProperty('responseCache', JSON.stringify(responseCache));
+    errorLocation += 1;
+
+    //get reference tables, used in updateMovements, SummarizeMovements, and GatherUser
+    let strategies = getStrategies();
+    let teams = getTeams();
+    let global = JSON.parse(SCRIPT_PROP.getProperty('globalSums'));
+    errorLocation += 1;
+
+    //SECOND Update movements in Cache
+    updateMovementsInCache(formSubs, strategies, teams, global);
+    errorLocation += 1;
+
+    //THIRD Update user profile information
+    let mvmnts = {};
+    for(let sub of submissions){
+      mvmnts[sub.movementId] = new Date().toLocaleString().split(',')[0];
+    }
+    updateUserInCache(phone, mvmnts, false, pin);
+    lock.releaseLock();
+    errorLocation += 1;
+
+    //FITH Gather user information
+    let userInfo = gatherUserInfo(phone);
+    errorLocation += 1;
+
+    //FOURTH Summarize movements
+    let summary = summarizeMovements(Object.keys(userInfo.mvmnts), strategies, teams, global);
+    errorLocation += 1;
+
+    result = {'summary': summary, 'userInfo': userInfo};
+
+  } catch (error) {
+    //Logger.log as well as the email - a failing test otherwise only reports itself by email, which
+    //is much slower to debug than reading the execution log directly.
+    Logger.log('saveResponseToCacheFromJSON failed at step ' + errorLocation + ': ' + error.message);
+    MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(payload) + '\n\n' + errorLocation);
     lock.releaseLock();
   }
   return result;
@@ -98,7 +199,7 @@ function emailTeamStories(){
       teamStories[teamID].push(story);
     }
     catch (error) {
-      MailApp.sendEmail('carl.hempel@cru.org', 'Script Error while trying to send stories', JSON.stringify(error.message));
+      MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error while trying to send stories', JSON.stringify(error.message));
     }
   }
   //then send all the stories for each team.  We don't assume that all movements in a submission are associated with the same team.
@@ -134,7 +235,7 @@ You've got new comments for your question: "${question}"\n\n`;
     }
     body += '\n - Spotlight'
 
-    let draft = GmailApp.createDraft(email, subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    let draft = GmailApp.createDraft(email, subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
     draft.send()
     //GmailApp.moveMessageToTrash(draft.send());
   }

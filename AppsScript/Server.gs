@@ -32,7 +32,6 @@ function doGet(e){
 
 //SENDING list of movements
 function sendMovements(e) {
-  let old_e = e;
   try {
     let object = getMovements(e.parameter.movements.split(','),'onboard');
       
@@ -40,10 +39,10 @@ function sendMovements(e) {
       .createTextOutput(JSON.stringify(object))
       .setMimeType(ContentService.MimeType.JSON);
   } 
-  catch(e) {
+  catch(error) {
     // if error return this
     return ContentService
-      .createTextOutput(JSON.stringify({"result":"error", "error": e.message, 'orig_e': old_e}))
+      .createTextOutput(JSON.stringify({"result":"error", "error": error.message}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -121,17 +120,17 @@ function requestPin(e) {
   let user = getUser(e.parameter.phone);
   if(user && user.email){
     let subject = `Spotlight: requested pin for ${user.phone}`;
-    let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
+    let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at ${SUPPORT_EMAIL} \n\n- the Spotlight team`;
     try {
-      GmailApp.sendEmail(user.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
-      GmailApp.sendEmail('spotlight@cru.org',subject, 'pin requested', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+      GmailApp.sendEmail(user.email,subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+      GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'pin requested', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
     }
     catch(error){
-      GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+      GmailApp.sendEmail(SUPPORT_EMAIL,'Pin request error:', error, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
     }
   }
   return ContentService
-    .createTextOutput(JSON.stringify({'result':'success', 'text':'The pin associated with your phone number has been sent to the email address we have on file.\n\nIf you do not have access to that email address or have further questions - please let us know at spotlight@cru.org!'}))
+    .createTextOutput(JSON.stringify({'result':'success', 'text':'The pin associated with your phone number has been sent to the email address we have on file.\n\nIf you do not have access to that email address or have further questions - please let us know at '+SUPPORT_EMAIL+'!'}))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -195,7 +194,7 @@ function requestSummary(e) {
     let userInfo = gatherUserInfo(e.parameter.phone);
 
     return ContentService
-      .createTextOutput(JSON.stringify({"result":"success", "summary": summary, 'user': userInfo, 'orig_e': e}))
+      .createTextOutput(JSON.stringify({"result":"success", "summary": summary, 'user': userInfo}))
       .setMimeType(ContentService.MimeType.JSON);
   } catch(error) {
     return ContentService
@@ -238,19 +237,156 @@ function saveForm(e) {
     if(success){
       // return json success results
       return ContentService
-        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": success.summary, 'user': success.userInfo, 'orig_e': e}))
+        .createTextOutput(JSON.stringify({"result":"success", "number": e.parameters.movementId.length,"summary": success.summary, 'user': success.userInfo}))
         .setMimeType(ContentService.MimeType.JSON);
     }
     else {
       return ContentService
-        .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not save response to cache','orig_e': e}))
+        .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not save response to cache'}))
         .setMimeType(ContentService.MimeType.JSON);
     }
   } catch(error){
     // if error return this
     return ContentService
-      .createTextOutput(JSON.stringify({"result":"error", "error": error,'data': e}))
+      .createTextOutput(JSON.stringify({"result":"error", "error": error}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
+
+//POST entry point.  Mirrors doGet's dispatch table exactly and calls the same handlers, so doGet is
+//left completely untouched - any device still running old cached client JS keeps sending GETs and
+//keeps working indefinitely.
+function doPost(e){
+  Logger.log('doPost');
+
+  //New-style stats submissions arrive as a JSON string with Content-Type: text/plain;charset=utf-8.
+  //Use indexOf, NOT === - the browser sends the charset suffix, so an exact match against the bare
+  //"text/plain" would silently fall through to saveForm() below and throw before it could respond.
+  if(e.postData && e.postData.type && e.postData.type.indexOf('text/plain') === 0){
+    return saveFormJSON(e);
+  }
+
+  //Everything else is a normal application/x-www-form-urlencoded POST body.  Apps Script fills
+  //e.parameter from that body exactly as it does from a query string, so every handler below is the
+  //same unchanged function doGet calls.
+  //SEND movments list ---- USED in Onboarding only
+  if(e.parameter.movements){
+    return sendMovements(e);
+  }
+  //SEND user - receives phone number; return movements, name, last date || error - user not found
+  else if(e.parameter.requestUser){
+    return requestUser(e);
+  }
+  //SAVE new user - receives phone number, name, movements; returns success || error - already registered.
+  else if(e.parameter.registerUser){
+    return registerUser(e);
+  }
+  //SAVE over existing user - receives phone number, movements; returns success, name || error no user found
+  else if(e.parameter.updateUser){
+    return updateUser(e);
+  }
+  else if(e.parameter.requestPin){
+    return requestPin(e);
+  }
+  else if(e.parameter.requestSummary){
+    return requestSummary(e);
+  }
+  //Fallback: old-style form-urlencoded submission sent by POST instead of GET.  e.queryString and
+  //e.parameters reflect the POST body here, so the untouched legacy saveForm() still works.
+  else {
+    return saveForm(e);
+  }
+}
+
+//SAVE submitted form (new JSON format) - receives {userPin, submissions:[{movementId, userPhone, ...fields}, ...]}
+function saveFormJSON(e){
+  let payload;
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch(err){
+    return ContentService
+      .createTextOutput(JSON.stringify({"result":"error", "error": "Could not parse submission: "+err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  let submissions = payload.submissions;
+  if(!submissions || submissions.length === 0){
+    return ContentService
+      .createTextOutput(JSON.stringify({'result':'failure', 'code':'no_submission_data', 'text':'No submission data received'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  //check to see if we are authenticated
+  let user = getUser(submissions[0].userPhone);
+  if(!user || user.pin != payload.userPin){
+    return ContentService
+      .createTextOutput(JSON.stringify({'result':'failure', 'code':'pin_mismatch_login', 'text':'Phone and pin combo are not correct, please login again'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    let success = saveResponseToCacheFromJSON(payload);  //uses Lock, will return summarizeMovements and gatherUserInfo
+
+    if(success){
+      // return json success results
+      return ContentService
+        .createTextOutput(JSON.stringify({"result":"success", "number": submissions.length, "summary": success.summary, "user": success.userInfo}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    else {
+      return ContentService
+        .createTextOutput(JSON.stringify({'result':'failure', 'code':'save_failed', 'text':'Could not save response to cache'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(error){
+    // if error return this
+    return ContentService
+      .createTextOutput(JSON.stringify({"result":"error", "error": error.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+//Manual test - run in the Apps Script editor.  Deliberately includes a storyBox with an ampersand,
+//since that is the exact character class that corrupted sheet columns under the old GET parser.
+//NOTE: set movementId to a real id from THIS deployment's Movements sheet and userPhone to a real
+//registered test user, otherwise this just returns pin_mismatch_login without exercising the save.
+function testSaveFormJSON(){
+  let e = {
+    postData: {
+      type: 'text/plain',
+      contents: JSON.stringify({
+        userPin: "5978",
+        submissions: [{
+          movementId: "c10338",
+          userPhone: "8453320550",
+          spiritual_conversations: "1",
+          storyBox: "Great things happened this week & we're so grateful!"
+        }]
+      })
+    }
+  };
+  let result = saveFormJSON(e);
+  let content = result.getContent();
+  Logger.log(content);
+  return content; //NOT result - the editor cannot serialize a TextOutput
+}
+
+//Regression test for the charset dispatch bug specifically - routes through doPost() itself (not
+//saveFormJSON directly), using the exact Content-Type the real client sends.
+function testDoPostJSONWithCharset(){
+  let e = {
+    postData: {
+      type: 'text/plain;charset=utf-8',
+      contents: JSON.stringify({
+        userPin: "5978",
+        submissions: [{ movementId: "c10338", userPhone: "8453320550", spiritual_conversations: "1" }]
+      })
+    },
+    parameter: {}
+  };
+  let result = doPost(e);
+  let content = result.getContent();
+  Logger.log(content);
+  return content; //NOT result - the editor cannot serialize a TextOutput
+}

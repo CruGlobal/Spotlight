@@ -7,11 +7,11 @@ function setKey(){
   var ui = SpreadsheetApp.getUi();
   var scriptValue = ui.prompt('Please provide your Infobase Authorization Token.' , ui.ButtonSet.OK);
   SCRIPT_PROP.setProperty(API_KEY, scriptValue.getResponseText());
-  GmailApp.sendEmail('spotlight@cru.org','Server: API key set', 'API Key was set', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API key set', 'API Key was set', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
 }
 function deleteKey(){
   SCRIPT_PROP.deleteProperty(API_KEY);
-  GmailApp.sendEmail('spotlight@cru.org','Server: API key deleted', 'API Key was deleted', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API key deleted', 'API Key was deleted', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
 }
 function getKey() {
   return SCRIPT_PROP.getProperty(API_KEY);
@@ -20,11 +20,11 @@ function setURL(){
   var ui = SpreadsheetApp.getUi();
   var scriptValue = ui.prompt('Please provide the Infobase base URL(Ex: https://infobase-stage.cru.org/api/v1/ - must include the last "/").' , ui.ButtonSet.OK);
   SCRIPT_PROP.setProperty(API_URL, scriptValue.getResponseText());
-  GmailApp.sendEmail('spotlight@cru.org','Server: API URL set', 'API URL was set', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API URL set', 'API URL was set', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
 }
 function deleteURL(){
   SCRIPT_PROP.deleteProperty(API_URL);
-  GmailApp.sendEmail('spotlight@cru.org','Server: API URL deleted', 'API URL was deleted', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API URL deleted', 'API URL was deleted', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
 }
 function getURL() {
   return SCRIPT_PROP.getProperty(API_URL);

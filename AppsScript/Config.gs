@@ -14,7 +14,10 @@
         var QUESTION_RELS = "QuestionRels";
 
 var SCRIPT_PROP = PropertiesService.getScriptProperties(); // new property service
-var MAINTAINER_EMAIL = 'spotlight@cru.com'  //change where all maintainer and error emails should go.
+var MAINTAINER_EMAIL = 'spotlight@cru.org'  //change where all maintainer and error emails should go.
+var SUPPORT_EMAIL = 'spotlight@cru.org'     //the address users see: 'from' on user-facing mail,
+                                            //the support address quoted to them, and where the
+                                            //team's own copies of those messages are sent.
 
 function setup() {
   var doc = SpreadsheetApp.getActiveSpreadsheet();
@@ -70,14 +73,14 @@ function updateAutoScriptProperties() {
   writeCacheToSheets();
   writeUsersToSheets();
   setMovementsScriptProperty();
-  GmailApp.sendEmail('carl.hempel@cru.org','updateAutoScript ran','');
+  GmailApp.sendEmail(MAINTAINER_EMAIL,'updateAutoScript ran','');
 }
 
 function updateTeamAndMovements(e) {
   if(!e || e.changeType == 'OTHER') {
     updateTeamsScriptProperty();
     updateMovementsScriptProperty();
-    //GmailApp.sendEmail('carl.hempel@cru.org','updateTeamAndMovements ran','');
+    //GmailApp.sendEmail(MAINTAINER_EMAIL,'updateTeamAndMovements ran','');
   }
 }
 
@@ -93,7 +96,7 @@ function cacheSize() {
   }
   Logger.log(store_size);
   if(store_size > 480000){
-    GmailApp.sendEmail('carl.hempel@cru.org','Server script properties are at 480kb!','You should check it out: \n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
+    GmailApp.sendEmail(MAINTAINER_EMAIL,'Server script properties are at 480kb!','You should check it out: \n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
   }
 
   return store_size;
@@ -102,7 +105,7 @@ function cacheSize() {
 function clearResponseCacheIfTooBig() {
   if(cacheSize() > 420000) {
     updateAutoScriptProperties();
-    GmailApp.sendEmail('carl.hempel@cru.org','Wrote Response Cache to sheets','New size is: '+cacheSize()+'\n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
+    GmailApp.sendEmail(MAINTAINER_EMAIL,'Wrote Response Cache to sheets','New size is: '+cacheSize()+'\n\nhttps://docs.google.com/spreadsheets/d/'+SCRIPT_PROP.getProperty("key"));
   }
 }
 

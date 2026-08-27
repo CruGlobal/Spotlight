@@ -67,13 +67,13 @@ function registerUserInCache(e){
   lock.releaseLock();
 
   let subject = `Spotlight: registered ${e.parameter.phone}`;
-  let body = `Hi ${userOb.name}, \n\nYou have registered with Spotlight.\n\nYour pin is: ${userOb.pin}\n\nIf you have received this in error or have other questions - please let us know at spotlight@cru.org \n\n- the Spotlight team`;
+  let body = `Hi ${userOb.name}, \n\nYou have registered with Spotlight.\n\nYour pin is: ${userOb.pin}\n\nIf you have received this in error or have other questions - please let us know at ${SUPPORT_EMAIL} \n\n- the Spotlight team`;
   try {
-    GmailApp.sendEmail(userOb.email,subject, body, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
-    GmailApp.sendEmail('spotlight@cru.org',subject, 'user registered', {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    GmailApp.sendEmail(userOb.email,subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+    GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'user registered', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
   }
   catch(error){
-    GmailApp.sendEmail('spotlight@cru.org','Pin request error:', error, {'from': 'spotlight@cru.org', 'name': 'Spotlight'});
+    GmailApp.sendEmail(SUPPORT_EMAIL,'Pin request error:', error, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
   }
   
   writeUsersToSheets();
