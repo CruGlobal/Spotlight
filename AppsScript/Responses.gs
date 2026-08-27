@@ -6,15 +6,24 @@ function saveResponseToCache(e){
 
   let formSubs = e.queryString.replace(pinRegex,'').split('+');
 
-  var storyRegex = /&storyBox(\=[^&]*)?(?=&|$)|^storyBox(\=[^&]*)?(&|$)/;
+  //storyBox must actually HAVE a value to count as a story. The previous pattern made the "=value"
+  //part optional, so a bare "storyBox" param (no '=' at all) still matched, and the follow-up
+  //replace('storyBox=','') then found nothing to strip - leaving the literal word "storyBox" as the
+  //story text. That is what got cached and mailed out to team leaders as somebody's story.
+  //Capturing the value directly removes the string surgery that made that possible.
+  var storyRegex = /(?:^|&)storyBox=([^&]+)/;
   var movementRegex = /&movementId(\=[^&]*)?(?=&|$)|^movementId(\=[^&]*)?(&|$)/;
 
   let listOfStories = [];
   for(formSub of formSubs){
-    let storyBox = formSub.match(storyRegex);
-    if(storyBox){ //there's a match, and the match isn't empty
-      storyBox = storyBox[0].replace('&','').replace('storyBox=','');
-      if(storyBox != ''){
+    let storyMatch = formSub.match(storyRegex);
+    if(storyMatch){
+      let storyBox = storyMatch[1];
+      //Decode only to test for emptiness - what gets cached stays the raw encoded value, because
+      //emailTeamStories() calls decodeURIComponent on every storyCache entry.
+      let asText = storyBox;
+      try { asText = decodeURIComponent(storyBox.replace(/\+/g, ' ')); } catch(err) { asText = storyBox; }
+      if(asText.trim() !== ''){ //a blank or whitespace-only box is not a story
         //Now we need to email the right person.
         let movement = formSub.match(movementRegex)[0].replace('&','').replace('movementId=','');
         listOfStories.push([movement,storyBox,phone]);
