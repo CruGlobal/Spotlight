@@ -203,7 +203,20 @@ function writeUsersToSheets() {
       }
     }
     if(numOldUsers) {
-      GmailApp.sendEmail(MAINTAINER_EMAIL, `Removed ${numOldUsers} old users`);
+      //This is a courtesy notification and it must never take down a user's request.
+      //writeUsersToSheets() is called from registerUserInCache() and updateUserInCache(),
+      //and it has a finally-without-catch, so anything thrown here propagates all the way
+      //out of doGet/doPost and fails registration and device setup for a real user.
+      //It also used to omit GmailApp.sendEmail's required third argument (the body), which
+      //threw "The parameters (String,String) don't match the method signature" every time
+      //a user aged past a year - and the throw happens BEFORE the sheet write below, so
+      //nothing got written either.
+      try {
+        GmailApp.sendEmail(MAINTAINER_EMAIL, `Removed ${numOldUsers} old users`,
+                           `${numOldUsers} user(s) were more than a year old and have been removed.`);
+      } catch(err) {
+        Logger.log('could not send the old-user notification: ' + err.message);
+      }
     }
     Logger.log('number of old users removed: ' + numOldUsers);
     //cycle through remaining new users and add to the bottom of the users table
