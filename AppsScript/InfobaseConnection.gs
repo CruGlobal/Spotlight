@@ -7,11 +7,11 @@ function setKey(){
   var ui = SpreadsheetApp.getUi();
   var scriptValue = ui.prompt('Please provide your Infobase Authorization Token.' , ui.ButtonSet.OK);
   SCRIPT_PROP.setProperty(API_KEY, scriptValue.getResponseText());
-  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API key set', 'API Key was set', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+  GmailApp.sendEmail(MAINTAINER_EMAIL,'Server: API key set', 'API Key was set');
 }
 function deleteKey(){
   SCRIPT_PROP.deleteProperty(API_KEY);
-  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API key deleted', 'API Key was deleted', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+  GmailApp.sendEmail(MAINTAINER_EMAIL,'Server: API key deleted', 'API Key was deleted');
 }
 function getKey() {
   return SCRIPT_PROP.getProperty(API_KEY);
@@ -20,11 +20,11 @@ function setURL(){
   var ui = SpreadsheetApp.getUi();
   var scriptValue = ui.prompt('Please provide the Infobase base URL(Ex: https://infobase-stage.cru.org/api/v1/ - must include the last "/").' , ui.ButtonSet.OK);
   SCRIPT_PROP.setProperty(API_URL, scriptValue.getResponseText());
-  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API URL set', 'API URL was set', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+  GmailApp.sendEmail(MAINTAINER_EMAIL,'Server: API URL set', 'API URL was set');
 }
 function deleteURL(){
   SCRIPT_PROP.deleteProperty(API_URL);
-  GmailApp.sendEmail(SUPPORT_EMAIL,'Server: API URL deleted', 'API URL was deleted', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+  GmailApp.sendEmail(MAINTAINER_EMAIL,'Server: API URL deleted', 'API URL was deleted');
 }
 function getURL() {
   return SCRIPT_PROP.getProperty(API_URL);
@@ -154,8 +154,13 @@ function submitMovementData() {
       SCRIPT_PROP.setProperty('date', today);
     }
     else if(parseInt(SCRIPT_PROP.getProperty('tries')) > 3){  //we're done trying!
-      Logger.log('more than 3 tries.')
-    //  return;
+      //This return was commented out, so the give-up guard did nothing: execution fell
+      //straight through and tried again anyway. Combined with the recursive retry that used
+      //to sit in the catch below, any persistent failure looped until the 6 minute timeout,
+      //emailing on every pass and eating the mail quota that PIN and registration email share.
+      notifyFailure('submitMovementData', new Error('gave up after more than 3 tries today'),
+                    {tries: SCRIPT_PROP.getProperty('tries')});
+      return;
     }
     else {
       SCRIPT_PROP.setProperty('tries', parseInt(SCRIPT_PROP.getProperty('tries')) + 1);
@@ -187,9 +192,10 @@ function submitMovementData() {
     Logger.log(response);
   }
   catch(error) {
-    Logger.log(JSON.stringify(error.message));
-    GmailApp.sendEmail('carl.hempel@cru.org','Error in submit movement data',JSON.stringify(error.message));
-    submitMovementData();
+    //Deliberately does NOT call submitMovementData() again. It used to, which made every
+    //failure recurse without bound. The time-based trigger will run this again on schedule,
+    //and the tries counter above caps the attempts per day.
+    notifyFailure('submitMovementData', error, {tries: SCRIPT_PROP.getProperty('tries')});
   }
 }
 

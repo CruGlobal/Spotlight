@@ -139,7 +139,11 @@ function getMovements(movementsList, purpose) {
         object.push(mvmnt);
       }
     } catch(e) {
-      console.log(e);
+      //console.log() writes to Cloud Logging, not the execution log, so this was effectively
+      //invisible - AND the movement was silently dropped from the returned list, meaning the
+      //user simply never sees that location. The usual cause is an id that is not in the
+      //movements cache (for example a Summer Mission id reaching the campus deployment).
+      notifyFailure('getMovements', e, {movementId: mvmntIn, purpose: purpose});
     }
   }
   return object;

@@ -1,10 +1,59 @@
+//Form-urlencoded decode: '+' means a space, and only then percent-decode. That order keeps a
+//literal plus the user actually typed (%2B) intact, and treats a missing or literally
+//"undefined" value as empty - decodeURIComponent(undefined) returns the STRING "undefined",
+//which is how that word ended up in the storyBox column of the Responses sheet.
+//At file scope rather than nested, because emailTeamStories() and writeCacheToSheets() need it too.
+function formDecode(value){
+  if(value === undefined || value === null || value === 'undefined'){ return ''; }
+  try {
+    return decodeURIComponent(String(value).replace(/\+/g, ' '));
+  } catch(err){
+    //A malformed percent-escape - a story truncated mid-'%E2' - throws URIError and used to take
+    //the whole submission down. The raw text is worth more than a dead save.
+    return String(value).replace(/\+/g, ' ');
+  }
+}
+
+//A pin must never become a sheet column name. Anchored, and tested against the DECODED name, so it
+//catches a bare "userPin" and the encoded "userPin%3D1983" (which decodes to "userPin=1983" and
+//hits the \W branch) without also matching innocent fields that merely contain those letters -
+//"equipping_leaders" and "helping_hands" both contain "pin".
+function isSecretParamName(name){
+  return /^(userpin|pin|password)(\W|$)/i.test(formDecode(name));
+}
+
 function saveResponseToCache(e){
   //Logger.log(e.queryString);
   let phone = e.queryString.match(/userPhone=(\d*)&/)[1];
   let pinRegex = /userPin(\=[^&]*)?(&|$)|^userPin(\=[^&]*)?(&|$)/g;
   let pin = e.queryString.match(/userPin=(\d*)&/)[1];
 
-  let formSubs = e.queryString.replace(pinRegex,'').split('+');
+  //Every arrival here is a client still running the pre-doPost JS. notifyFailure dedupes and caps,
+  //so this cannot flood the inbox - it exists to show when the legacy path is safe to delete.
+  notifyFailure('legacy GET submission',
+                new Error('client submitted via the pre-JSON query-string path'),
+                requestContext(e));
+
+  //'+' did two jobs in the old client: it separated one movement's submission from the next, AND
+  //per form-urlencoding it encoded a space inside a value. Splitting on it blindly therefore tore
+  //every multi-word story apart at its spaces, which produced junk rows and junk columns.
+  //Every real submission carries movementId=; a torn-off story fragment never does. So a chunk
+  //without it is a continuation, and the '+' that split them was a space - rejoin and the original
+  //submission comes back whole, story and all. Nothing is discarded.
+  let rawChunks = e.queryString.replace(pinRegex,'').split('+');
+  let formSubs = [];
+  for(let chunk of rawChunks){
+    if(formSubs.length === 0 || chunk.indexOf('movementId=') > -1){
+      formSubs.push(chunk);
+    }
+    else {
+      formSubs[formSubs.length - 1] += '+' + chunk;
+    }
+  }
+  if(formSubs.length !== rawChunks.length){
+    Logger.log('saveResponseToCache: rejoined ' + (rawChunks.length - formSubs.length)
+               + ' story fragment(s) that the old + format had split apart');
+  }
 
   //storyBox must actually HAVE a value to count as a story. The previous pattern made the "=value"
   //part optional, so a bare "storyBox" param (no '=' at all) still matched, and the follow-up
@@ -18,23 +67,40 @@ function saveResponseToCache(e){
   for(formSub of formSubs){
     let storyMatch = formSub.match(storyRegex);
     if(storyMatch){
-      let storyBox = storyMatch[1];
-      //Decode only to test for emptiness - what gets cached stays the raw encoded value, because
-      //emailTeamStories() calls decodeURIComponent on every storyCache entry.
-      let asText = storyBox;
-      try { asText = decodeURIComponent(storyBox.replace(/\+/g, ' ')); } catch(err) { asText = storyBox; }
-      if(asText.trim() !== ''){ //a blank or whitespace-only box is not a story
+      let storyBox = formDecode(storyMatch[1]);
+      if(storyBox.trim() !== ''){ //a blank or whitespace-only box is not a story
+        //A torn fragment can carry a storyBox with no movementId at all, and then .match()
+        //returns null and [0] throws - uncaught, because this loop is outside the try below.
+        let movementMatch = formSub.match(movementRegex);
+        if(!movementMatch){
+          notifyFailure('saveResponseToCache', new Error('story fragment carried no movementId'),
+                        {phone: phone});
+          continue;
+        }
         //Now we need to email the right person.
-        let movement = formSub.match(movementRegex)[0].replace('&','').replace('movementId=','');
-        listOfStories.push([movement,storyBox,phone]);
+        let movement = movementMatch[0].replace('&','').replace('movementId=','');
+        //Re-encode after form-decoding, because emailTeamStories() decodes every storyCache entry -
+        //so it needs real spaces, not the raw '+' form that would render as Great+things+happened.
+        listOfStories.push([movement,encodeURIComponent(storyBox),phone]);
       }
     }
   }
 
-  storyRegex = /&storyBox\=([^&]+)(?=&|$)|^storyBox\=([^&]+)(&|$)/;  //modified to only match entries that have entries.
-    
-  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '&storyBox=1')); //record that we had a story
-  formSubs = formSubs.map(form => form.split('&').map(param => [param.split('=')[0],decodeURIComponent(param.split('=')[1])]));
+  //Capture the boundary and put it back with $1 instead of consuming it. The old second alternative
+  //(^storyBox\=([^&]+)(&|$)) swallowed the trailing '&', which glued the next parameter onto the
+  //story flag - "&storyBox=1teamQ1=1" - losing teamQ1's value and creating an empty-named column.
+  storyRegex = /(^|&)storyBox=[^&]+/;  //only matches entries that actually have a value
+
+  formSubs = formSubs.map(formSub => formSub.replace(storyRegex, '$1storyBox=1')); //record that we had a story
+  formSubs = formSubs.map(form => form.split('&')
+    .filter(param => param !== '')
+    .map(function(param){
+      return [param.split('=')[0], formDecode(param.split('=')[1])];
+    })
+    //A pin must never become a sheet column. The pinRegex above only catches a literal "userPin=",
+    //so an encoded one (userPin%3D1983, which is what a rejoined boundary carries) used to survive
+    //and create its own column - naming the column after somebody's pin.
+    .filter(param => !isSecretParamName(param[0])));
 
   for(form of formSubs){
     form.push(['Timestamp',GoogleDate(new Date())]);
@@ -72,7 +138,7 @@ function saveResponseToCache(e){
       mvmnts[movement] = new Date().toLocaleString().split(',')[0];
     }
     updateUserInCache(phone, mvmnts, false, pin); 
-    lock.releaseLock();
+    if(lock.hasLock()){ lock.releaseLock(); }
 
     //FITH Gather user information
     let userInfo = gatherUserInfo(phone);
@@ -84,8 +150,16 @@ function saveResponseToCache(e){
     result = {'summary': summary, 'userInfo': userInfo};
     
   } catch (error) {
-    MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(e.queryString));
-    lock.releaseLock();
+    //The query string is kept deliberately: it is the only complete copy of the submission,
+    //and it is what made recovering people's stories possible. But userPin is stripped first -
+    //pins had no business being in admin email, least of all after a migration whose whole
+    //point was getting them out of URLs.
+    //hasLock(), because the success path above already releases it partway through the try: whether
+    //we still hold it here depends on how far execution got before throwing.
+    if(lock.hasLock()){ lock.releaseLock(); } //released first: reporting must not hold the lock
+    notifyFailure('saveResponseToCache', error,
+                  {phone: phone,
+                   submission: String(e.queryString).replace(/userPin=[^&+]*/g, 'userPin=[redacted]')});
   }
   return result;
 }
@@ -168,7 +242,7 @@ function saveResponseToCacheFromJSON(payload){
       mvmnts[sub.movementId] = new Date().toLocaleString().split(',')[0];
     }
     updateUserInCache(phone, mvmnts, false, pin);
-    lock.releaseLock();
+    if(lock.hasLock()){ lock.releaseLock(); }
     errorLocation += 1;
 
     //FITH Gather user information
@@ -182,13 +256,82 @@ function saveResponseToCacheFromJSON(payload){
     result = {'summary': summary, 'userInfo': userInfo};
 
   } catch (error) {
-    //Logger.log as well as the email - a failing test otherwise only reports itself by email, which
-    //is much slower to debug than reading the execution log directly.
-    Logger.log('saveResponseToCacheFromJSON failed at step ' + errorLocation + ': ' + error.message);
-    MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error', JSON.stringify(error.message) + '\n\n' + JSON.stringify(payload) + '\n\n' + errorLocation);
-    lock.releaseLock();
+    //hasLock(), because the success path above already releases it partway through the try: whether
+    //we still hold it here depends on how far execution got before throwing.
+    if(lock.hasLock()){ lock.releaseLock(); } //released first: reporting must not hold the lock
+    //Routed through notifyFailure so this path is deduped, capped and pin-redacted like every
+    //other failure. The payload is kept because it is the only full copy of the submission.
+    //The pin comes out of a shallow copy first, so the original payload is untouched.
+    //failureContextToText_ redacts a JSON-shaped pin as a backstop, but the call site should
+    //not be handing it one at all.
+    let safePayload = {};
+    for(let k of Object.keys(payload || {})){ safePayload[k] = payload[k]; }
+    safePayload.userPin = '[redacted]';
+    notifyFailure('saveResponseToCacheFromJSON', error,
+                  {step: errorLocation, phone: phone,
+                   submission: JSON.stringify(safePayload)});
   }
   return result;
+}
+
+//An entry whose text is empty, or literally "storyBox" or "undefined", is parser damage rather than
+//anybody's story - those are the exact shapes the old query-string parser manufactured, and what
+//got mailed to a team leader as five people's stories. Whole-string match after trimming, never a
+//substring, so a real story that happens to contain the word survives.
+function isPoisonedStory_(decodedText){
+  var t = String(decodedText).trim();
+  return t === '' || t === 'storyBox' || t === 'undefined';
+}
+
+//Remove specific entries from storyCache, re-reading under the lock rather than writing back a
+//snapshot taken at the top of the digest: a submission that lands WHILE the digest is running would
+//otherwise be erased. The old blanket deleteProperty did exactly that.
+//Never throws - a failure here must not abort a digest that has already sent mail.
+function dropStoriesFromCache_(storiesToDrop){
+  if(!storiesToDrop || storiesToDrop.length === 0){ return; }
+  var lock = LockService.getPublicLock();
+  try {
+    lock.waitLock(30000);
+    var current = JSON.parse(SCRIPT_PROP.getProperty('storyCache')) || [];
+    var drop = {};
+    for(var i = 0; i < storiesToDrop.length; i++){
+      var dk = JSON.stringify(storiesToDrop[i]);
+      drop[dk] = (drop[dk] || 0) + 1;
+    }
+    var kept = [];
+    for(var j = 0; j < current.length; j++){
+      var k = JSON.stringify(current[j]);
+      if(drop[k]){ drop[k] -= 1; }  //one occurrence at a time, so identical stories aren't over-removed
+      else { kept.push(current[j]); }
+    }
+    if(kept.length === 0){ SCRIPT_PROP.deleteProperty('storyCache'); }
+    else { SCRIPT_PROP.setProperty('storyCache', JSON.stringify(kept)); }
+  }
+  catch(err){
+    //Loud, because anything left in the cache is a candidate for being mailed twice.
+    Logger.log('dropStoriesFromCache_ failed, entries remain queued: ' + err.message
+               + '\n' + JSON.stringify(storiesToDrop));
+    notifyFailure('emailTeamStories: could not clear sent stories from the cache', err,
+                  {entries: storiesToDrop.length});
+  }
+  finally {
+    try { lock.releaseLock(); } catch(e){ /* never held, or already released */ }
+  }
+}
+
+//Readable enough that a team leader's digest can be rebuilt and forwarded from the failure email
+//alone, without going back to the sheet.
+function undeliveredStoriesText_(stories, movements, users){
+  var lines = [];
+  for(var i = 0; i < stories.length; i++){
+    var movementId = stories[i][0];
+    var phone = stories[i][2];
+    var who = (users && users[phone] && users[phone].name) ? users[phone].name : phone;
+    var where = (movements && movements[movementId] && movements[movementId].name)
+                ? movements[movementId].name : movementId;
+    lines.push('• ' + who + ' (' + where + '): ' + formDecode(stories[i][1]));
+  }
+  return lines.join('\n');
 }
 
 function emailTeamStories(){
@@ -199,7 +342,28 @@ function emailTeamStories(){
   let users = JSON.parse(SCRIPT_PROP.getProperty('users'));
   let listOfStories = JSON.parse(SCRIPT_PROP.getProperty('storyCache')) || [];
 
-  for(story of listOfStories){  //need to associate the stories with a team and it's associated email address
+  //Drop parser damage before grouping, so it can neither be mailed nor left to re-queue.
+  let clean = [];
+  let poisoned = [];
+  let unmatched = [];  //stories whose movement id is not in the cache - dropped in one batch below
+  for(let story of listOfStories){
+    //A malformed entry must not abort the whole digest. This pre-pass sits OUTSIDE the per-story try
+    //below, so without this guard a single null in storyCache threw here and NO team received
+    //anything - and because nothing then drained the cache, every later run failed identically.
+    //Nothing in this codebase writes such an entry (every writer pushes [movementId, story, phone]),
+    //so this is defensive: it covers a hand-edited Script Property or a future writer.
+    if(!story || !Array.isArray(story) || story.length < 3){ poisoned.push(story); continue; }
+    if(isPoisonedStory_(formDecode(story[1]))){ poisoned.push(story); }
+    else { clean.push(story); }
+  }
+  if(poisoned.length){
+    //Logged rather than silent: if this ever drops a real story, this line is the evidence.
+    Logger.log('emailTeamStories: dropped ' + poisoned.length
+               + ' unusable story entry/entries: ' + JSON.stringify(poisoned));
+    dropStoriesFromCache_(poisoned);
+  }
+
+  for(let story of clean){  //need to associate the stories with a team and it's associated email address
     try {
       let teamID = movements[story[0]].tID;
       if(!teamStories[teamID]){ //make sure we have a defined team in the teamStories object
@@ -208,48 +372,103 @@ function emailTeamStories(){
       teamStories[teamID].push(story);
     }
     catch (error) {
-      MailApp.sendEmail(MAINTAINER_EMAIL, 'Script Error while trying to send stories', JSON.stringify(error.message));
+      //Collected, not reported one at a time. The movement id used to sit in 'where', which IS the
+      //dedupe signature, so a stale movements cache sent one email per unknown id - 150 of them in
+      //a single run, spending the entire daily budget and silencing every other failure report
+      //until midnight. getMovements() already keeps its id in the context; this now matches.
+      unmatched.push(story);
     }
   }
+  //One report and one drop for the whole loop. dropStoriesFromCache_() takes the public lock and
+  //rewrites the entire storyCache on every call, so doing either once per story contended with
+  //writeCacheToSheets() and ate into the 6-minute execution limit.
+  //
+  //One email naming every unknown id is also far more useful than 150 separate ones: the cause is
+  //almost always a single stale movements cache. The story text rides along in the context, so
+  //notifyFailure's unconditional Logger.log preserves it even if the mail cap is already spent.
+  if(unmatched.length){
+    notifyFailure('emailTeamStories: stories matched no movement',
+                  new Error(unmatched.length + ' story entry/entries carried a movement id that is not in the cache'),
+                  {count: unmatched.length,
+                   movementIds: unmatched.map(function(s){ return s[0]; }).join(', '),
+                   stories: undeliveredStoriesText_(unmatched, movements, users)});
+    dropStoriesFromCache_(unmatched);
+  }
   //then send all the stories for each team.  We don't assume that all movements in a submission are associated with the same team.
-  for(teamID of Object.keys(teamStories)) {
-    let storyBox = teams[teamID].storyBox;
-    let teamName = teams[teamID].name;
-    let email_match = storyBox.match(/Ͱ.*?ͱ/);
-    if(email_match == null){
-      continue;
-    }
-    let email = email_match[0].replace(/Ͱ|ͱ/g,'');
-    let subject = 'StoryBox: ' + teamName + ' as of ' + new Date().toLocaleDateString();
-    let question = storyBox.replace(/^.*ͱ/,'');
-    let body = `Hi ${teamName},
+  for(let teamID of Object.keys(teamStories)) {
+    let stories = teamStories[teamID];
+    let teamName = teamID;
+    let question = '';
+    try {
+      let team = teams[teamID];
+      if(!team || !team.storyBox){
+        throw new Error('team has no storyBox question configured');
+      }
+      let storyBox = team.storyBox;
+      teamName = team.name;
+      let email_match = storyBox.match(/Ͱ.*?ͱ/);
+      if(email_match == null){
+        //No recipient configured, so nothing was ever meant to be sent. Not a failure - but the
+        //entries still have to go, or they sit in the cache forever.
+        Logger.log('emailTeamStories: team ' + teamID + ' has no notification address; dropping '
+                   + stories.length + ' story entry/entries');
+        dropStoriesFromCache_(stories);
+        continue;
+      }
+      let email = email_match[0].replace(/Ͱ|ͱ/g,'');
+      let subject = 'StoryBox: ' + teamName + ' as of ' + new Date().toLocaleDateString();
+      question = storyBox.replace(/^.*ͱ/,'');
+      let body = `Hi ${teamName},
 
 You've got new comments for your question: "${question}"\n\n`;
 
-    //group our movements
-    let mvmnts = {};
+      //group our movements
+      let mvmnts = {};
 
-    for(story of teamStories[teamID]){
-      let movementId = story[0];
-      let storyTxt = story[1];
-      let phone = story[2];
-      let record = `• ${users[phone].name}: \n     ${decodeURIComponent(storyTxt)}\n`;
-      if(mvmnts[movementId] == undefined){
-        mvmnts[movementId] = [];
+      for(let story of stories){
+        let movementId = story[0];
+        let storyTxt = story[1];
+        let phone = story[2];
+        //An unregistered phone threw here and took the whole digest down with it. The story is the
+        //point; a missing name is not worth losing every team's email over.
+        let who = (users && users[phone] && users[phone].name) ? users[phone].name : phone;
+        let record = `• ${who}: \n     ${formDecode(storyTxt)}\n`;
+        if(mvmnts[movementId] == undefined){
+          mvmnts[movementId] = [];
+        }
+        mvmnts[movementId].push(record);
       }
-      mvmnts[movementId].push(record);
-    }
-    for(mvmnt of Object.keys(mvmnts)) {
-      body += `${movements[mvmnt].name}\n ${mvmnts[mvmnt].join()}`
-    }
-    body += '\n - Spotlight'
+      for(let mvmnt of Object.keys(mvmnts)) {
+        let mvmntName = (movements[mvmnt] && movements[mvmnt].name) ? movements[mvmnt].name : mvmnt;
+        //join('') - the bare join() defaults to ',' and every record already ends in '\n', which is
+        //what put ",•" in front of every name after the first.
+        body += `${mvmntName}\n ${mvmnts[mvmnt].join('')}`
+      }
+      body += '\n - Spotlight'
 
-    let draft = GmailApp.createDraft(email, subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
-    draft.send()
-    //GmailApp.moveMessageToTrash(draft.send());
+      let draft = GmailApp.createDraft(email, subject, body, senderOptions());
+      draft.send()
+      //GmailApp.moveMessageToTrash(draft.send());
+
+      //Sent. Drop these now so the next run cannot mail them a second time.
+      dropStoriesFromCache_(stories);
+    }
+    catch (error) {
+      //No retry. Hand the content to the admin and drop it: leaving it queued is what let one
+      //broken team re-send every other team's digest on every subsequent run.
+      //teamID MUST be in 'where'. notifyFailure dedupes on where + the first line of the message for
+      //FAILURE_DEDUPE_MINUTES, every team in a run fails seconds apart, and a systemic cause gives
+      //them all the same message - so a shared 'where' would suppress every team after the first and
+      //destroy the very content this email exists to preserve.
+      let readable = undeliveredStoriesText_(stories, movements, users);
+      //Logged separately as well: failureContextToText_ truncates each value at 4000 characters,
+      //and the execution log is the only copy that is not subject to the daily mail cap.
+      Logger.log('emailTeamStories: undelivered stories for team ' + teamID + '\n' + readable);
+      notifyFailure('emailTeamStories: undelivered stories for team ' + teamID, error,
+                    {teamID: teamID, team: teamName, question: question, stories: readable});
+      dropStoriesFromCache_(stories);
+    }
   }
-
-  SCRIPT_PROP.deleteProperty('storyCache');
 
   return;
 }
@@ -354,6 +573,15 @@ function writeCacheToSheets(){
       
       //create param_ob and add headers if missing
       for(param of sub){
+        //This is the ONE place a new column is ever created, which makes it the right place for
+        //the invariant: a pin must never become a column name. The parser filters these out
+        //upstream, but that only covers the route we know about - and a header, once written, is
+        //permanent, because nothing in this project ever deletes one.
+        if(isSecretParamName(param[0])){
+          Logger.log('writeCacheToSheets: refused to create a column for a credential-shaped '
+                     + 'parameter name (value withheld)');
+          continue;
+        }
         if(!headers.includes(param[0]) && !missing_params.includes(param[0])){ //we need to add this to the headers row.
           missing_params.push(param[0]);
         }

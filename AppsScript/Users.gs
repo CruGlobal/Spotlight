@@ -69,11 +69,12 @@ function registerUserInCache(e){
   let subject = `Spotlight: registered ${e.parameter.phone}`;
   let body = `Hi ${userOb.name}, \n\nYou have registered with Spotlight.\n\nYour pin is: ${userOb.pin}\n\nIf you have received this in error or have other questions - please let us know at ${SUPPORT_EMAIL} \n\n- the Spotlight team`;
   try {
-    GmailApp.sendEmail(userOb.email,subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
-    GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'user registered', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+    GmailApp.sendEmail(userOb.email,subject, body, senderOptions());
+    GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'user registered', senderOptions());
   }
   catch(error){
-    GmailApp.sendEmail(SUPPORT_EMAIL,'Pin request error:', error, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+    notifyFailure('registerUserInCache: could not send the welcome email', error,
+                  {phone: e.parameter.phone});
   }
   
   writeUsersToSheets();
@@ -198,8 +199,24 @@ function writeUsersToSheets() {
         }
         
         delete usersOb[userPhone];
-      } catch {
-        Logger.log('missing user: '+ userPhone + ' in cached data');
+      } catch(err) {
+        //The user is present in the sheet but missing (or malformed) in the cache. This used
+        //to just log and move on - which meant the user was left out of newUsers and so was
+        //silently DELETED from the sheet by the rewrite below, with one log line as the only
+        //trace. Keep the row exactly as the sheet already holds it, and report it.
+        //
+        //Only the sheet row, though. The `delete usersOb[userPhone]` at the end of the try
+        //never runs once something has thrown, so a cache entry that EXISTS but is merely
+        //malformed is still sitting in usersOb waiting for the append loop below. Keeping the
+        //sheet row as well would write this phone twice - and the sheet would grow by another
+        //row on every single run. Drop it here so the preserved row is the only one: it carries
+        //the data the sheet already had, which beats a row rebuilt from the entry that just
+        //failed to parse. Nothing is permanently lost either way, because
+        //setUserScriptProperty() rebuilds the cache from the sheet at the end of this function.
+        newUsers.push(users[i]);
+        delete usersOb[userPhone];
+        notifyFailure('writeUsersToSheets', err,
+                      {userPhone: userPhone, action: 'kept the existing sheet row rather than dropping the user'});
       }
     }
     if(numOldUsers) {

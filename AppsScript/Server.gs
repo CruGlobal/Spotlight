@@ -1,7 +1,76 @@
 // original from: http://mashe.hawksey.info/2014/07/google-sheets-as-a-database-insert-with-apps-script-using-postget-methods-with-ajax-example/
 // original gist: https://gist.github.com/willpatera/ee41ae374d3c9839c2d6 
 
+//=========================================================================================
+// WEB APP ENTRY POINTS
+//
+// Apps Script emails you when a TIME-DRIVEN TRIGGER fails, but it does NOT for a web app
+// request: an uncaught doGet/doPost exception only appears in the Executions list. That is
+// how a broken registration path went unnoticed for two days.
+//
+// These wrappers exist so it cannot happen silently again. They also mean the client gets
+// parseable JSON instead of the Apps Script HTML error page, which fetch() cannot read and
+// which surfaces to the user as an unexplained failure.
+//
+// The dispatch tables themselves are UNCHANGED - they moved verbatim into dispatchGet() and
+// dispatchPost() below.
+//=========================================================================================
 function doGet(e){
+  try {
+    return dispatchGet(e);
+  } catch(error){
+    notifyFailure('doGet', error, requestContext(e));
+    //Deliberately RE-THROWN rather than answered with jsonFailure(). Returning parseable JSON turns
+    //an HTTP 500 into an HTTP 200, and every client cached before the doPost migration reads any 200
+    //as success: it then stores an undefined user (localStorage gets the literal string "undefined",
+    //so the next getUser() throws and wipes everything, unsent formSubs included) and clears the
+    //stats the person just entered. The notification above is the whole point of this wrapper - the
+    //response on the wire must stay exactly as it has always been.
+    throw error;
+  }
+}
+
+function doPost(e){
+  try {
+    return dispatchPost(e);
+  } catch(error){
+    notifyFailure('doPost', error, requestContext(e));
+    //Deliberately RE-THROWN rather than answered with jsonFailure(). Returning parseable JSON turns
+    //an HTTP 500 into an HTTP 200, and every client cached before the doPost migration reads any 200
+    //as success: it then stores an undefined user (localStorage gets the literal string "undefined",
+    //so the next getUser() throws and wipes everything, unsent formSubs included) and clears the
+    //stats the person just entered. The notification above is the whole point of this wrapper - the
+    //response on the wire must stay exactly as it has always been.
+    throw error;
+  }
+}
+
+//Receives a failure the browser hit. Always answers success on purpose: the client must not
+//retry or cascade because reporting failed, and there is nothing useful it could do with an
+//error here anyway.
+function clientError(e){
+  try {
+    //The browser is NOT a trusted caller: this endpoint is anonymous and it sends mail. 'where'
+    //lands in the email subject AND in notifyFailure's dedupe signature, so echoing it let anyone
+    //mint a fresh signature - and therefore a fresh email and a fresh script property - on every
+    //request. Allow-list it instead, and truncate the rest here rather than trusting the client's
+    //own truncation. The per-day allowance for these lives in failureQuotaAvailable_().
+    let where = (CLIENT_ERROR_SOURCES.indexOf(e.parameter.where) > -1)
+                ? e.parameter.where : 'unrecognised';
+    notifyFailure('client: ' + where,
+                  new Error(String(e.parameter.message || 'no message supplied').substring(0, 300)),
+                  {page: String(e.parameter.page || '').substring(0, 120),
+                   userAgent: String(e.parameter.ua || '').substring(0, 200),
+                   phone: String(e.parameter.userPhone || '').substring(0, 20)});
+  } catch(err){
+    Logger.log('clientError handler itself failed: ' + err.message);
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify({'result':'success'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function dispatchGet(e){
   //SEND movments list ---- USED in Onboarding only
   if(e.parameter.movements){  
     return sendMovements(e);
@@ -23,6 +92,13 @@ function doGet(e){
   }
   else if(e.parameter.requestSummary){
     return requestSummary(e);
+  }
+  //A request with no userPhone is not a submission at all - it is a crawler, a health check, or
+  //somebody pasting the deployment URL into a browser. Answer it plainly instead of letting
+  //saveForm() throw on the missing parameter, which now costs a failure email every 30 minutes.
+  //Safe to answer with a 200: nothing was ever submitted here, so no client has data at stake.
+  else if(!e.parameter.userPhone){
+    return jsonFailure('no_action', 'No action requested.');
   }
   //SAVE submitted form - recieves data; return summary of movement stats
   else {
@@ -53,12 +129,12 @@ function requestUser(e) {
   let user = getUser(e.parameter.phone);
   if(!user) {
     return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'User is not registered.  \n\nTo register please click on the onboarding link you were sent.'}))
+      .createTextOutput(JSON.stringify({'result':'failure', 'code':'not_registered', 'text':'User is not registered.  \n\nTo register please click on the onboarding link you were sent.'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
   else if(user.pin != e.parameter.pin){
     return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct, please try again'}))
+      .createTextOutput(JSON.stringify({'result':'failure', 'code':'pin_mismatch', 'text':'Phone and pin combo are not correct, please try again'}))
       .setMimeType(ContentService.MimeType.JSON);
   }
   //Now try to get information
@@ -72,13 +148,15 @@ function requestUser(e) {
     }
     else {
       return ContentService
-            .createTextOutput(JSON.stringify({'result':'failure', 'text':'Phone and pin combo are not correct'}))
+            .createTextOutput(JSON.stringify({'result':'failure', 'code':'pin_mismatch', 'text':'Phone and pin combo are not correct'}))
             .setMimeType(ContentService.MimeType.JSON);
     }
-  } catch(e){
-    // if error return this
+  } catch(error){
+    //"error": e stringified an Error to {}, so neither the client nor the log got
+    //anything useful. The catch also used to bind `e`, shadowing the event object.
+    notifyFailure('requestUser', error, requestContext(e));
     return ContentService
-          .createTextOutput(JSON.stringify({"result":"error", "error": e}))
+          .createTextOutput(JSON.stringify({"result":"error", "error": error.message}))
           .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -122,11 +200,11 @@ function requestPin(e) {
     let subject = `Spotlight: requested pin for ${user.phone}`;
     let body = `Hi ${user.name}, \n\nYour pin is: ${user.pin}\n\nIf you have received this in error or have other questions - please let us know at ${SUPPORT_EMAIL} \n\n- the Spotlight team`;
     try {
-      GmailApp.sendEmail(user.email,subject, body, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
-      GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'pin requested', {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+      GmailApp.sendEmail(user.email,subject, body, senderOptions());
+      GmailApp.sendEmail(SUPPORT_EMAIL,subject, 'pin requested', senderOptions());
     }
     catch(error){
-      GmailApp.sendEmail(SUPPORT_EMAIL,'Pin request error:', error, {'from': SUPPORT_EMAIL, 'name': 'Spotlight'});
+      notifyFailure('requestPin: could not send the pin email', error, {phone: user.phone});
     }
   }
   return ContentService
@@ -197,8 +275,9 @@ function requestSummary(e) {
       .createTextOutput(JSON.stringify({"result":"success", "summary": summary, 'user': userInfo}))
       .setMimeType(ContentService.MimeType.JSON);
   } catch(error) {
+    notifyFailure('requestSummary', error, requestContext(e));
     return ContentService
-      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not find movements associated with user','error': error}))
+      .createTextOutput(JSON.stringify({'result':'failure', 'text':'Could not find movements associated with user','error': error.message}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -246,9 +325,9 @@ function saveForm(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
   } catch(error){
-    // if error return this
+    notifyFailure('saveForm', error, requestContext(e));
     return ContentService
-      .createTextOutput(JSON.stringify({"result":"error", "error": error}))
+      .createTextOutput(JSON.stringify({"result":"error", "error": error.message}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -257,14 +336,20 @@ function saveForm(e) {
 //POST entry point.  Mirrors doGet's dispatch table exactly and calls the same handlers, so doGet is
 //left completely untouched - any device still running old cached client JS keeps sending GETs and
 //keeps working indefinitely.
-function doPost(e){
-  Logger.log('doPost');
+function dispatchPost(e){
+  Logger.log('dispatchPost');
 
   //New-style stats submissions arrive as a JSON string with Content-Type: text/plain;charset=utf-8.
   //Use indexOf, NOT === - the browser sends the charset suffix, so an exact match against the bare
   //"text/plain" would silently fall through to saveForm() below and throw before it could respond.
   if(e.postData && e.postData.type && e.postData.type.indexOf('text/plain') === 0){
     return saveFormJSON(e);
+  }
+
+  //A failure reported by the browser. Checked early so that a client-side error can reach the
+  //admin inbox at all - before this, every one of them died in the user's console.
+  if(e.parameter.clientError){
+    return clientError(e);
   }
 
   //Everything else is a normal application/x-www-form-urlencoded POST body.  Apps Script fills
@@ -292,8 +377,19 @@ function doPost(e){
   else if(e.parameter.requestSummary){
     return requestSummary(e);
   }
-  //Fallback: old-style form-urlencoded submission sent by POST instead of GET.  e.queryString and
-  //e.parameters reflect the POST body here, so the untouched legacy saveForm() still works.
+  //Same guard as dispatchGet: a POST with no userPhone is not a submission - it is a scanner, an
+  //empty body, or a probe with the wrong Content-Type. Without this it reaches saveForm(), where
+  //e.parameters.userPhone[0] throws, which now costs a failure email and a 500 on every hit.
+  else if(!e.parameter.userPhone){
+    return jsonFailure('no_action', 'No action requested.');
+  }
+  //Fallback: old-style form-urlencoded submission sent by POST instead of GET. e.parameter and
+  //e.parameters are filled from the POST body, so the named handlers above work either way.
+  //
+  //NOTE: e.queryString is the URL query string, NOT the body - for a body-only POST it is empty.
+  //saveResponseToCache() parses e.queryString, so it would throw here. No client sends such a POST
+  //today (stats go as text/plain JSON, and every other POST names its action above), so this branch
+  //is unreachable in practice - but do not treat it as a working legacy path.
   else {
     return saveForm(e);
   }

@@ -1,5 +1,11 @@
 /* global caches, fetch, self */
-const CACHE_NAME = 'spotlight-0.3'
+// Every app on cruglobal.github.io shares ONE CacheStorage - it is keyed by ORIGIN, not by service
+// worker scope, so registering with {scope:'./'} buys no isolation here. A bare version name like
+// 'spotlight-0.4' identifies a VERSION but not an APP, so each app's activate sweep below used to
+// delete its siblings' caches - and an offline user of a wiped app got no shell at all, with no
+// self-repair until they were next online. The prefix makes the name identify the app too.
+const CACHE_PREFIX = 'spotlight-campus-'   // MUST be unique per deployment
+const CACHE_NAME = CACHE_PREFIX + '0.4'
 const CACHED_URLS = [
   'browserconfig.xml',
   'favicon.ico',
@@ -75,19 +81,30 @@ self.addEventListener('fetch', event => {
   }())
 })
 
+// Removes this app's OLD caches, and drains this app's files out of the legacy shared caches that
+// predate CACHE_PREFIX. Deliberately never deletes a whole cache it does not own: until every app
+// on the origin has deployed this change, a sibling may still be serving from one of those legacy
+// caches. Once the last app has drained its own files out, the legacy cache is empty and goes.
+async function sweepCaches () {
+  const scope = self.registration.scope // e.g. https://cruglobal.github.io/Spotlight/
+  for (const name of await caches.keys()) {
+    if (name.startsWith(CACHE_PREFIX)) {
+      if (name !== CACHE_NAME) { await caches.delete(name) } // our own older version
+      continue
+    }
+    if (!/^spotlight-[\d.]+$/.test(name)) { continue } // not one of ours - never touch it
+    const legacy = await caches.open(name)
+    for (const request of await legacy.keys()) {
+      if (request.url.startsWith(scope)) { await legacy.delete(request) }
+    }
+    if ((await legacy.keys()).length === 0) { await caches.delete(name) }
+  }
+}
+
 // Clean up caches other than current.
 self.addEventListener('activate', event => {
   self.clients.claim() // take over already-open tabs straight away
   event.waitUntil(async function () {
-    const cacheNames = await caches.keys()
-
-    await Promise.all(
-      cacheNames.filter((cacheName) => {
-        const deleteThisCache = cacheName !== CACHE_NAME
-        console.log('deleting', cacheName);
-
-        return deleteThisCache
-      }).map(cacheName => caches.delete(cacheName))
-    )
+    await sweepCaches()
   }())
 })

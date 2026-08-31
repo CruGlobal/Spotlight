@@ -169,6 +169,14 @@ function getUser(){
   }
 }
 function setUser(user){
+  //Refuse to store a non-user. A failure response carries no .user, and storing undefined here
+  //put the literal string "undefined" into localStorage - which made getUser() throw on the next
+  //read and silently logged the person out. Five call sites pass data.user straight through, so
+  //guarding here fixes all of them at once.
+  if(!user){
+    console.log('setUser called with no user - ignoring');
+    return;
+  }
   localStorage.setItem('SC_user', JSON.stringify(user));
   return;
 }
@@ -183,12 +191,24 @@ async function loadMovements(listOfMovementIDs){
   }).then(handleErrors)
   .then(json)
   .then(function(data) {
-    if(data.result == 'error'){
-      alert(data.error);
+    //sendMovements() answers with a bare ARRAY on success. Anything else is a failure shape -
+    //{result:'error'} from its own catch, or {result:'failure', code:'no_action'} for a request
+    //that named no endpoint. The old `== 'error'` test matched neither and let them through
+    //silently. Either way success must stay false, because the caller's "length == 0" guard
+    //cannot tell an object from an array: ({}).length is undefined, undefined == 0 is false,
+    //and execution used to fall straight into `for(movement of {})` -> TypeError, not iterable.
+    //(A server CRASH never reaches here at all - doGet re-throws, so it lands in .catch() below.)
+    if(!Array.isArray(data)){
+      console.log('loadMovements: unexpected response', data);
+      if(data && data.error){ alert(data.error); } //unchanged for the shape that already alerted
+      return; //success stays false; the caller shows its own notification
     }
     success = data;
   }).catch(function(error){
-    catchError(error);
+    //notify=false: hashchanged() already shows its own "couldn't find your locations" notification
+    //for this failure, so alerting here made the user dismiss two messages for one problem. The
+    //failure still reaches the admin inbox - reportClientError() runs regardless of `notify`.
+    catchError(error, false);
   }).then(function(data){
     stopSpin();
   });
@@ -262,10 +282,30 @@ async function requestUser(phone, pin, spin=true){
   }).then(handleErrors)
   .then(json)
   .then(function(data){
+    //A server CRASH stays an HTTP 500 (doGet re-throws), so it lands in .catch() below and leaves
+    //success false - which is exactly what makes the callers fall back to the cached user. A crash
+    //must never reach the caller's "log in again" branch, because that calls resetUser() ->
+    //removeLocalStorage(), which also wipes unsent formSubs.
+    //
+    //What this guard catches is the 200-with-a-failure-body shapes this handler returns itself.
+    //Test for those, not for the success one: allow-listing {result:'success'} would swallow every
+    //DELIBERATE rejection - "not registered" and "wrong pin" both arrive as {result:'failure'} -
+    //and the caller's if(!result) would then tell a user who simply mistyped their pin that they
+    //were offline. The 'unexpected_error' test is dead today (nothing emits it) and kept only so
+    //that a future version-gated JSON failure cannot slip through unnoticed.
+    if(!data || data.result === 'error' || data.code === 'unexpected_error'){
+      console.log('requestUser: server could not answer', data);
+      return; //success stays false, so the caller keeps the cached user
+    }
     success = data;
-    let user = data.user;
-    setUser(user);
-    window.user = user;
+    //Only assign when the server actually sent a user. A deliberate rejection - a mistyped pin, an
+    //unregistered phone - carries no .user, and assigning undefined here left window.user undefined.
+    //That is harmless only because hashchanged() immediately calls resetUser(), which reloads. Guard
+    //it so a future result:'failure' that does NOT reset cannot leave the app running with no user.
+    if(data.user){
+      setUser(data.user);
+      window.user = data.user;
+    }
   }).catch(function(error){
     catchError(error, false);
   });
@@ -485,7 +525,9 @@ async function hashchanged(){
     //then lets show our movements page
     if(movements){
       let movementsList = await loadMovements(movements);
-      if(movementsList.length == 0){
+      //!movementsList catches every failure shape loadMovements() can return - see the note
+      //there. Without it a failed fetch skipped this branch entirely and threw instead.
+      if(!movementsList || movementsList.length == 0){
         location.hash = '#onboarding';
         let notification = `<div id="notification">
         <div class="blurBackground" style="display:block" onclick="removeNotification();"></div>
@@ -861,6 +903,14 @@ async function processOnboardForm(e) {
         alert("You're currently offline, please try again when you have data");
         return;
       }
+      //Dead today: a server crash stays an HTTP 500 (doGet re-throws), so it lands in .catch() and
+      //arrives here as a falsy result, caught by the offline branch above. Kept so that a future
+      //version-gated JSON failure cannot fall into the message below and accuse the user of a
+      //double registration that never happened.
+      else if(result.code === 'unexpected_error'){
+        alert(result.text);
+        return;
+      }
       else if(result.result != "success"){
         alert("I'm sorry that phone number is already registered with a name, if it's yours, try unchecking register, and click Setup Device");
         return;
@@ -993,6 +1043,16 @@ async function submitLocationForm(){
   .then(json)
   .then(function(data){
     console.log(data);
+
+    //A non-success response must NOT fall through into the code below: it would wipe
+    //window.formSubs and take the user's unsent entries with it. Leave everything exactly as it
+    //was so they can retry. (Latvia already had this guard; this brings the others in line.)
+    if(!data || data.result !== 'success'){
+      alert((data && data.text) ? data.text
+            : 'That did not save. Your entries have been kept - please try again in a moment.');
+      return;
+    }
+
     window.statSummary = data.summary;
     
     logData('timing','summaryReceived');
@@ -1104,12 +1164,64 @@ async function setTextReminder(){
   });
 }
 
+//Reports a client-side failure AND tells the user something actually went wrong.
+//
+//This used to do neither for an ONLINE user: it alerted only when offline, so a genuine server
+//error looked to the user as though the button simply did nothing. And no browser error ever
+//reached the server, which is why a broken registration path produced silence instead of
+//complaints.
 function catchError(error, notify=true){
-  if(!navigator.onLine && notify){
-    alert('You are offline, try submitting again when you are back online.')
-  }
   console.log(error);
-  return; 
+
+  if(!navigator.onLine){
+    if(notify){
+      alert('You are offline, try submitting again when you are back online.');
+    }
+    return; //offline: nothing to report to, and nothing worth reporting
+  }
+
+  if(notify){
+    //Deliberately does not name the cause. navigator.onLine is true on a captive portal and on
+    //a dead connection with an interface up, so most of these are the network, not the server.
+    alert("That didn't go through. Please check your connection and try again.");
+  }
+
+  //Reported regardless of `notify`: whether the USER is told is a separate question from
+  //whether the failure reaches the admin inbox.
+  reportClientError('catchError', error);
+  return;
+}
+
+//Fire-and-forget failure report. Never awaited, so it cannot slow the UI down, and it swallows
+//its own failure - an error inside the error reporter must not generate another report. Capped
+//per page load so a repeating failure cannot hammer the server or the mail quota.
+var CLIENT_ERROR_REPORT_CAP = 5;
+window.clientErrorsReported = 0;
+
+function reportClientError(where, error){
+  if(window.clientErrorsReported >= CLIENT_ERROR_REPORT_CAP){ return; }
+  window.clientErrorsReported += 1;
+  try {
+    let message = 'unknown';
+    try {
+      message = (error && error.message) ? error.message : String(error);
+    } catch(e){ /* keep the default */ }
+
+    //Note: phone only, never the pin.
+    fetch(window.indicatorAppURL, {
+      method: "POST",
+      body: new URLSearchParams({
+        clientError: "true",
+        where: where,
+        message: String(message).substring(0, 500),
+        page: String(location.hash || '#').substring(0, 120),
+        ua: String(navigator.userAgent).substring(0, 200),
+        userPhone: (window.user && window.user.phone) ? window.user.phone : ''
+      })
+    }).catch(function(){ /* reporting itself failed - deliberately silent */ });
+  } catch(e){
+    console.log('could not report client error', e);
+  }
 }
 
 function toggleMore(el) {
