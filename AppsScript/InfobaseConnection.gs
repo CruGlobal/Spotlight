@@ -67,9 +67,24 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
   let movementsObject = {};
   let headers = data.shift();
 
+  //Counted, because both of the skips below are SILENT DATA LOSS and neither left any trace.
+  //A campus row whose id is missing from the Infobase activity list is simply never reported,
+  //and that is indistinguishable from a week where nobody submitted anything.
+  let skippedNotCampus = 0;
+  let skippedNotInInfobase = [];
+  let skippedOutOfPeriod = 0;
+  let included = 0;
+
   for(row of data){ //rows are response submissions
     let movementId = String(row[2]);
-    if(movementId.toLowerCase().indexOf('c') != 0 || movementsList.indexOf(parseInt(movementId.replace('c', ''))) == -1){ //We don't want to include SM IDs or non-infobase movement ids
+    //Split into two checks purely so the log can tell them apart - the combined condition is
+    //unchanged, and so is which rows get skipped.
+    if(movementId.toLowerCase().indexOf('c') != 0){ //We don't want to include SM IDs
+      skippedNotCampus += 1;
+      continue;
+    }
+    if(movementsList.indexOf(parseInt(movementId.replace('c', ''))) == -1){ //or non-infobase movement ids
+      skippedNotInInfobase.push(movementId);
       continue;
     }
 
@@ -91,11 +106,34 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
           movementsObject[movementId][header] += parseInt(row[i]) || 0;
         }
       }
+      included += 1;
     }
     else {
-      //Logger.log('not in range');
+      skippedOutOfPeriod += 1;
     }
   }
+
+  //The one line that answers "is this actually working?". skippedNotInInfobase is the number that
+  //matters: those are campus submissions that Spotlight accepted from a real user and then threw
+  //away, usually because the Movements sheet and Infobase's activity list have drifted apart.
+  Logger.log('getStatsForPeriod ' + period.begin + '..' + period.end
+             + ' - included ' + included + ' row(s) across ' + Object.keys(movementsObject).length
+             + ' movement(s); skipped ' + skippedOutOfPeriod + ' outside the period, '
+             + skippedNotCampus + ' non-campus, '
+             + skippedNotInInfobase.length + ' campus rows whose movement is not in Infobase');
+
+  if(skippedNotInInfobase.length){
+    //The COUNT stays out of the message and lives in the context instead. notifyFailure dedupes on
+    //where + the first line of the message, so a count that changes every run would mint a fresh
+    //signature - and therefore a fresh fail_* Script Property - every time. That is the same
+    //unbounded-signature problem the clientError path in Config.gs was fixed for.
+    notifyFailure('getStatsForPeriod: campus submissions dropped',
+      new Error('campus row(s) were discarded because their movement id is not in the Infobase activity list'),
+      {rows: skippedNotInInfobase.length,
+       movementIds: skippedNotInInfobase.filter(onlyUnique).join(', ').substring(0, 3000),
+       period: period.begin + '..' + period.end});
+  }
+
   return Object.values(movementsObject);
 }
 function submitMovementData() {
@@ -187,9 +225,66 @@ function submitMovementData() {
     let url = getURL()+'statistics';
 
     var response = UrlFetchApp.fetch(url, requestOptions);
-  
-    GmailApp.sendEmail('carl.hempel@cru.org','Successful Update!', `Num of Movements: ${JSON.parse(statistics).statistics.length} \n\nMovement IDs: \n - ${JSON.parse(statistics).statistics.map(el => 'https://infobase.cru.org/locations/0/movements/'+el.activity_id+'/stats').join('\n - ')}`);
-    Logger.log(response);
+
+    //muteHttpExceptions above stops a non-2xx from throwing, which is what we want - the response
+    //BODY carries Infobase's own explanation and is worth more than a bare exception. But muting
+    //without then checking the status is what made this function report success unconditionally:
+    //a 401 from an expired token and a 500 from Infobase both arrived here, were assigned to an
+    //unused variable, and were followed by an email saying "Successful Update!".
+    //
+    //Logger.log(response) was the other half of it. That logs the HTTPResponse OBJECT, which
+    //stringifies to something useless, so even the execution log held no evidence.
+    var code = response.getResponseCode();
+    var body = response.getContentText();
+    //Parsed once and reused - the email template below used to re-parse the whole payload twice more.
+    var submitted = JSON.parse(statistics).statistics;
+    var count = submitted.length;
+
+    Logger.log('Infobase POST ' + url + ' -> HTTP ' + code);
+    Logger.log(body);
+
+    if(code < 200 || code >= 300){
+      notifyFailure('submitMovementData: Infobase rejected the statistics POST',
+                    new Error('HTTP ' + code),
+                    {url: url, movements: count, tries: SCRIPT_PROP.getProperty('tries'),
+                     response: String(body).substring(0, 3000)});
+      return;  //no success email on a failed post
+    }
+
+    //Movement NAMES come from the movements cache, never from the payload. getStatsForPeriod()'s
+    //objects are stringified straight into the POST above, so hanging a name on them would send
+    //Infobase a field it never asked for.
+    //
+    //The cache is keyed WITH the prefix ('c15195') while activity_id is the bare number, so the
+    //lookup key is 'c' + activity_id. That is safe rather than lucky: an uppercase 'C15195' clears
+    //getStatsForPeriod's first check but parseInt()s to NaN and fails its activity-list check, so
+    //only lowercase-'c' ids ever reach the payload.
+    var movementNames = {};
+    try {
+      movementNames = JSON.parse(SCRIPT_PROP.getProperty('movements')) || {};
+    } catch(err){
+      //A label is a convenience and must never cost the success email. Rows fall back to bare ids.
+      Logger.log('could not read the movements cache for email labels: ' + err.message);
+    }
+
+    //Plain text, deliberately. Campus names contain ampersands ("Texas A&M"), there is no
+    //HTML-escape helper anywhere in this project, and an unescaped & in an htmlBody renders wrong.
+    //Mail clients auto-link a bare URL anyway, so nothing is gained by going to HTML.
+    var movementLines = submitted.map(function(el){
+      var cached = movementNames['c' + el.activity_id];
+      //Same fallback as emailTeamStories(): a movement missing from the cache shows its id rather
+      //than blanking the row.
+      var label = (cached && cached.name) ? cached.name + ' (' + el.activity_id + ')'
+                                          : String(el.activity_id);
+      return label + ': https://infobase.cru.org/locations/0/movements/' + el.activity_id + '/stats';
+    }).join('\n - ');
+
+    //The body is included even on success. A 2xx here means Infobase ACCEPTED the request, not
+    //that every record in it was stored - per-record problems come back inside a 200, and until
+    //now nobody could see them.
+    GmailApp.sendEmail('carl.hempel@cru.org','Successful Update!',
+      `HTTP ${code}\n\nNum of Movements: ${count} \n\nMovements: \n - ${movementLines}`
+      + `\n\nInfobase response:\n${String(body).substring(0, 3000)}`);
   }
   catch(error) {
     //Deliberately does NOT call submitMovementData() again. It used to, which made every
@@ -207,10 +302,41 @@ function getAllMovements() {
     method: 'GET',
     headers: myHeaders,
     contentType: "application/json",
-    redirect: 'follow'
+    redirect: 'follow',
+    //Muted so the body can be read and reported. Unmuted, a 401 threw an Apps Script exception
+    //whose message truncates the body, and an HTML error page then reached JSON.parse and failed
+    //as "Unexpected token <" - which says nothing about the token having expired.
+    muteHttpExceptions: true
   };
 
   let url = getURL()+'activities?per_page=10000';
 
-  return JSON.parse(UrlFetchApp.fetch(url, requestOptions));
+  var response = UrlFetchApp.fetch(url, requestOptions);
+  var code = response.getResponseCode();
+  var body = response.getContentText();
+
+  if(code < 200 || code >= 300){
+    throw new Error('Infobase GET ' + url + ' returned HTTP ' + code + ': '
+                    + String(body).substring(0, 1000));
+  }
+
+  var parsed;
+  try {
+    parsed = JSON.parse(body);
+  } catch(err){
+    throw new Error('Infobase GET ' + url + ' returned HTTP ' + code
+                    + ' but the body was not JSON: ' + String(body).substring(0, 1000));
+  }
+
+  //This list is a FILTER, not just a lookup: getStatsForPeriod() drops every movement that is not
+  //in it. So a response that parses but carries no activities is not a harmless empty result - it
+  //silently discards the whole week's stats. Fail loudly instead, and log the count either way so
+  //a list that is merely short is visible too.
+  if(!parsed || !Array.isArray(parsed.activities)){
+    throw new Error('Infobase GET ' + url + ' returned HTTP ' + code
+                    + ' with no activities array: ' + String(body).substring(0, 1000));
+  }
+  Logger.log('Infobase GET ' + url + ' -> HTTP ' + code + ', ' + parsed.activities.length + ' activities');
+
+  return parsed;
 }
