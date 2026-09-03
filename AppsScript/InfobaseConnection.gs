@@ -67,15 +67,37 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
   let movementsObject = {};
   let headers = data.shift();
 
-  //Counted, because both of the skips below are SILENT DATA LOSS and neither left any trace.
-  //A campus row whose id is missing from the Infobase activity list is simply never reported,
-  //and that is indistinguishable from a week where nobody submitted anything.
+  //Counted, because both of the movement skips below are SILENT DATA LOSS and neither left any
+  //trace. A campus row whose id is missing from the Infobase activity list is simply never
+  //reported, and that is indistinguishable from a week where nobody submitted anything.
   let skippedNotCampus = 0;
   let skippedNotInInfobase = [];
   let skippedOutOfPeriod = 0;
   let included = 0;
 
+  //Hoisted. Built inside the loop these were two Date allocations per row - roughly 32,000 of
+  //them on a sheet this size, every run, against a 6 minute execution limit.
+  let periodBegin = new Date(period.begin);
+  let periodEnd = new Date(period.end);
+
   for(row of data){ //rows are response submissions
+    //THE PERIOD CHECK COMES FIRST, and that ordering is the whole point.
+    //
+    //It used to sit AFTER the two movement checks, which meant every row in the sheet's entire
+    //history was tested against the Infobase activity list before anything looked at its date.
+    //The Responses sheet is append-only and holds years of submissions, so any movement that has
+    //since left that list contributed one "dropped" count per historical row it had ever
+    //submitted. The first report read 708 dropped rows across 51 movements when THREE were in the
+    //period - the other 705 were 2022-2026 history, 367 of them from 2023 alone.
+    //
+    //Which rows get skipped is unchanged either way. What changes is that all three counters now
+    //describe the reporting period and nothing else, so the number in the email is actionable.
+    let submissionDate = new Date(Utilities.formatDate(new Date(row[0]), "UTC", "YYYY-MM-dd"));
+    if(submissionDate < periodBegin || submissionDate > periodEnd){
+      skippedOutOfPeriod += 1;
+      continue;
+    }
+
     let movementId = String(row[2]);
     //Split into two checks purely so the log can tell them apart - the combined condition is
     //unchanged, and so is which rows get skipped.
@@ -88,29 +110,21 @@ function getStatsForPeriod(movementsList){ //defaults to the previous sunday unt
       continue;
     }
 
-    let submissionDate = new Date(Utilities.formatDate(new Date(row[0]), "UTC", "YYYY-MM-dd"));
-    
-    //Check that data row falls in the right period and is a campus activity.  
-    if(submissionDate >= new Date(period.begin) && submissionDate <= new Date(period.end)){
-      if(!movementsObject[movementId]){ //check to be sure that the mvoement exists.
-        movementsObject[movementId] = {"activity_id": movementId.replace('c',""),
-                                       "period_begin": period.begin,
-                                       "period_end": period.end};
-      }
-      for(i=3; i < row.length; i++){
-        let header = headers[i];
-        if(INFOBASE_VALID.indexOf(header) > -1 && !isNaN(parseInt(row[i]))){ //make sure we've got a valid infobase id and there's a number recorded
-          if(!movementsObject[movementId][header]){  //check to be sure that the property for this header exists.
-            movementsObject[movementId][header] = 0;
-          }
-          movementsObject[movementId][header] += parseInt(row[i]) || 0;
+    if(!movementsObject[movementId]){ //check to be sure that the mvoement exists.
+      movementsObject[movementId] = {"activity_id": movementId.replace('c',""),
+                                     "period_begin": period.begin,
+                                     "period_end": period.end};
+    }
+    for(i=3; i < row.length; i++){
+      let header = headers[i];
+      if(INFOBASE_VALID.indexOf(header) > -1 && !isNaN(parseInt(row[i]))){ //make sure we've got a valid infobase id and there's a number recorded
+        if(!movementsObject[movementId][header]){  //check to be sure that the property for this header exists.
+          movementsObject[movementId][header] = 0;
         }
+        movementsObject[movementId][header] += parseInt(row[i]) || 0;
       }
-      included += 1;
     }
-    else {
-      skippedOutOfPeriod += 1;
-    }
+    included += 1;
   }
 
   //The one line that answers "is this actually working?". skippedNotInInfobase is the number that
