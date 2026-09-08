@@ -116,7 +116,7 @@ function installPWA(){
 }
 
 // The same PIN input serves both logging in and signing up, so it has to say which one it is.
-// Registering flips the label to "Create PIN", reveals the hint, and hides the recovery link -
+// Registering flips the label to "New PIN", reveals the hint, and hides the recovery link -
 // "Forgot my PIN" means nothing to someone who does not have one yet, and reading it was what
 // convinced new staff there was an existing PIN they were supposed to know.
 function toggleRegister(){
@@ -125,7 +125,7 @@ function toggleRegister(){
     document.getElementById('regUserEmail').setAttribute('required', true);
     document.getElementById('ua').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
-    document.getElementById('pinLabel').textContent = 'Create PIN';
+    document.getElementById('pinLabel').textContent = 'New PIN';
     document.getElementById('pinInfo').style.display = '';
     document.getElementById('pinRecovery').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
