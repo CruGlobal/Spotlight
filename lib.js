@@ -115,12 +115,19 @@ function installPWA(){
   }
 }
 
+// The same PIN input serves both logging in and signing up, so it has to say which one it is.
+// Registering flips the label to "Create PIN", reveals the hint, and hides the recovery link -
+// "Forgot my PIN" means nothing to someone who does not have one yet, and reading it was what
+// convinced new staff there was an existing PIN they were supposed to know.
 function toggleRegister(){
   if(document.getElementById('register').checked){
     document.getElementById('regUserName').setAttribute('required', true);
     document.getElementById('regUserEmail').setAttribute('required', true);
     document.getElementById('ua').setAttribute('required', true);
     document.getElementById('userToggle').style.display = '';
+    document.getElementById('pinLabel').textContent = 'Create PIN';
+    document.getElementById('pinInfo').style.display = '';
+    document.getElementById('pinRecovery').style.display = 'none';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = '');
   }
   else{
@@ -128,6 +135,9 @@ function toggleRegister(){
     document.getElementById('regUserEmail').removeAttribute('required');
     document.getElementById('ua').removeAttribute('required');
     document.getElementById('userToggle').style.display = 'none';
+    document.getElementById('pinLabel').textContent = 'PIN';
+    document.getElementById('pinInfo').style.display = 'none';
+    document.getElementById('pinRecovery').style.display = '';
     document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
   }
 }
@@ -500,20 +510,15 @@ async function hashchanged(){
     }
     document.getElementById('movements').innerHTML = '';
     document.querySelectorAll('input[type="checkbox"]').forEach(el => el.removeAttribute('checked'));
-    document.getElementById('userToggle').style.display = 'none';
-    document.getElementById('staffToggle').style.display = 'none';
-    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = 'none');
 
-    //clear any previous dom manipulation
+    //clear any previous dom manipulation. The two toggles run here, before the branch below,
+    //rather than only in the login branch: arriving on an onboarding link skipped them entirely,
+    //which left the PIN field labelled for a login on the one screen where everybody is signing
+    //up for the first time.
     document.getElementById('register').checked = false;
-    document.getElementById('regUserName').removeAttribute('required');
-    document.getElementById('regUserEmail').removeAttribute('required');
-    document.getElementById('ua').removeAttribute('required');
-    document.getElementById('userToggle').style.display = 'none';
-    document.querySelectorAll('#formSubmit span').forEach(el => el.style.display = "none");
     document.getElementById('regUserStaff').checked = false;
-    document.getElementById('staffAcct').removeAttribute('required');
-    document.getElementById('staffToggle').style.display = "none";
+    toggleRegister();
+    toggleStaff();
 
     let movements = [];
     try {
@@ -549,8 +554,6 @@ async function hashchanged(){
     else {
       document.querySelectorAll('.movementInfo').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.loginInfo').forEach(el => el.style.display = '');
-      toggleRegister();
-      toggleStaff();
     }
 
     projector.classList = 'onboarding';
@@ -912,7 +915,7 @@ async function processOnboardForm(e) {
         return;
       }
       else if(result.result != "success"){
-        alert("I'm sorry that phone number is already registered with a name, if it's yours, try unchecking register, and click Setup Device");
+        alert("I'm sorry that phone number is already registered with a name, if it's yours, try unchecking 'Create a new account', and click Login");
         return;
       }
     }

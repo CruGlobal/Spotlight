@@ -128,32 +128,34 @@
         
         <form class="last-el-bottom" id="onboard-form">
           <div class="movementInfo">
-            <p>Select the movements below that you would like to add or click <a href="#onboarding">here</a> to login.  </p>
-            <h2>Movements</h2>
+            <p>Already registered? <a href="#onboarding">Log in here</a>.</p>
+            <h2>Select Movements</h2>
             <div id="movements">
           </div>
           <br>
           </div>
           <div class="loginInfo">
-            <b>If you have previously registered, go ahead and enter your phone number and pin!</b> <br><br> If you haven't yet registered, you'll need to open the custom link that was sent to you.
+            <b>If you have previously registered, please login below.</b> <br><br> If you haven't yet registered – use the custom link that was sent to you.
           </div>
-          <h2 style="margin-bottom: 0;">Account Login</h2>
+          <h2 style="margin-bottom: 0;">Your Account</h2>
+          <div class="movementInfo">
+            <span style="padding-left: 0.8rem;">
+              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
+              <label for="register">Create a new account</label>
+            </span>
+          </div>
           <div class="accountToggle">
             <label for="regUserPhone" class="pb05">Phone Number</label>
             <span class="whiteBg pb12">
               <input id="regUserPhone" name="regUserPhone" class="masked" required placeholder="(XXX) XXX-XXXX" pattern="\(\d{3}\) \d{3}-\d{4}" title="(123) 456-7890">
             </span>
-            <label for="regUserPin" class="pb05">Password/PIN</label>
+            <label for="regUserPin" id="pinLabel" class="pb05">PIN</label><span id="pinInfo" style="display: none;">Create a PIN for your account – this code will be visible to admins.<br><br></span>
             <span class="whiteBg pb12">
               <input id="regUserPin" name="regUserPin" type="password" class="masked" required pattern="[0-9]{4}" placeholder="XXXX" style="width: 100%" title="pin for logging in later">
             </span>
-            <small><a class="link" onclick="requestPin()">Recover your PIN</a></small>
+            <small id="pinRecovery"><a class="link" onclick="requestPin()">Forgot my PIN</a></small>
           </div>
           <div class="movementInfo">
-            <span style="padding-left: 0.8rem;">
-              <input name="register" id="register" type="checkbox" onchange="toggleRegister();">
-              <label for="register">Register as new user</label>
-            </span>
             <div id="userToggle">
               <h2>New User</h2>
               <div id="registerUser">
@@ -180,7 +182,7 @@
           </div>
           <div>
             <span class="bottom-button">
-              <button id="formSubmit"><span style="display:none;">Register and </span>Setup Device</button>
+              <button id="formSubmit"><span style="display:none;">Create Account and </span>Login</button>
             </span>
             <span class="questions">
               Questions or Bugs? Send us an <a href="" data-part1="spotlight" data-part2="cru" data-part3="org" data-part4="App feedback: "> 
