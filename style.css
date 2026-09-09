@@ -190,7 +190,8 @@ small {
 #movements {
   display: grid;
   grid-template-columns: 20px 1fr;
-  grid-gap: 1rem;
+  grid-gap: 1rem 0.25rem;
+  padding-left: 0.8rem;
 }
 #movementName {
   text-align: center;
