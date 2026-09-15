@@ -4,6 +4,13 @@ window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbzluLRHNFKprWc
 // Dev
 //window.indicatorAppURL = "https://script.google.com/macros/s/AKfycbxWTt86lv0Jpr7AqTaL1yHzTv5NOl7UdAOfYeSUcx8n9-IOLUPPcEATLhV1K8fuCfblBg/exec";
 
+// Cru Connections guest stats flow - where semester/quarterly figures are entered.
+// See stat-deep-link.md. This replaces the old infobase.cru.org/locations/0/movements/{id}/stats
+// link, and it is also the ONLY route for the seven fields LogMovementStats cannot accept
+// (students/faculty involved and engaged, student/faculty leaders, graduating on mission).
+// UAT: https://connections-uat.cru.org/mvt  -  a UAT link does not work in production.
+window.connectionsStatsURL = "https://connections.cru.org/mvt";
+
 var online = false;
 
 function updateOnlineStatus(event) {
@@ -764,9 +771,18 @@ async function hashchanged(){
       }
       document.getElementById('statsList').dispatchEvent(new Event('change'));
 
-      if(movement.id.startsWith('c')){ //for now the infobase will only show for campus movements - may add SM movements in the future but needs more thought/work
+      if(movement.id.startsWith('c')){ //for now the semester link will only show for campus movements - may add SM movements in the future but needs more thought/work
         document.getElementById('semesterData').style.display = '';
-        document.getElementById('semesterInfobaseAnchor').href= `https://infobase.cru.org/locations/0/movements/${movement.id.replace('c','')}/stats`;
+        //externalId takes the BARE Infobase id, no prefix - the same value Spotlight has always
+        //sent as activity_id. Name and email are optional, but supplying BOTH makes the flow skip
+        //its identity fields entirely; supplying one is no better than supplying neither, so send
+        //them together or not at all rather than passing an empty or undefined parameter.
+        let statsLink = `${window.connectionsStatsURL}?externalId=${encodeURIComponent(movement.id.replace('c',''))}`;
+        if(window.user && window.user.email && window.user.name){
+          statsLink += `&email=${encodeURIComponent(window.user.email)}`
+                     + `&fullName=${encodeURIComponent(window.user.name)}`;
+        }
+        document.getElementById('semesterConnectionsAnchor').href = statsLink;
       }
       else {
         document.getElementById('semesterData').style.display = 'none';
