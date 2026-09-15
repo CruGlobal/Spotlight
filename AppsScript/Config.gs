@@ -50,6 +50,13 @@ function onOpen() {
     .addItem('Delete Authorization Token', 'deleteKey')
     .addItem('Set API URL', 'setURL')
     .addItem('Delete API URL', 'deleteURL')
+    .addSeparator()
+    //Connections (Salesforce). Kept in the same menu as the Infobase pair it replaces, so that
+    //during the migration it is obvious both credential sets exist and which one is configured.
+    .addItem('Set Connections Credentials', 'setConnectionsCredentials')
+    .addItem('Delete Connections Credentials', 'deleteConnectionsCredentials')
+    .addItem('Set Stats Cutover Date', 'setConnectionsCutoverDate')
+    .addItem('Toggle Connections Dry Run', 'toggleConnectionsDryRun')
   .addToUi();
 }
 
@@ -234,8 +241,23 @@ var FAILURE_REDACT_KEYS = ['userpin','pin','password','pwd'];
 //email reads 'Spotlight failure: doGet' and cannot be attributed to an app. Its own constant rather
 //than SENDER_NAME, because Latvia does not define SENDER_NAME.
 var FAILURE_SUBJECT_PREFIX = 'Spotlight';
-var CLIENT_ERROR_SOURCES = ['catchError'];  //every 'where' value lib.js actually sends
-var CLIENT_ERROR_DAILY_CAP = 20;            //browser-reported failures get their own, smaller share
+//Every 'where' value lib.js actually sends - one per catchError() call site, so an onboarding
+//failure is distinguishable from a login one both in the subject line and in the dedupe bucket.
+//
+//This list is what BOUNDS the client dedupe signature space (see notifyFailure), so it must stay a
+//FIXED allow-list - never echo the client's own value. Adding a tag in lib.js without adding it
+//here files that call site under 'unrecognised', so deploy this script BEFORE the client, not after.
+//
+//'catchError' is the untagged value every client sent before per-call-site tagging. Keep it: the
+//service worker serves lib.js stale-while-revalidate, so pre-tag clients keep reporting for a while.
+var CLIENT_ERROR_SOURCES = ['catchError', 'loadMovements', 'registerUser', 'updateUser',
+                            'requestUser', 'requestPin', 'requestSummary', 'submitLocationForm',
+                            'setTextReminder'];
+//Browser-reported failures get their own, smaller share of the daily cap. Raised from 20 alongside
+//the tags: these all used to collapse into ONE dedupe bucket, and nine buckets can legitimately
+//send several times as often, so the old allowance would have started dropping reports silently.
+//Still far below FAILURE_DAILY_CAP, which is what protects the user-facing PIN and registration mail.
+var CLIENT_ERROR_DAILY_CAP = 40;
 
 function notifyFailure(where, error, context){
   var message = 'unknown error';
@@ -254,7 +276,8 @@ function notifyFailure(where, error, context){
     //caller supplied, so including it made the signature space unbounded: one fail_* script
     //property per distinct message, and ~10,500 requests fill the 500kb store that also holds the
     //users/movements/responseCache caches - at which point registration and stats submission break.
-    //`where` is allow-listed to two values, so this bounds client signatures at two.
+    //`where` is allow-listed to the fixed CLIENT_ERROR_SOURCES list, so this bounds client
+    //signatures at that list's length, plus one for 'unrecognised'.
     var fromClientSig = String(where).indexOf('client: ') === 0;
     var signature = fromClientSig ? where : (where + '|' + String(message).split('\n')[0]);
     var key = 'fail_' + failureSignatureKey_(signature);
