@@ -218,7 +218,7 @@ async function loadMovements(listOfMovementIDs){
     //notify=false: hashchanged() already shows its own "couldn't find your locations" notification
     //for this failure, so alerting here made the user dismiss two messages for one problem. The
     //failure still reaches the admin inbox - reportClientError() runs regardless of `notify`.
-    catchError(error, false);
+    catchError(error, false, 'loadMovements');
   }).then(function(data){
     stopSpin();
   });
@@ -247,7 +247,7 @@ async function registerUser(name, phone, mvmnts, cat, pin, email){
     setUser(data.user);
     success = data;
   }).catch(function(error){
-    catchError(error, false);
+    catchError(error, false, 'registerUser');
   }).then(function(data){
     stopSpin();
   });
@@ -273,7 +273,7 @@ async function updateUser(phone, mvmnts, cat, pin){
     setUser(data.user);
     success = data;
   }).catch(function(error){
-    catchError(error, false);
+    catchError(error, false, 'updateUser');
   }).then(function(data){
     stopSpin();
   });
@@ -317,7 +317,7 @@ async function requestUser(phone, pin, spin=true){
       window.user = data.user;
     }
   }).catch(function(error){
-    catchError(error, false);
+    catchError(error, false, 'requestUser');
   });
   if(spin) {stopSpin();}
   return success;
@@ -341,7 +341,7 @@ async function requestPin(){
     console.log(data);
     alert(data.text);
   }).catch(function(error){
-    catchError(error, false);
+    catchError(error, false, 'requestPin');
   });
   stopSpin();
   return;
@@ -811,7 +811,7 @@ async function hashchanged(){
         setUser(data.user);
         window.user = data.user;
       }).catch(function(error){
-        catchError(error);
+        catchError(error, true, 'requestSummary');
       }).then(function(data){
         stopSpin();
       });
@@ -1066,7 +1066,7 @@ async function submitLocationForm(){
     window.formSubs = {}; //reset window.formSubs
     localStorage.setItem('formSubs', JSON.stringify(window.formSubs));
   }).catch(function(error){
-    catchError(error);
+    catchError(error, true, 'submitLocationForm');
   }).then(function(data){
     stopSpin();
   });
@@ -1161,7 +1161,7 @@ async function setTextReminder(){
     }
     document.getElementById('blurBackground').dispatchEvent(new Event('click'));
   }).catch(function(error){
-    catchError(error);
+    catchError(error, true, 'setTextReminder');
   }).then(function(data){
     stopSpin();
   });
@@ -1173,7 +1173,17 @@ async function setTextReminder(){
 //error looked to the user as though the button simply did nothing. And no browser error ever
 //reached the server, which is why a broken registration path produced silence instead of
 //complaints.
-function catchError(error, notify=true){
+//
+//`where` names the CALL SITE, so the admin inbox can tell an onboarding failure from a login one.
+//Every client failure used to arrive as the single value 'catchError', which meant not only that
+//the reports were indistinguishable but that they shared ONE dedupe bucket on the server - so one
+//failed onboarding suppressed every other client report for the next 30 minutes.
+//
+//It must be a value CLIENT_ERROR_SOURCES allow-lists in Config.gs, or the server files it under
+//'unrecognised'. That allow-list is what bounds the dedupe signature space, so never invent a tag
+//here without adding it there. Defaulting to 'catchError' means a call site missed here degrades
+//to the old behaviour rather than losing its report.
+function catchError(error, notify=true, where='catchError'){
   console.log(error);
 
   if(!navigator.onLine){
@@ -1191,7 +1201,7 @@ function catchError(error, notify=true){
 
   //Reported regardless of `notify`: whether the USER is told is a separate question from
   //whether the failure reaches the admin inbox.
-  reportClientError('catchError', error);
+  reportClientError(where, error);
   return;
 }
 
@@ -1374,9 +1384,13 @@ function json(response) {
   return response.json();
 }
 
+//Reports response.status, NOT response.statusText. HTTP/2 dropped the reason phrase and Google
+//serves this app over HTTP/2, so statusText is always the empty string - which is why every
+//"Request failed" report reaching the admin inbox carried no status at all, and a quota refusal
+//could not be told apart from a crash.
 function handleErrors(response) {
   if(!response.ok) {
-    throw new Error("Request failed " + response.statusText);
+    throw new Error("Request failed " + response.status);
   }
   return response;
 }

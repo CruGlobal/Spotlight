@@ -5,7 +5,7 @@
 // delete its siblings' caches - and an offline user of a wiped app got no shell at all, with no
 // self-repair until they were next online. The prefix makes the name identify the app too.
 const CACHE_PREFIX = 'spotlight-campus-'   // MUST be unique per deployment
-const CACHE_NAME = CACHE_PREFIX + '0.4'
+const CACHE_NAME = CACHE_PREFIX + '0.5'
 const CACHED_URLS = [
   'browserconfig.xml',
   'favicon.ico',
